@@ -1,0 +1,38 @@
+{
+  "name": "puppetlabs-scheduled_task",
+  "version": "0.1.0",
+  "author": "puppetlabs",
+  "summary": "Manage scheduled tasks for Windows Server 2008 and newer operating systems.",
+  "license": "Apache-2.0",
+  "source": "https://github.com/puppetlabs/puppetlabs-scheduled_task.git",
+  "project_page": "https://github.com/puppetlabs/puppetlabs-iis",
+  "issues_url": "https://tickets.puppet.com/browse/MODULES",
+  "dependencies": [
+
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "windows",
+      "operatingsystemrelease": [
+        "2008",
+        "2008 R2",
+        "2012",
+        "2012 R2",
+        "2016",
+        "7",
+        "8",
+        "8.1",
+        "10"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 4.7.0 < 6.0.0"
+    }
+  ],
+  "pdk-version": "1.2.1",
+  "template-url": "file:///opt/puppetlabs/pdk/share/cache/pdk-module-template.git",
+  "template-ref": "heads/master-0-gd2dae81"
+}
