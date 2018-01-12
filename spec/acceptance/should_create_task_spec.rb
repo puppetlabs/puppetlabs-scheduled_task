@@ -32,10 +32,10 @@ describe "Should create a scheduled task", :node => host do
       provider    => 'taskscheduler_api2'
     }
     MANIFEST
-    execute_manifest_on(host, pp, :catch_failures => true)
+    execute_manifest(pp, :catch_failures => true)
 
     # Ensure it's idempotent
-    execute_manifest_on(host, pp, :catch_changes  => true)
+    execute_manifest(pp, :catch_changes  => true)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"

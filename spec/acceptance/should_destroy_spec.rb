@@ -20,7 +20,7 @@ describe "Should destroy a scheduled task", :node => host do
       provider => 'taskscheduler_api2'
     }
     MANIFEST
-    execute_manifest_on(host, pp, :catch_failures => true)
+    execute_manifest(pp, :catch_failures => true)
   end
 
   it 'Should destroy the task' do
@@ -35,7 +35,7 @@ describe "Should destroy a scheduled task", :node => host do
     }
     MANIFEST
 
-    execute_manifest_on(host, pp, :catch_failures => true)
+    execute_manifest(pp, :catch_failures => true)
 
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
     query_out = on(host, query_cmd, :accept_all_exit_codes => true).output
