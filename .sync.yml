@@ -3,3 +3,9 @@ NOTICE:
   copyright_holders:
     - name: 'Puppet, Inc.'
       begin: 2018
+Gemfile:
+  optional:
+    ':system_tests':
+          - gem: beaker-testmode_switcher
+            version: '<= 0.2.0'
+          - gem: master_manipulator
