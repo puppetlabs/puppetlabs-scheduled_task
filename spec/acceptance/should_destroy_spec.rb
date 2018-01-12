@@ -39,6 +39,6 @@ describe "Should destroy a scheduled task", :node => host do
 
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
     query_out = on(host, query_cmd, :accept_all_exit_codes => true).output
-    expect(query_out).to eq("ERROR: The system cannot find the file specified.\n\n")
+    expect(query_out).to match(/ERROR: The system cannot find the .+ specified/)
   end
 end

@@ -12,7 +12,7 @@ describe "Should create a scheduled task", :node => host do
     on(host, "schtasks.exe /delete /tn #{@taskname} /f", :accept_all_exit_codes => true) do |r|
       # Empty means deletion was ok.  The 'The system cannot find the file specified' error occurs
       # if the task does not exist
-      unless r.stderr.empty? || r.stderr =~ /ERROR: The system cannot find the file specified/
+      unless r.stderr.empty? || r.stderr =~ /ERROR: The system cannot find the .+ specified/
         raise r.stderr
       end
     end
