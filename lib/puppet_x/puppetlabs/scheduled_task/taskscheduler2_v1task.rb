@@ -71,12 +71,6 @@ class TaskScheduler2V1Task
     @tasksched.delete(full_taskname)
   end
 
-  # Execute the current task.
-  #
-  def run
-    raise NotImplementedError
-  end
-
   # Saves the current task. Tasks must be saved before they can be activated.
   # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
   #
@@ -87,19 +81,6 @@ class TaskScheduler2V1Task
     task_object = @task.nil? ? @full_task_path : @task
     @tasksched.save(task_object, @definition, @task_password)
   end
-
-  # Terminate the current task.
-  #
-  def terminate
-    raise NotImplementedError
-  end
-
-  # Set the host on which the various TaskScheduler methods will execute.
-  #
-  def machine=(host)
-    raise NotImplementedError
-  end
-  alias :host= :machine=
 
   # Sets the +user+ and +password+ for the given task. If the user and
   # password are set properly then true is returned.
@@ -177,21 +158,6 @@ class TaskScheduler2V1Task
     dir
   end
 
-  # Returns the task's priority level. Possible values are 'idle',
-  # 'normal', 'high', 'realtime', 'below_normal', 'above_normal',
-  # and 'unknown'.
-  #
-  def priority
-    raise NotImplementedError
-  end
-
-  # Sets the priority of the task. The +priority+ should be a numeric
-  # priority constant value.
-  #
-  def priority=(priority)
-    raise NotImplementedError
-  end
-
   # Creates a new work item (scheduled job) with the given +trigger+. The
   # trigger variable is a hash of options that define when the scheduled
   # job should run.
@@ -245,12 +211,6 @@ class TaskScheduler2V1Task
     append_trigger(v1trigger)
   end
 
-  # Adds a trigger at the specified index.
-  #
-  def add_trigger(index, trigger)
-    raise NotImplementedError
-  end
-
   # Returns the flags (integer) that modify the behavior of the work item. You
   # must OR the return value to determine the flags yourself.
   #
@@ -264,70 +224,6 @@ class TaskScheduler2V1Task
   #
   def flags=(flags)
     @definition.Settings.Enabled = (flags & Win32::TaskScheduler::DISABLED == 0)
-  end
-
-  # Returns the status of the currently active task. Possible values are
-  # 'ready', 'running', 'not scheduled' or 'unknown'.
-  #
-  def status
-    raise NotImplementedError
-  end
-
-  # Returns the exit code from the last scheduled run.
-  #
-  def exit_code
-    raise NotImplementedError
-  end
-
-  # Returns the comment associated with the task, if any.
-  #
-  def comment
-    raise NotImplementedError
-  end
-
-  # Sets the comment for the task.
-  #
-  def comment=(comment)
-    raise NotImplementedError
-  end
-
-  # Returns the name of the user who created the task.
-  #
-  def creator
-    raise NotImplementedError
-  end
-
-  # Sets the creator for the task.
-  #
-  def creator=(creator)
-    raise NotImplementedError
-  end
-
-  # Returns a Time object that indicates the next time the task will run.
-  #
-  def next_run_time
-    raise NotImplementedError
-  end
-
-  # Returns a Time object indicating the most recent time the task ran or
-  # nil if the task has never run.
-  #
-  def most_recent_run_time
-    raise NotImplementedError
-  end
-
-  # Returns the maximum length of time, in milliseconds, that the task
-  # will run before terminating.
-  #
-  def max_run_time
-    raise NotImplementedError
-  end
-
-  # Sets the maximum length of time, in milliseconds, that the task can run
-  # before terminating. Returns the value you specified if successful.
-  #
-  def max_run_time=(max_run_time)
-    raise NotImplementedError
   end
 
   # Returns whether or not the scheduled task exists.
