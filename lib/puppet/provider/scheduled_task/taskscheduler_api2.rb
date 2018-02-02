@@ -9,6 +9,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
        This is a technical preview using the newer V2 API interface but
        still editing V1 compatbile scheduled tasks."
 
+  defaultfor :operatingsystem => :windows
   confine    :operatingsystem => :windows
 
   def self.instances

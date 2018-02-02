@@ -7,7 +7,6 @@ end
 Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   desc %q{This provider manages scheduled tasks on Windows.}
 
-  defaultfor :operatingsystem => :windows
   confine    :operatingsystem => :windows
 
   MINUTES_IN_DAY = 1440

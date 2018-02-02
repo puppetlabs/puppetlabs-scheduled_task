@@ -10,6 +10,10 @@ describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_wi
     ).name).to eq('Foo')
   end
 
+  it 'should use taskscheduler_api2 as the default provider' do
+    expect(described_class.defaultprovider).to eq( Puppet::Type::Scheduled_task::ProviderTaskscheduler_api2)
+  end
+
   describe 'when setting the command' do
     it 'should accept an absolute path to the command' do
       expect(described_class.new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe')[:command]).to eq('C:\Windows\System32\notepad.exe')
