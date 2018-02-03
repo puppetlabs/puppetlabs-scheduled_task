@@ -180,6 +180,10 @@ class TaskScheduler2V1Task
   end
   alias :new_task :new_work_item
 
+  def compatibility
+    @definition.Settings.Compatibility
+  end
+
   # Returns the number of triggers associated with the active task.
   #
   def trigger_count

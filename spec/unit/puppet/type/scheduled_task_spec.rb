@@ -108,6 +108,29 @@ describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_wi
     end
   end
 
+  describe 'when setting the compatibility' do
+    it 'should allow 1' do
+      expect(described_class.new(
+        :title        => 'Foo',
+        :command      => 'C:\Windows\System32\notepad.exe',
+        :compatibility => 1,
+      )[:compatibility]).to eq(:'1')
+    end
+
+    it 'should not allow 2' do
+      expect {
+        described_class.new(
+          :name         => 'Foo',
+          :command      => 'C:\Windows\System32\notepad.exe',
+          :compatibility => 2
+        )
+      }.to raise_error(
+        Puppet::ResourceError,
+        /Parameter compatibility failed on Scheduled_task\[Foo\]: Invalid value 2\. Valid values are 1\./
+      )
+    end
+  end
+
   describe 'when setting the trigger' do
     it 'should delegate to the provider to validate the trigger' do
       described_class.defaultprovider.any_instance.expects(:validate_trigger).returns(true)
