@@ -1,5 +1,5 @@
-# This class is used to manage V1 compatible tasks using the Task Scheduler V2 API
-# It is designed to be a binary compatible API to puppet/util/windows/taskscheduler.rb but
+# This class is used to manage V2 compatible tasks using the Task Scheduler V2 API
+# It is designed to be a compatible API to puppet/util/windows/taskscheduler.rb but
 # will only surface the features used by the Puppet scheduledtask provider
 #
 require_relative './taskscheduler2'
@@ -34,14 +34,14 @@ class TaskScheduler2Task
     end
   end
 
-  # Returns an array of scheduled task names.
+  # Returns an array of V2 scheduled task names.
   #
-  # Emulates V1 tasks by appending the '.job' suffix
+  # Emulates V1 task interface by appending the '.job' suffix
   #
   def enum
     @tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_AT, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1]).map do |item|
+      include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2]).map do |item|
         @tasksched.task_name_from_task_path(item) + '.job'
     end
   end
@@ -79,6 +79,7 @@ class TaskScheduler2Task
   #
   def save(file = nil)
     task_object = @task.nil? ? @full_task_path : @task
+    # require 'pry'; binding.pry
     @tasksched.save(task_object, @definition, @task_password)
   end
 
@@ -170,7 +171,7 @@ class TaskScheduler2Task
     @task = nil
     @task_password = nil
 
-    @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1)
+    @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2)
 
     append_trigger(task_trigger)
 
@@ -215,20 +216,20 @@ class TaskScheduler2Task
     append_trigger(v1trigger)
   end
 
-  # Returns the flags (integer) that modify the behavior of the work item. You
-  # must OR the return value to determine the flags yourself.
-  #
-  def flags
-    flags = 0
-    flags = flags | Win32::TaskScheduler::DISABLED if !@definition.Settings.Enabled
-    flags
-  end
+  # # Returns the flags (integer) that modify the behavior of the work item. You
+  # # must OR the return value to determine the flags yourself.
+  # #
+  # def flags
+  #   flags = 0
+  #   flags = flags | Win32::TaskScheduler::DISABLED if !@definition.Settings.Enabled
+  #   flags
+  # end
 
-  # Sets an OR'd value of flags that modify the behavior of the work item.
-  #
-  def flags=(flags)
-    @definition.Settings.Enabled = (flags & Win32::TaskScheduler::DISABLED == 0)
-  end
+  # # Sets an OR'd value of flags that modify the behavior of the work item.
+  # #
+  # def flags=(flags)
+  #   @definition.Settings.Enabled = (flags & Win32::TaskScheduler::DISABLED == 0)
+  # end
 
   # Returns whether or not the scheduled task exists.
   def exists?(job_name)
@@ -268,7 +269,7 @@ class TaskScheduler2Task
     'end_day',
     'end_month',
     'end_year',
-    'flags',
+    # 'flags',
     'minutes_duration',
     'minutes_interval',
     'random_minutes_interval',
@@ -334,31 +335,34 @@ class TaskScheduler2Task
     trigger_settings = v1trigger['type']
 
     case v1trigger['trigger_type']
-      when :TASK_TIME_TRIGGER_DAILY
+      when :TASK_TRIGGER_DAILY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_DAILY)
         trigger_object.DaysInterval = trigger_settings['days_interval']
         # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.Randomdelay = 0
+        # TODO: should this be random_minutes_interval
+        trigger_object.Randomdelay = ''
 
-      when :TASK_TIME_TRIGGER_WEEKLY
+      when :TASK_TRIGGER_WEEKLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_WEEKLY)
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.WeeksInterval = trigger_settings['weeks_interval']
         # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.Randomdelay = 0
+        # TODO: should this be random_minutes_interval
+        trigger_object.Randomdelay = ''
 
-      when :TASK_TIME_TRIGGER_MONTHLYDATE
+      when :TASK_TRIGGER_MONTHLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLY)
         trigger_object.DaysOfMonth = trigger_settings['days']
         trigger_object.Monthsofyear = trigger_settings['months']
         # Static V2 settings which are not set by the Puppet scheduledtask type
         trigger_object.RunOnLastDayOfMonth = false
-        trigger_object.Randomdelay = 0
+        # TODO: should this be random_minutes_interval
+        trigger_object.Randomdelay = ''
 
-      when :TASK_TIME_TRIGGER_MONTHLYDOW
+      when :TASK_TRIGGER_MONTHLYDOW
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLYDOW)
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
@@ -366,13 +370,15 @@ class TaskScheduler2Task
         trigger_object.Weeksofmonth = trigger_settings['weeks']
         # Static V2 settings which are not set by the Puppet scheduledtask type
         trigger_object.RunonLastWeekOfMonth = false
-        trigger_object.Randomdelay = 0
+        # TODO: should this be random_minutes_interval
+        trigger_object.Randomdelay = ''
 
-      when :TASK_TIME_TRIGGER_ONCE
+      when :TASK_TRIGGER_TIME
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383622(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_TIME)
         # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.Randomdelay = 0
+        # TODO: should this be random_minutes_interval
+        trigger_object.Randomdelay = ''
       else
         raise Error.new(_("Unknown V1 trigger type %{type}") % { type: v1trigger['trigger_type'] })
     end
@@ -434,10 +440,10 @@ class TaskScheduler2Task
    end
 
   def v2trigger_to_v1hash(v2trigger)
-    trigger_flags = 0
-    trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless v2trigger.Endboundary.empty?
-    # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
-    trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED unless v2trigger.Enabled
+    # trigger_flags = 0
+    # trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless v2trigger.Endboundary.empty?
+    # # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
+    # trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED unless v2trigger.Enabled
 
     v1trigger = {
       'start_year'              => trigger_date_part_to_int(v2trigger.StartBoundary, '%Y'),
@@ -450,33 +456,34 @@ class TaskScheduler2Task
       'start_minute'            => trigger_date_part_to_int(v2trigger.StartBoundary, '%M'),
       'minutes_duration'        => trigger_duration_to_minutes(v2trigger.Repetition.Duration),
       'minutes_interval'        => trigger_duration_to_minutes(v2trigger.Repetition.Interval),
-      'flags'                   => trigger_flags,
+      # 'flags'                   => trigger_flags,
       'random_minutes_interval' => trigger_string_to_int(v2trigger.Randomdelay)
     }
 
     case v2trigger.ole_type.to_s
       when 'ITimeTrigger'
-        v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
+        v1trigger['trigger_type'] = :TASK_TRIGGER_TIME
+        # TODO: V2 tasks don't have a "once" type, they have a "time" type
         v1trigger['type'] = { 'once' => nil }
       when 'IDailyTrigger'
-        v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
+        v1trigger['trigger_type'] = :TASK_TRIGGER_DAILY
         v1trigger['type'] = {
           'days_interval' => trigger_string_to_int(v2trigger.DaysInterval)
         }
       when 'IWeeklyTrigger'
-        v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
+        v1trigger['trigger_type'] = :TASK_TRIGGER_WEEKLY
         v1trigger['type'] = {
           'weeks_interval' => trigger_string_to_int(v2trigger.WeeksInterval),
           'days_of_week'   => trigger_string_to_int(v2trigger.DaysOfWeek)
         }
       when 'IMonthlyTrigger'
-        v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
+        v1trigger['trigger_type'] = :TASK_TRIGGER_MONTHLY
         v1trigger['type'] = {
           'days'   => trigger_string_to_int(v2trigger.DaysOfMonth),
           'months' => trigger_string_to_int(v2trigger.MonthsOfYear)
         }
       when 'IMonthlyDOWTrigger'
-        v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDOW
+        v1trigger['trigger_type'] = :TASK_TRIGGER_MONTHLYDOW
         v1trigger['type'] = {
           'weeks'        => trigger_string_to_int(v2trigger.WeeksOfMonth),
           'days_of_week' => trigger_string_to_int(v2trigger.DaysOfWeek),
