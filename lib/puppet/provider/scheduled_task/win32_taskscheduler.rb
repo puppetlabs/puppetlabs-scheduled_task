@@ -1,35 +1,35 @@
 require 'puppet/parameter'
 
 if Puppet.features.microsoft_windows?
-  require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task')
+  require 'puppet/util/windows/taskscheduler'
 end
 
-Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
-  desc "This provider manages scheduled tasks on Windows.
-       This is a technical preview using the newer V2 API interface but
-       still editing V1 compatbile scheduled tasks."
+Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
+  desc %q{This provider manages scheduled tasks on Windows.}
 
-  defaultfor :operatingsystem => :windows
   confine    :operatingsystem => :windows
 
+  MINUTES_IN_DAY = 1440
+
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.tasks.collect do |job_file|
+    Win32::TaskScheduler.new.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
+
       new(
-        :provider => :taskscheduler_api2,
+        :provider => :win32_taskscheduler,
         :name     => job_title
       )
     end
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.exists? resource[:name]
+    Win32::TaskScheduler.new.exists? resource[:name]
   end
 
   def task
     return @task if @task
 
-    @task ||= PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new
+    @task ||= Win32::TaskScheduler.new
     @task.activate(resource[:name] + '.job') if exists?
 
     @task
@@ -77,7 +77,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
                   nil
                 end
       next unless trigger and scheduler_trigger_types.include?(trigger['trigger_type'])
-
       puppet_trigger = {}
       case trigger['trigger_type']
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_DAILY
@@ -211,7 +210,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def create
     clear_task
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(resource[:name], dummy_time_trigger)
+    @task = Win32::TaskScheduler.new(resource[:name], dummy_time_trigger)
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user].each do |prop|
@@ -220,7 +219,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.delete(resource[:name] + '.job')
+    Win32::TaskScheduler.new.delete(resource[:name] + '.job')
   end
 
   def flush
@@ -357,9 +356,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
 
     if integer_interval > 0 && integer_duration == -1
-      minutes_in_day = 1440
-      integer_duration = minutes_in_day
-      trigger['minutes_duration'] = minutes_in_day
+      integer_duration = MINUTES_IN_DAY
+      trigger['minutes_duration'] = MINUTES_IN_DAY
     end
 
     if integer_interval >= integer_duration && integer_interval > 0

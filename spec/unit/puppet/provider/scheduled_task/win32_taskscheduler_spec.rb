@@ -111,6 +111,12 @@ shared_examples_for "a trigger that handles start_date and start_time" do
   end
 end
 
+describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if => Puppet.features.microsoft_windows? do
+  it 'should be the default provider' do
+    expect(Puppet::Type.type(:scheduled_task).defaultprovider).to eq(subject.class)
+  end
+end
+
 # The Win32::TaskScheduler and PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task classes should be
 # API compatible and behave the same way.  What differs is which Windows API is used to query
 # and affect the system.  This means for testing, any tests should be the same no matter what
