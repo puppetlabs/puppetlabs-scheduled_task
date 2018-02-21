@@ -438,7 +438,9 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
     days_of_week = [days_of_week] unless days_of_week.is_a?(Array)
     days_of_week.each do |day_of_week|
-      bitfield |= day_of_week_name_to_constant(day_of_week)
+      bitmask = day_of_week_name_to_constant(day_of_week)
+      self.fail "Days_of_week value #{day_of_week} is invalid. Expected sun, mon, tue, wed, thu, fri or sat." if bitmask.nil?
+      bitfield |= bitmask
     end
 
     bitfield
