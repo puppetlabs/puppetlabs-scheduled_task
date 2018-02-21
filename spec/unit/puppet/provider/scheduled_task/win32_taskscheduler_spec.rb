@@ -1567,6 +1567,17 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         /#{Regexp.escape("Unknown trigger option(s): ['this is invalid']")}/
       )
     end
+
+    it 'should raise when an invalid day_of_week is passed' do
+      triggers_to_validate = [
+        {'schedule' => 'weekly', 'start_date' => '2011-09-13', 'start_time' => '13:50', 'day_of_week' => 'BadDay'}
+      ]
+
+      expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
+        Puppet::Error,
+        /#{Regexp.escape("Days_of_week value BadDay is invalid")}/
+      )
+    end
   end
 
   describe '#flush' do
