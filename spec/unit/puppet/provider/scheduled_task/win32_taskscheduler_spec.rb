@@ -815,6 +815,15 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       expect(provider).not_to be_triggers_same(current, desired)
     end
 
+    it 'should not consider triggers with different monthly types to be the same' do
+      # A trigger of type Win32::TaskScheduler::MONTHLYDATE
+      current = {'schedule' => 'monthly', 'start_time' => '14:00', 'months' => [1,2,3,4,5,6,7,8,9,10,11,12], 'on' => [9]}
+      # A trigger of type Win32::TaskScheduler::MONTHLYDOW
+      desired = {'schedule' => 'monthly', 'start_time' => '14:00', 'which_occurrence' => 'second', 'day_of_week' => ['sat']}
+
+      expect(provider).not_to be_triggers_same(current, desired)
+    end
+
     describe 'start_date' do
       it "considers triggers to be equal when start_date is not specified in the 'desired' trigger" do
         current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}

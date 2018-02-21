@@ -241,6 +241,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   def triggers_same?(current_trigger, desired_trigger)
     return false unless current_trigger['schedule'] == desired_trigger['schedule']
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
+    return false if translate_hash_to_trigger(desired_trigger)['trigger_type'] != translate_hash_to_trigger(current_trigger)['trigger_type']
 
     desired = desired_trigger.dup
     desired['start_date']  ||= current_trigger['start_date']  if current_trigger.has_key?('start_date')
