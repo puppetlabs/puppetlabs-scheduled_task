@@ -260,25 +260,6 @@ module TaskScheduler2
     index
   end
 
-  # Helpers
-
-  # Converts a hash table describing year, month, day etc. into a timelimit string as per
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381850(v=vs.85).aspx
-  # https://en.wikipedia.org/wiki/ISO_8601#Durations
-  # returns PT0S if there is nothing set.
-  def self.hash_to_duration(hash)
-    duration = 'P'
-    duration += hash[:year].to_s + 'Y' unless hash[:year].nil? || hash[:year].zero?
-    duration += hash[:month].to_s + 'M' unless hash[:month].nil? || hash[:month].zero?
-    duration += hash[:day].to_s + 'D' unless hash[:day].nil? || hash[:day].zero?
-    duration += 'T'
-    duration += hash[:hour].to_s + 'H' unless hash[:hour].nil? || hash[:hour].zero?
-    duration += hash[:minute].to_s + 'M' unless hash[:minute].nil? || hash[:minute].zero?
-    duration += hash[:second].to_s + 'S' unless hash[:second].nil? || hash[:second].zero?
-
-    duration == 'PT' ? 'PT0S' : duration
-  end
-
   # Private methods
   def self.task_service
     if @service_object.nil?
