@@ -3,6 +3,7 @@
 # will only surface the features used by the Puppet scheduledtask provider
 #
 require_relative './taskscheduler2'
+require_relative './trigger'
 require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants
 
 module PuppetX
@@ -424,7 +425,7 @@ class TaskScheduler2V1Task
     return 0 unless value.is_a?(String)
     return 0 if value.empty?
 
-    duration = duration_hash_to_seconds(@tasksched.duration_to_hash(value))
+    duration = duration_hash_to_seconds(Trigger.duration_to_hash(value))
 
     duration / 60
    end
