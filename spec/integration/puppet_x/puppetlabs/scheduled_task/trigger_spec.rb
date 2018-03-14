@@ -2,9 +2,7 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
-describe "PuppetX::PuppetLabs::ScheduledTask::Trigger", :if => Puppet.features.microsoft_windows? do
-  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::Trigger }
-
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do
   DAYS_IN_YEAR = 365.2422
   SECONDS_IN_HOUR = 60 * 60
   SECONDS_IN_DAY = 24 * SECONDS_IN_HOUR
@@ -49,10 +47,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::Trigger", :if => Puppet.features.m
     },
   ].freeze
 
-  describe '#duration_to_hash' do
+  describe '#to_hash' do
     EXPECTED_CONVERSIONS.each do |conversion|
       it "should create expected hashes from duration string #{conversion[:duration]}" do
-        expect(subject.duration_to_hash(conversion[:duration])).to eq(conversion[:duration_hash])
+        expect(subject.class.to_hash(conversion[:duration])).to eq(conversion[:duration_hash])
       end
     end
 
@@ -62,44 +60,44 @@ describe "PuppetX::PuppetLabs::ScheduledTask::Trigger", :if => Puppet.features.m
     ]
     .each do |duration|
       it "should return nil when failing to parse duration string #{duration}" do
-        expect(subject.duration_to_hash(duration)).to be_nil
+        expect(subject.class.to_hash(duration)).to be_nil
       end
     end
   end
 
-  describe '#duration_hash_to_seconds' do
+  describe '#hash_to_seconds' do
     it "should return 0 for a nil value" do
-      expect(subject.duration_hash_to_seconds(nil)).to be_zero
+      expect(subject.class.hash_to_seconds(nil)).to be_zero
     end
 
     EXPECTED_CONVERSIONS.each do |conversion|
       rounded_seconds = conversion[:expected_seconds].to_i
       it "should return #{rounded_seconds} seconds given a duration hash" do
-        converted = subject.duration_hash_to_seconds(conversion[:duration_hash])
+        converted = subject.class.hash_to_seconds(conversion[:duration_hash])
         expect(converted).to eq(rounded_seconds)
       end
     end
   end
 
-  describe '#duration_to_minutes' do
+  describe '#to_minutes' do
     it "should return 0 for a nil value" do
-      expect(subject.duration_to_minutes(nil)).to be_zero
+      expect(subject.class.to_minutes(nil)).to be_zero
     end
 
     it "should return 0 for an empty string value" do
-      expect(subject.duration_to_minutes('')).to be_zero
+      expect(subject.class.to_minutes('')).to be_zero
     end
 
     [1234, '0', 999.999].each do |value|
       it "should return 0 for the #{value.class} value: #{value}" do
-        expect(subject.duration_to_minutes(value)).to be_zero
+        expect(subject.class.to_minutes(value)).to be_zero
       end
     end
 
     EXPECTED_CONVERSIONS.each do |conversion|
       expected_minutes = conversion[:expected_seconds].to_i / 60
       it "should return #{expected_minutes} minutes given a duration #{conversion[:duration]}" do
-        converted = subject.duration_to_minutes(conversion[:duration])
+        converted = subject.class.to_minutes(conversion[:duration])
         expect(converted).to eq(expected_minutes)
       end
     end

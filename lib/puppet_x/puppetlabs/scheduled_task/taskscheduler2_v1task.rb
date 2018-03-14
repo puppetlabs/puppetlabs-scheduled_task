@@ -416,8 +416,8 @@ class TaskScheduler2V1Task
       'end_day'                 => trigger_date_part_to_int(v2trigger.EndBoundary, '%d'),
       'start_hour'              => trigger_date_part_to_int(v2trigger.StartBoundary, '%H'),
       'start_minute'            => trigger_date_part_to_int(v2trigger.StartBoundary, '%M'),
-      'minutes_duration'        => Trigger.duration_to_minutes(v2trigger.Repetition.Duration),
-      'minutes_interval'        => Trigger.duration_to_minutes(v2trigger.Repetition.Interval),
+      'minutes_duration'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Duration),
+      'minutes_interval'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Interval),
       'flags'                   => trigger_flags,
       'random_minutes_interval' => trigger_string_to_int(v2trigger.Randomdelay)
     }
