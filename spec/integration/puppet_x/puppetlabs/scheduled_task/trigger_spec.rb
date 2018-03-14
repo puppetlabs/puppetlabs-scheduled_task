@@ -45,8 +45,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::Trigger", :if => Puppet.features.m
         :hour => "12",
         :second => "60",
       },
-      # NOTE: -1 for rounding bug
-      :expected_seconds => (DAYS_IN_YEAR * SECONDS_IN_DAY) + ((DAYS_IN_YEAR / 12 * 2) * SECONDS_IN_DAY) + (30 * SECONDS_IN_DAY) + (60 * 60) + (SECONDS_IN_HOUR * 12) + 60 - 1
+      :expected_seconds => (DAYS_IN_YEAR * SECONDS_IN_DAY) + ((DAYS_IN_YEAR / 12 * 2) * SECONDS_IN_DAY) + (30 * SECONDS_IN_DAY) + (60 * 60) + (SECONDS_IN_HOUR * 12) + 60
     },
   ].freeze
 
