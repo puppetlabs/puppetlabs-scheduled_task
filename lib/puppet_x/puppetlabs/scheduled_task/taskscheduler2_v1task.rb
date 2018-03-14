@@ -406,30 +406,6 @@ class TaskScheduler2V1Task
     value.to_i
   end
 
-  def duration_hash_to_seconds(value)
-    return 0 if value.nil?
-    time = 0
-    # Note - the Year and Month calculations are approximate
-    time = time + value[:year].to_i   * (365.2422 * 24 * 60**2).to_i unless value[:year].nil?
-    time = time + value[:month].to_i  * (365.2422 * 2 * 60**2).to_i  unless value[:month].nil?
-    time = time + value[:day].to_i    * 24 * 60**2                   unless value[:day].nil?
-    time = time + value[:hour].to_i   * 60**2                        unless value[:hour].nil?
-    time = time + value[:minute].to_i * 60                           unless value[:minute].nil?
-    time = time + value[:second].to_i                                unless value[:second].nil?
-
-    time
-  end
-
-  def trigger_duration_to_minutes(value)
-    return 0 if value.nil?
-    return 0 unless value.is_a?(String)
-    return 0 if value.empty?
-
-    duration = duration_hash_to_seconds(Trigger.duration_to_hash(value))
-
-    duration / 60
-   end
-
   def v2trigger_to_v1hash(v2trigger)
     trigger_flags = 0
     trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless v2trigger.Endboundary.empty?
@@ -445,8 +421,8 @@ class TaskScheduler2V1Task
       'end_day'                 => trigger_date_part_to_int(v2trigger.EndBoundary, '%d'),
       'start_hour'              => trigger_date_part_to_int(v2trigger.StartBoundary, '%H'),
       'start_minute'            => trigger_date_part_to_int(v2trigger.StartBoundary, '%M'),
-      'minutes_duration'        => trigger_duration_to_minutes(v2trigger.Repetition.Duration),
-      'minutes_interval'        => trigger_duration_to_minutes(v2trigger.Repetition.Interval),
+      'minutes_duration'        => Trigger.duration_to_minutes(v2trigger.Repetition.Duration),
+      'minutes_interval'        => Trigger.duration_to_minutes(v2trigger.Repetition.Interval),
       'flags'                   => trigger_flags,
       'random_minutes_interval' => trigger_string_to_int(v2trigger.Randomdelay)
     }

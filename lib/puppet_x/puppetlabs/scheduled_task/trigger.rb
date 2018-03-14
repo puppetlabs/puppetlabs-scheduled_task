@@ -28,6 +28,32 @@ module Trigger
   end
   module_function :duration_to_hash
 
+  def duration_hash_to_seconds(value)
+    return 0 if value.nil?
+    time = 0
+    # Note - the Year and Month calculations are approximate
+    time = time + value[:year].to_i   * (365.2422 * 24 * 60**2).to_i unless value[:year].nil?
+    time = time + value[:month].to_i  * (365.2422 * 2 * 60**2).to_i  unless value[:month].nil?
+    time = time + value[:day].to_i    * 24 * 60**2                   unless value[:day].nil?
+    time = time + value[:hour].to_i   * 60**2                        unless value[:hour].nil?
+    time = time + value[:minute].to_i * 60                           unless value[:minute].nil?
+    time = time + value[:second].to_i                                unless value[:second].nil?
+
+    time
+  end
+  module_function :duration_hash_to_seconds
+
+  def duration_to_minutes(value)
+    return 0 if value.nil?
+    return 0 unless value.is_a?(String)
+    return 0 if value.empty?
+
+    duration = duration_hash_to_seconds(duration_to_hash(value))
+
+    duration / 60
+   end
+   module_function :duration_to_minutes
+
 end
 end
 end
