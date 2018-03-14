@@ -27,12 +27,7 @@ class TaskScheduler2V1Task
   def initialize(work_item = nil, trigger = nil)
     @tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
 
-    if work_item
-      if trigger
-        raise TypeError unless trigger.is_a?(Hash)
-        new_work_item(work_item, trigger)
-      end
-    end
+    new_work_item(work_item, trigger) if work_item && trigger
   end
 
   # Returns an array of scheduled task names.
