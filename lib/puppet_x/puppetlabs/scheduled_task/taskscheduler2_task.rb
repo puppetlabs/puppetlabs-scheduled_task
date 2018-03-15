@@ -3,7 +3,7 @@
 # will only surface the features used by the Puppet scheduledtask provider
 #
 require_relative './taskscheduler2'
-require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants
+#require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants
 
 module PuppetX
 module PuppetLabs
@@ -79,7 +79,6 @@ class TaskScheduler2Task
   #
   def save(file = nil)
     task_object = @task.nil? ? @full_task_path : @task
-    # require 'pry'; binding.pry
     @tasksched.save(task_object, @definition, @task_password)
   end
 
@@ -341,7 +340,7 @@ class TaskScheduler2Task
         trigger_object.DaysInterval = trigger_settings['days_interval']
         # Static V2 settings which are not set by the Puppet scheduledtask type
         # TODO: should this be random_minutes_interval
-        trigger_object.Randomdelay = ''
+        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_WEEKLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
@@ -350,7 +349,7 @@ class TaskScheduler2Task
         trigger_object.WeeksInterval = trigger_settings['weeks_interval']
         # Static V2 settings which are not set by the Puppet scheduledtask type
         # TODO: should this be random_minutes_interval
-        trigger_object.Randomdelay = ''
+        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_MONTHLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
@@ -360,7 +359,7 @@ class TaskScheduler2Task
         # Static V2 settings which are not set by the Puppet scheduledtask type
         trigger_object.RunOnLastDayOfMonth = false
         # TODO: should this be random_minutes_interval
-        trigger_object.Randomdelay = ''
+        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_MONTHLYDOW
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
@@ -371,19 +370,20 @@ class TaskScheduler2Task
         # Static V2 settings which are not set by the Puppet scheduledtask type
         trigger_object.RunonLastWeekOfMonth = false
         # TODO: should this be random_minutes_interval
-        trigger_object.Randomdelay = ''
+        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_TIME
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383622(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_TIME)
         # Static V2 settings which are not set by the Puppet scheduledtask type
         # TODO: should this be random_minutes_interval
-        trigger_object.Randomdelay = ''
+        # trigger_object.Randomdelay = ''
       else
         raise Error.new(_("Unknown V1 trigger type %{type}") % { type: v1trigger['trigger_type'] })
     end
 
     # Values for all Trigger Types
+    trigger_object.RandomDelay = "PT#{v1trigger['random_minutes_interval']}M" unless v1trigger['random_minutes_interval'].nil?   || v1trigger['random_minutes_interval'].nil?
     trigger_object.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
     trigger_object.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
     trigger_object.StartBoundary = normalize_datetime(v1trigger['start_year'],
