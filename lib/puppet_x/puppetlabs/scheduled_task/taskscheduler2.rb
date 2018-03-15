@@ -61,6 +61,14 @@ module TaskScheduler2
   TASK_LOGON_SERVICE_ACCOUNT                = 5
   TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
 
+  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383616(v=vs.85).aspx
+  TASK_CONSOLE_CONNECT     = 1
+  TASK_CONSOLE_DISCONNECT  = 2
+  TASK_REMOTE_CONNECT      = 3
+  TASK_REMOTE_DISCONNECT   = 4
+  TASK_SESSION_LOCK        = 7
+  TASK_SESSION_UNLOCK      = 8
+
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380747(v=vs.85).aspx
   TASK_RUNLEVEL_LUA     = 0
   TASK_RUNLEVEL_HIGHEST = 1
