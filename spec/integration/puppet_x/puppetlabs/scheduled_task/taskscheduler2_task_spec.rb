@@ -1,9 +1,7 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
 require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'  if Puppet.features.microsoft_windows?
-# require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
