@@ -83,6 +83,15 @@ Puppet::Type.newtype(:scheduled_task) do
       to determine if a scheduled task is in sync or not."
   end
 
+  newproperty(:compatibility) do
+    desc "The compatibility level associated with the task. May currently only
+      be set to 1 for compatibility with tasks on a Windows XP or Windows Server
+      2003 computer."
+
+    newvalue(1)
+    defaultto(1)
+  end
+
   newproperty(:trigger, :array_matching => :all) do
     desc <<-'EOT'
       One or more triggers defining when the task should run. A single trigger is
