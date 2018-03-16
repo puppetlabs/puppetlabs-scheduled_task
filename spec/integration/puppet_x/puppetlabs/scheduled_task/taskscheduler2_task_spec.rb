@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
+require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'  if Puppet.features.microsoft_windows?
 # require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
@@ -88,8 +88,8 @@ end
 
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
-describe PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task, :if => Puppet.features.microsoft_windows? do
-
+describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet.features.microsoft_windows? do
+  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new() }
   triggers.each do |trigger|
     context "should be able to create a #{trigger['trigger_type']} trigger" do
       before(:each) do
