@@ -36,13 +36,11 @@ class TaskScheduler2Task
 
   # Returns an array of V2 scheduled task names.
   #
-  # Emulates V1 task interface by appending the '.job' suffix
-  #
   def enum
     @tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2]).map do |item|
-        @tasksched.task_name_from_task_path(item) + '.job'
+        @tasksched.task_name_from_task_path(item)
     end
   end
   alias :tasks :enum
@@ -51,10 +49,9 @@ class TaskScheduler2Task
   #
   def activate(task_name)
     raise TypeError unless task_name.is_a?(String)
-    normal_task_name = normalize_task_name(task_name)
-    raise Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless exists?(normal_task_name)
+    raise Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: task_name }) unless exists?(task_name)
 
-    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normal_task_name
+    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + task_name
 
     @task = @tasksched.task(full_taskname)
     @full_task_path = full_taskname
@@ -67,7 +64,7 @@ class TaskScheduler2Task
   # Delete the specified task name.
   #
   def delete(task_name)
-    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
+    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + task_name
     @tasksched.delete(full_taskname)
   end
 
@@ -165,7 +162,7 @@ class TaskScheduler2Task
   def new_work_item(task_name, task_trigger)
     raise TypeError unless task_trigger.is_a?(Hash)
 
-    @full_task_path = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
+    @full_task_path = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + task_name
     @definition = @tasksched.new_task_definition
     @task = nil
     @task_password = nil
@@ -211,8 +208,8 @@ class TaskScheduler2Task
   # Sets the trigger for the currently active task.
   #
   # Note - This method name is a mis-nomer. It's actually appending a newly created trigger to the trigger collection.
-  def trigger=(v1trigger)
-    append_trigger(v1trigger)
+  def trigger=(trigger_hash)
+    append_trigger(trigger_hash)
   end
 
   # # Returns the flags (integer) that modify the behavior of the work item. You
@@ -233,19 +230,11 @@ class TaskScheduler2Task
   # Returns whether or not the scheduled task exists.
   def exists?(job_name)
     # task name comparison is case insensitive
-    enum.any? { |name| name.casecmp(job_name + '.job') == 0 }
+    enum.any? { |name| name.casecmp(job_name) == 0 }
   end
 
   private
   # :stopdoc:
-
-  def normalize_task_name(task_name)
-    # The Puppet provider and some other instances may pass a '.job' suffix as per the V1 API
-    # This is not needed for the V2 API so we just remove it
-    task_name = task_name.slice(0,task_name.length - 4) if task_name.end_with?('.job')
-
-    task_name
-  end
 
   # Find the first TASK_ACTION_EXEC action
   def default_action(create_if_missing: false)
@@ -326,40 +315,30 @@ class TaskScheduler2Task
     DateTime.new(year, month, day, hour, minute, 0).strftime('%FT%T')
   end
 
-  def append_trigger(v1trigger)
-    raise TypeError unless v1trigger.is_a?(Hash)
-    v1trigger = transform_and_validate(v1trigger)
+  def append_trigger(trigger_hash)
+    raise TypeError unless trigger_hash.is_a?(Hash)
+    trigger_hash = transform_and_validate(trigger_hash)
 
     trigger_object = nil
-    trigger_settings = v1trigger['type']
+    trigger_settings = trigger_hash['type']
 
-    case v1trigger['trigger_type']
+    case trigger_hash['trigger_type']
       when :TASK_TRIGGER_DAILY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_DAILY)
         trigger_object.DaysInterval = trigger_settings['days_interval']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        # TODO: should this be random_minutes_interval
-        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_WEEKLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_WEEKLY)
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.WeeksInterval = trigger_settings['weeks_interval']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        # TODO: should this be random_minutes_interval
-        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_MONTHLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLY)
         trigger_object.DaysOfMonth = trigger_settings['days']
         trigger_object.Monthsofyear = trigger_settings['months']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.RunOnLastDayOfMonth = false
-        # TODO: should this be random_minutes_interval
-        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_MONTHLYDOW
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
@@ -367,35 +346,29 @@ class TaskScheduler2Task
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.Monthsofyear = trigger_settings['months']
         trigger_object.Weeksofmonth = trigger_settings['weeks']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.RunonLastWeekOfMonth = false
-        # TODO: should this be random_minutes_interval
-        # trigger_object.Randomdelay = ''
 
       when :TASK_TRIGGER_TIME
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383622(v=vs.85).aspx
         trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_TIME)
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        # TODO: should this be random_minutes_interval
-        # trigger_object.Randomdelay = ''
+      
       else
-        raise Error.new(_("Unknown V1 trigger type %{type}") % { type: v1trigger['trigger_type'] })
+        raise Error.new(_("Unknown trigger type %{type}") % { type: trigger_hash['trigger_type'] })
     end
 
     # Values for all Trigger Types
-    trigger_object.RandomDelay = "PT#{v1trigger['random_minutes_interval']}M" unless v1trigger['random_minutes_interval'].nil?   || v1trigger['random_minutes_interval'].nil?
-    trigger_object.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
-    trigger_object.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
-    trigger_object.StartBoundary = normalize_datetime(v1trigger['start_year'],
-                                                      v1trigger['start_month'],
-                                                      v1trigger['start_day'],
-                                                      v1trigger['start_hour'],
-                                                      v1trigger['start_minute']
+    trigger_object.RandomDelay = "PT#{trigger_hash['random_minutes_interval']}M" unless trigger_hash['random_minutes_interval'].nil?   || trigger_hash['random_minutes_interval'].nil?
+    trigger_object.Repetition.Interval = "PT#{trigger_hash['minutes_interval']}M" unless trigger_hash['minutes_interval'].nil? || trigger_hash['minutes_interval'].zero?
+    trigger_object.Repetition.Duration = "PT#{trigger_hash['minutes_duration']}M" unless trigger_hash['minutes_duration'].nil? || trigger_hash['minutes_duration'].zero?
+    trigger_object.StartBoundary = normalize_datetime(trigger_hash['start_year'],
+                                                      trigger_hash['start_month'],
+                                                      trigger_hash['start_day'],
+                                                      trigger_hash['start_hour'],
+                                                      trigger_hash['start_minute']
     )
     # Static V2 settings which are not set by the Puppet scheduledtask type
     trigger_object.Repetition.StopAtDurationEnd = false
 
-    v1trigger
+    trigger_hash
   end
 
   def trigger_date_part_to_int(value, datepart)
