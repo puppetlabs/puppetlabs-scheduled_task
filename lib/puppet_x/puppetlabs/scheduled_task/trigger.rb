@@ -52,6 +52,17 @@ module Trigger
       duration / 60
     end
   end
+
+  def string_to_int(value)
+    return 0 if value.nil?
+    return value if value.is_a?(Integer)
+    return 0 unless value.is_a?(String)
+    return 0 if value.empty?
+
+    value.to_i
+  end
+  module_function :string_to_int
+
 end
 end
 end

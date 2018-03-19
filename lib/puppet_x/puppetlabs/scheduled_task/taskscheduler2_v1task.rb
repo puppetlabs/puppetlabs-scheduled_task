@@ -392,15 +392,6 @@ class TaskScheduler2V1Task
     DateTime.parse(value).strftime(datepart).to_i
   end
 
-  def trigger_string_to_int(value)
-    return 0 if value.nil?
-    return value if value.is_a?(Integer)
-    return 0 unless value.is_a?(String)
-    return 0 if value.empty?
-
-    value.to_i
-  end
-
   def v2trigger_to_v1hash(v2trigger)
     trigger_flags = 0
     trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless v2trigger.Endboundary.empty?
@@ -419,7 +410,7 @@ class TaskScheduler2V1Task
       'minutes_duration'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Duration),
       'minutes_interval'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Interval),
       'flags'                   => trigger_flags,
-      'random_minutes_interval' => trigger_string_to_int(v2trigger.Randomdelay)
+      'random_minutes_interval' => Trigger.string_to_int(v2trigger.Randomdelay)
     }
 
     case v2trigger.ole_type.to_s
@@ -429,26 +420,26 @@ class TaskScheduler2V1Task
       when 'IDailyTrigger'
         v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
         v1trigger['type'] = {
-          'days_interval' => trigger_string_to_int(v2trigger.DaysInterval)
+          'days_interval' => Trigger.string_to_int(v2trigger.DaysInterval)
         }
       when 'IWeeklyTrigger'
         v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
         v1trigger['type'] = {
-          'weeks_interval' => trigger_string_to_int(v2trigger.WeeksInterval),
-          'days_of_week'   => trigger_string_to_int(v2trigger.DaysOfWeek)
+          'weeks_interval' => Trigger.string_to_int(v2trigger.WeeksInterval),
+          'days_of_week'   => Trigger.string_to_int(v2trigger.DaysOfWeek)
         }
       when 'IMonthlyTrigger'
         v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
         v1trigger['type'] = {
-          'days'   => trigger_string_to_int(v2trigger.DaysOfMonth),
-          'months' => trigger_string_to_int(v2trigger.MonthsOfYear)
+          'days'   => Trigger.string_to_int(v2trigger.DaysOfMonth),
+          'months' => Trigger.string_to_int(v2trigger.MonthsOfYear)
         }
       when 'IMonthlyDOWTrigger'
         v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDOW
         v1trigger['type'] = {
-          'weeks'        => trigger_string_to_int(v2trigger.WeeksOfMonth),
-          'days_of_week' => trigger_string_to_int(v2trigger.DaysOfWeek),
-          'months'       => trigger_string_to_int(v2trigger.MonthsOfYear)
+          'weeks'        => Trigger.string_to_int(v2trigger.WeeksOfMonth),
+          'days_of_week' => Trigger.string_to_int(v2trigger.DaysOfWeek),
+          'months'       => Trigger.string_to_int(v2trigger.MonthsOfYear)
         }
       else
         raise Error.new(_("Unknown trigger type %{type}") % { type: v2trigger.ole_type.to_s })

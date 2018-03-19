@@ -2,6 +2,25 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
+  describe "#string_to_int" do
+    [nil, '', :foo, 1.2, [], {}].each do |value|
+      it "should return 0 given value '#{value}' (#{value.class})" do
+        expect(subject.string_to_int(value)).to be_zero
+      end
+    end
+
+    [
+      { :input => 0, :expected => 0 },
+      { :input => 100, :expected => 100 }
+    ].each do |value|
+      it "should coerce numeric input #{value[:input]} to #{value[:expected]}" do
+        expect(subject.string_to_int(value[:input])).to eq(value[:expected])
+      end
+    end
+  end
+end
+
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do
   DAYS_IN_YEAR = 365.2422
   SECONDS_IN_HOUR = 60 * 60
