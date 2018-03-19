@@ -55,9 +55,8 @@ module Trigger
 
   def string_to_int(value)
     return 0 if value.nil?
-    return value if value.is_a?(Integer)
-    return 0 unless value.is_a?(String)
-    return 0 if value.empty?
+    return value if value.is_a?(Numeric)
+    raise ArgumentError.new('value must be a String') unless value.is_a?(String)
 
     value.to_i
   end

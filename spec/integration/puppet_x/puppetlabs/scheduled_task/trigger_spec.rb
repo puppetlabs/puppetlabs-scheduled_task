@@ -4,7 +4,7 @@ require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
   describe "#string_to_int" do
-    [nil, '', :foo, 1.2, [], {}].each do |value|
+    [nil, ''].each do |value|
       it "should return 0 given value '#{value}' (#{value.class})" do
         expect(subject.string_to_int(value)).to be_zero
       end
@@ -12,10 +12,17 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     [
       { :input => 0, :expected => 0 },
+      { :input => 1.2, :expected => 1.2} ,
       { :input => 100, :expected => 100 }
     ].each do |value|
       it "should coerce numeric input #{value[:input]} to #{value[:expected]}" do
         expect(subject.string_to_int(value[:input])).to eq(value[:expected])
+      end
+    end
+
+    [:foo, [], {}].each do |value|
+      it "should raise ArgumentError given value '#{value}' (#{value.class})" do
+        expect { subject.string_to_int(value) }.to raise_error(ArgumentError)
       end
     end
   end
