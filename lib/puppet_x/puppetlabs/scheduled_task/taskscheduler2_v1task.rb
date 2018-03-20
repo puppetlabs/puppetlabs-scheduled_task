@@ -265,37 +265,22 @@ class TaskScheduler2V1Task
       when :TASK_TIME_TRIGGER_DAILY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
         trigger_object.DaysInterval = trigger_settings['days_interval']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.Randomdelay = 0
 
       when :TASK_TIME_TRIGGER_WEEKLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.WeeksInterval = trigger_settings['weeks_interval']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.Randomdelay = 0
 
       when :TASK_TIME_TRIGGER_MONTHLYDATE
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
         trigger_object.DaysOfMonth = trigger_settings['days']
         trigger_object.Monthsofyear = trigger_settings['months']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.RunOnLastDayOfMonth = false
-        trigger_object.Randomdelay = 0
 
       when :TASK_TIME_TRIGGER_MONTHLYDOW
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.Monthsofyear = trigger_settings['months']
         trigger_object.Weeksofmonth = trigger_settings['weeks']
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.RunonLastWeekOfMonth = false
-        trigger_object.Randomdelay = 0
-
-      when :TASK_TIME_TRIGGER_ONCE
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383622(v=vs.85).aspx
-        # Static V2 settings which are not set by the Puppet scheduledtask type
-        trigger_object.Randomdelay = 0
     end
 
     # Values for all Trigger Types
@@ -307,8 +292,6 @@ class TaskScheduler2V1Task
                                                             v1trigger['start_hour'],
                                                             v1trigger['start_minute']
     )
-    # Static V2 settings which are not set by the Puppet scheduledtask type
-    trigger_object.Repetition.StopAtDurationEnd = false
 
     v1trigger
   end
