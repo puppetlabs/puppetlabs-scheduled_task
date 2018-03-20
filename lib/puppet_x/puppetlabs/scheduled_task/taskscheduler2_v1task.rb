@@ -254,41 +254,8 @@ class TaskScheduler2V1Task
     action
   end
 
-  # Private method that validates keys, and converts all keys to lowercase
-  # strings.
-  #
-  def transform_and_validate(hash)
-    new_hash = {}
-
-    hash.each do |key, value|
-      key = key.to_s.downcase
-      if key == 'type'
-        new_type_hash = {}
-        raise ArgumentError unless value.is_a?(Hash)
-        value.each{ |subkey, subvalue|
-          subkey = subkey.to_s.downcase
-          if Trigger::V1::ValidTypeKeys.include?(subkey)
-            new_type_hash[subkey] = subvalue
-          else
-            raise ArgumentError, "Invalid type key '#{subkey}'"
-          end
-        }
-        new_hash[key] = new_type_hash
-      else
-        if Trigger::V1::ValidKeys.include?(key)
-          new_hash[key] = value
-        else
-          raise ArgumentError, "Invalid key '#{key}'"
-        end
-      end
-    end
-
-    new_hash
-  end
-
   def append_trigger(v1trigger)
-    raise TypeError unless v1trigger.is_a?(Hash)
-    v1trigger = transform_and_validate(v1trigger)
+    v1trigger = Trigger::V1.transform_and_validate(v1trigger)
 
     trigger_object = nil
     trigger_settings = v1trigger['type']

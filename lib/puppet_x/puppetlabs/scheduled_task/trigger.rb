@@ -106,6 +106,39 @@ module Trigger
         'weeks'
     ]
 
+    # canonicalize given trigger hash
+    # throws errors if hash structure is invalid
+    # @returns original object with downcased keys
+    def self.transform_and_validate(hash)
+      raise TypeError unless hash.is_a?(Hash)
+      new_hash = {}
+
+      hash.each do |key, value|
+        key = key.to_s.downcase
+        if key == 'type'
+          new_type_hash = {}
+          raise ArgumentError unless value.is_a?(Hash)
+          value.each{ |subkey, subvalue|
+            subkey = subkey.to_s.downcase
+            if ValidTypeKeys.include?(subkey)
+              new_type_hash[subkey] = subvalue
+            else
+              raise ArgumentError, "Invalid type key '#{subkey}'"
+            end
+          }
+          new_hash[key] = new_type_hash
+        else
+          if ValidKeys.include?(key)
+            new_hash[key] = value
+          else
+            raise ArgumentError, "Invalid key '#{key}'"
+          end
+        end
+      end
+
+      new_hash
+    end
+
     # iTrigger is a COM ITrigger instance
     def self.from_iTrigger(iTrigger)
       require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants

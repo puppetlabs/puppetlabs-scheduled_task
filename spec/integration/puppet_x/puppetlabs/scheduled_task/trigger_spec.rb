@@ -63,6 +63,84 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
   end
 end
 
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
+  describe "#transform_and_validate" do
+    [
+      {
+        :input =>
+        {
+          'END_day' => nil,
+          'end_Month' => nil,
+          'End_year' => nil,
+          'FLAGS' => nil,
+          'minutes_duration' => nil,
+          'MINutes_intERVAL' => nil,
+          'Random_Minutes_Interval' => nil,
+          'Start_day' => nil,
+          'START_hour' => nil,
+          'start_Minute' => nil,
+          'start_YEAR' => nil,
+          'Trigger_Type' => nil,
+          'TyPe' =>
+          {
+            'days_Interval' => nil,
+            'Weeks_interval' => nil,
+            'DAYS_of_Week' => nil,
+            'MONTHS' => nil,
+            'daYS' => nil,
+            'weeks' => nil
+          }
+        },
+        # all keys are lower
+        :expected =>
+        {
+          'end_day' => nil,
+          'end_month' => nil,
+          'end_year' => nil,
+          'flags' => nil,
+          'minutes_duration' => nil,
+          'minutes_interval' => nil,
+          'random_minutes_interval' => nil,
+          'start_day' => nil,
+          'start_hour' => nil,
+          'start_minute' => nil,
+          'start_year' => nil,
+          'trigger_type' => nil,
+          'type' =>
+          {
+            'days_interval' => nil,
+            'weeks_interval' => nil,
+            'days_of_week' => nil,
+            'months' => nil,
+            'days' => nil,
+            'weeks' => nil
+          }
+        }
+      },
+      {
+        :input => { 'type' => { 'DAYS_Interval' => nil, } },
+        :expected => { 'type' => { 'days_interval' => nil, } },
+      },
+    ].each do |value|
+      it "should return downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
+        expect(subject.class.transform_and_validate(value[:input])).to eq(value[:expected])
+      end
+    end
+
+    [
+      { :foo => nil, 'type' => {} },
+      { [] => nil },
+      { 'type' => [] },
+      { 'type' => 1 },
+    ].each do |value|
+      it "should fail with ArgumentError given a hash with invalid keys #{value}" do
+        expect { subject.class.transform_and_validate(value) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+end
+
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do
   DAYS_IN_YEAR = 365.2422
   SECONDS_IN_HOUR = 60 * 60
