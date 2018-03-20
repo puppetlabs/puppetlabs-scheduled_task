@@ -26,6 +26,27 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       end
     end
   end
+
+  describe "#date_part_to_int" do
+    [nil, '', :foo, [], {}].each do |value|
+      it "should return 0 given value '#{value}' (#{value.class})" do
+        expect(subject.date_part_to_int(value, '')).to be_zero
+      end
+    end
+
+    [
+      { :input => ['2018-01-02T03:04:05', '%Y'], :expected => 2018 },
+      { :input => ['2018-01-02T03:04:05', '%m'], :expected => 1 },
+      { :input => ['2018-01-02T03:04:05', '%d'], :expected => 2 },
+      { :input => ['2018-01-02T03:04:05', '%H'], :expected => 3 },
+      { :input => ['2018-01-02T03:04:05', '%M'], :expected => 4 },
+      { :input => ['2018-01-02T03:04:05', '%S'], :expected => 5 },
+    ].each do |value|
+      it "should return numeric input #{value[:expected]} for date string #{value[:input]}" do
+        expect(subject.date_part_to_int(*value[:input])).to eq(value[:expected])
+      end
+    end
+  end
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do

@@ -384,14 +384,6 @@ class TaskScheduler2V1Task
     v1trigger
   end
 
-  def trigger_date_part_to_int(value, datepart)
-    return 0 if value.nil?
-    return 0 unless value.is_a?(String)
-    return 0 if value.empty?
-
-    DateTime.parse(value).strftime(datepart).to_i
-  end
-
   def v2trigger_to_v1hash(v2trigger)
     trigger_flags = 0
     trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless v2trigger.Endboundary.empty?
@@ -399,14 +391,14 @@ class TaskScheduler2V1Task
     trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED unless v2trigger.Enabled
 
     v1trigger = {
-      'start_year'              => trigger_date_part_to_int(v2trigger.StartBoundary, '%Y'),
-      'start_month'             => trigger_date_part_to_int(v2trigger.StartBoundary, '%m'),
-      'start_day'               => trigger_date_part_to_int(v2trigger.StartBoundary, '%d'),
-      'end_year'                => trigger_date_part_to_int(v2trigger.EndBoundary, '%Y'),
-      'end_month'               => trigger_date_part_to_int(v2trigger.EndBoundary, '%m'),
-      'end_day'                 => trigger_date_part_to_int(v2trigger.EndBoundary, '%d'),
-      'start_hour'              => trigger_date_part_to_int(v2trigger.StartBoundary, '%H'),
-      'start_minute'            => trigger_date_part_to_int(v2trigger.StartBoundary, '%M'),
+      'start_year'              => Trigger.date_part_to_int(v2trigger.StartBoundary, '%Y'),
+      'start_month'             => Trigger.date_part_to_int(v2trigger.StartBoundary, '%m'),
+      'start_day'               => Trigger.date_part_to_int(v2trigger.StartBoundary, '%d'),
+      'end_year'                => Trigger.date_part_to_int(v2trigger.EndBoundary, '%Y'),
+      'end_month'               => Trigger.date_part_to_int(v2trigger.EndBoundary, '%m'),
+      'end_day'                 => Trigger.date_part_to_int(v2trigger.EndBoundary, '%d'),
+      'start_hour'              => Trigger.date_part_to_int(v2trigger.StartBoundary, '%H'),
+      'start_minute'            => Trigger.date_part_to_int(v2trigger.StartBoundary, '%M'),
       'minutes_duration'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Duration),
       'minutes_interval'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Interval),
       'flags'                   => trigger_flags,
