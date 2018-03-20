@@ -64,7 +64,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
-  describe "#transform_and_validate" do
+  describe "#canonicalize_and_validate" do
     [
       {
         :input =>
@@ -123,7 +123,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       },
     ].each do |value|
       it "should return downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
-        expect(subject.class.transform_and_validate(value[:input])).to eq(value[:expected])
+        expect(subject.class.canonicalize_and_validate(value[:input])).to eq(value[:expected])
       end
     end
 
@@ -135,7 +135,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       { 'type' => 1 },
     ].each do |value|
       it "should fail with ArgumentError given a hash with invalid keys #{value}" do
-        expect { subject.class.transform_and_validate(value) }.to raise_error(ArgumentError)
+        expect { subject.class.canonicalize_and_validate(value) }.to raise_error(ArgumentError)
       end
     end
   end

@@ -109,9 +109,9 @@ module Trigger
     # canonicalize given trigger hash
     # throws errors if hash structure is invalid
     # @returns original object with downcased keys
-    def self.transform_and_validate(hash)
+    def self.canonicalize_and_validate(hash)
       raise TypeError unless hash.is_a?(Hash)
-      new_hash = {}
+      hash = downcase_keys(hash)
 
       invalid_keys = hash.keys - ValidKeys
       raise ArgumentError.new("Invalid trigger keys #{invalid_keys}") unless invalid_keys.empty?

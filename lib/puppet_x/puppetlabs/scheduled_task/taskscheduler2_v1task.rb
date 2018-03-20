@@ -255,7 +255,7 @@ class TaskScheduler2V1Task
   end
 
   def append_trigger(v1trigger)
-    v1trigger = Trigger::V1.transform_and_validate(v1trigger)
+    v1trigger = Trigger::V1.canonicalize_and_validate(v1trigger)
 
     trigger_object = nil
     trigger_settings = v1trigger['type']
