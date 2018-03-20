@@ -49,6 +49,18 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       end
     end
   end
+
+  describe "#normalize_datetime" do
+    [
+      # year, month, day, hour, minute
+      { :input => [2018, 3, 20, 8, 57], :expected => '2018-03-20T08:57:00' },
+      { :input => [1899, 12, 30, 0, 0], :expected => '1899-12-30T00:00:00' },
+    ].each do |value|
+      it "should return formatted date string #{value[:expected]} for date components #{value[:input]}" do
+        expect(subject.normalize_datetime(*value[:input])).to eq(value[:expected])
+      end
+    end
+  end
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do

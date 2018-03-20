@@ -314,10 +314,6 @@ class TaskScheduler2V1Task
     new_hash
   end
 
-  def normalize_datetime(year, month, day, hour, minute)
-    DateTime.new(year, month, day, hour, minute, 0).strftime('%FT%T')
-  end
-
   def append_trigger(v1trigger)
     raise TypeError unless v1trigger.is_a?(Hash)
     v1trigger = transform_and_validate(v1trigger)
@@ -372,11 +368,11 @@ class TaskScheduler2V1Task
     # Values for all Trigger Types
     trigger_object.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
     trigger_object.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
-    trigger_object.StartBoundary = normalize_datetime(v1trigger['start_year'],
-                                                      v1trigger['start_month'],
-                                                      v1trigger['start_day'],
-                                                      v1trigger['start_hour'],
-                                                      v1trigger['start_minute']
+    trigger_object.StartBoundary = Trigger.normalize_datetime(v1trigger['start_year'],
+                                                              v1trigger['start_month'],
+                                                              v1trigger['start_day'],
+                                                              v1trigger['start_hour'],
+                                                              v1trigger['start_minute']
     )
     # Static V2 settings which are not set by the Puppet scheduledtask type
     trigger_object.Repetition.StopAtDurationEnd = false

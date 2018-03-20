@@ -71,6 +71,11 @@ module Trigger
   end
   module_function :string_to_date
 
+  def normalize_datetime(year, month, day, hour, minute)
+    DateTime.new(year, month, day, hour, minute, 0).strftime('%FT%T')
+  end
+  module_function :normalize_datetime
+
 end
 end
 end
