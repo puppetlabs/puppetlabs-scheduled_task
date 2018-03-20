@@ -76,6 +76,71 @@ module Trigger
   end
   module_function :iso8601_datetime
 
+  # TASK_TRIGGER structure approximated as Ruby hash
+  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
+  class V1
+    # v2trigger is a COM trigger instance
+    def self.from_v2trigger(v2trigger)
+      require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants
+
+      trigger_flags = 0
+      trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless v2trigger.Endboundary.empty?
+      # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
+      trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED unless v2trigger.Enabled
+
+      start_boundary = Trigger.string_to_date(v2trigger.StartBoundary)
+      end_boundary = Trigger.string_to_date(v2trigger.EndBoundary)
+
+      v1trigger = {
+        'start_year'              => start_boundary.year,
+        'start_month'             => start_boundary.month,
+        'start_day'               => start_boundary.day,
+        'end_year'                => end_boundary ? end_boundary.year : 0,
+        'end_month'               => end_boundary ? end_boundary.month : 0,
+        'end_day'                 => end_boundary ? end_boundary.day : 0,
+        'start_hour'              => start_boundary.hour,
+        'start_minute'            => start_boundary.minute,
+        'minutes_duration'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Duration),
+        'minutes_interval'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Interval),
+        'flags'                   => trigger_flags,
+        'random_minutes_interval' => Trigger.string_to_int(v2trigger.Randomdelay)
+      }
+
+      case v2trigger.ole_type.to_s
+        when 'ITimeTrigger'
+          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
+          v1trigger['type'] = { 'once' => nil }
+        when 'IDailyTrigger'
+          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
+          v1trigger['type'] = {
+            'days_interval' => Trigger.string_to_int(v2trigger.DaysInterval)
+          }
+        when 'IWeeklyTrigger'
+          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
+          v1trigger['type'] = {
+            'weeks_interval' => Trigger.string_to_int(v2trigger.WeeksInterval),
+            'days_of_week'   => Trigger.string_to_int(v2trigger.DaysOfWeek)
+          }
+        when 'IMonthlyTrigger'
+          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
+          v1trigger['type'] = {
+            'days'   => Trigger.string_to_int(v2trigger.DaysOfMonth),
+            'months' => Trigger.string_to_int(v2trigger.MonthsOfYear)
+          }
+        when 'IMonthlyDOWTrigger'
+          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDOW
+          v1trigger['type'] = {
+            'weeks'        => Trigger.string_to_int(v2trigger.WeeksOfMonth),
+            'days_of_week' => Trigger.string_to_int(v2trigger.DaysOfWeek),
+            'months'       => Trigger.string_to_int(v2trigger.MonthsOfYear)
+          }
+        else
+          raise Error.new(_("Unknown trigger type %{type}") % { type: v2trigger.ole_type.to_s })
+      end
+
+      v1trigger
+    end
+  end
 end
 end
 end
