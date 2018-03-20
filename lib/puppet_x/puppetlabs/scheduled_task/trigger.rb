@@ -198,6 +198,22 @@ module Trigger
     end
 
   end
+
+  class V2
+    V1_TYPE_MAP =
+    {
+      :TASK_TIME_TRIGGER_DAILY => TaskScheduler2::TASK_TRIGGER_DAILY,
+      :TASK_TIME_TRIGGER_WEEKLY => TaskScheduler2::TASK_TRIGGER_WEEKLY,
+      :TASK_TIME_TRIGGER_MONTHLYDATE => TaskScheduler2::TASK_TRIGGER_MONTHLY,
+      :TASK_TIME_TRIGGER_MONTHLYDOW => TaskScheduler2::TASK_TRIGGER_MONTHLYDOW,
+      :TASK_TIME_TRIGGER_ONCE => TaskScheduler2::TASK_TRIGGER_TIME,
+    }.freeze
+
+    def self.type_from_v1type(v1type)
+      raise ArgumentError.new(_("Unknown V1 trigger Type %{type}") % { type: v1type }) unless V1_TYPE_MAP.keys.include?(v1type)
+      V1_TYPE_MAP[v1type]
+    end
+  end
 end
 end
 end
