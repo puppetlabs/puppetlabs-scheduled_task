@@ -254,33 +254,6 @@ class TaskScheduler2V1Task
     action
   end
 
-  # Used for validating a trigger hash from Puppet
-  ValidTriggerKeys = [
-    'end_day',
-    'end_month',
-    'end_year',
-    'flags',
-    'minutes_duration',
-    'minutes_interval',
-    'random_minutes_interval',
-    'start_day',
-    'start_hour',
-    'start_minute',
-    'start_month',
-    'start_year',
-    'trigger_type',
-    'type'
-  ]
-
-  ValidTypeKeys = [
-      'days_interval',
-      'weeks_interval',
-      'days_of_week',
-      'months',
-      'days',
-      'weeks'
-  ]
-
   # Private method that validates keys, and converts all keys to lowercase
   # strings.
   #
@@ -294,7 +267,7 @@ class TaskScheduler2V1Task
         raise ArgumentError unless value.is_a?(Hash)
         value.each{ |subkey, subvalue|
           subkey = subkey.to_s.downcase
-          if ValidTypeKeys.include?(subkey)
+          if Trigger::V1::ValidTypeKeys.include?(subkey)
             new_type_hash[subkey] = subvalue
           else
             raise ArgumentError, "Invalid type key '#{subkey}'"
@@ -302,7 +275,7 @@ class TaskScheduler2V1Task
         }
         new_hash[key] = new_type_hash
       else
-        if ValidTriggerKeys.include?(key)
+        if Trigger::V1::ValidKeys.include?(key)
           new_hash[key] = value
         else
           raise ArgumentError, "Invalid key '#{key}'"

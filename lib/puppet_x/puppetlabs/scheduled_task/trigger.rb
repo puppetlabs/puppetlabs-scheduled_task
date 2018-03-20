@@ -79,6 +79,33 @@ module Trigger
   # TASK_TRIGGER structure approximated as Ruby hash
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1
+    # Used for validating a trigger hash from Puppet
+    ValidKeys = [
+      'end_day',
+      'end_month',
+      'end_year',
+      'flags',
+      'minutes_duration',
+      'minutes_interval',
+      'random_minutes_interval',
+      'start_day',
+      'start_hour',
+      'start_minute',
+      'start_month',
+      'start_year',
+      'trigger_type',
+      'type'
+    ]
+
+    ValidTypeKeys = [
+        'days_interval',
+        'weeks_interval',
+        'days_of_week',
+        'months',
+        'days',
+        'weeks'
+    ]
+
     # iTrigger is a COM ITrigger instance
     def self.from_iTrigger(iTrigger)
       require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants
