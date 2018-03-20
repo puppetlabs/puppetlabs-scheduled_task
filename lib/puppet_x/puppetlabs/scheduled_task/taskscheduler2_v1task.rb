@@ -263,14 +263,14 @@ class TaskScheduler2V1Task
     case v1trigger['trigger_type']
       when :TASK_TIME_TRIGGER_DAILY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
-        trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_DAILY)
+        trigger_object = @definition.Triggers.Create(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_DAILY)
         trigger_object.DaysInterval = trigger_settings['days_interval']
         # Static V2 settings which are not set by the Puppet scheduledtask type
         trigger_object.Randomdelay = 0
 
       when :TASK_TIME_TRIGGER_WEEKLY
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
-        trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_WEEKLY)
+        trigger_object = @definition.Triggers.Create(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_WEEKLY)
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.WeeksInterval = trigger_settings['weeks_interval']
         # Static V2 settings which are not set by the Puppet scheduledtask type
@@ -278,7 +278,7 @@ class TaskScheduler2V1Task
 
       when :TASK_TIME_TRIGGER_MONTHLYDATE
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
-        trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLY)
+        trigger_object = @definition.Triggers.Create(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLY)
         trigger_object.DaysOfMonth = trigger_settings['days']
         trigger_object.Monthsofyear = trigger_settings['months']
         # Static V2 settings which are not set by the Puppet scheduledtask type
@@ -287,7 +287,7 @@ class TaskScheduler2V1Task
 
       when :TASK_TIME_TRIGGER_MONTHLYDOW
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
-        trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLYDOW)
+        trigger_object = @definition.Triggers.Create(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_MONTHLYDOW)
         trigger_object.DaysOfWeek = trigger_settings['days_of_week']
         trigger_object.Monthsofyear = trigger_settings['months']
         trigger_object.Weeksofmonth = trigger_settings['weeks']
@@ -297,7 +297,7 @@ class TaskScheduler2V1Task
 
       when :TASK_TIME_TRIGGER_ONCE
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383622(v=vs.85).aspx
-        trigger_object = @tasksched.append_new_trigger(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_TIME)
+        trigger_object = @definition.Triggers.Create(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_TIME)
         # Static V2 settings which are not set by the Puppet scheduledtask type
         trigger_object.Randomdelay = 0
       else

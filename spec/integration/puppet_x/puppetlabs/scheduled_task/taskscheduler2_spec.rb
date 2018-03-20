@@ -32,7 +32,7 @@ def create_test_task(task_name = nil, task_compatiblity = PuppetX::PuppetLabs::S
   tasksched.set_principal(definition, '')
   definition.Settings.Enabled = false
   # Create a trigger
-  trigger = tasksched.append_new_trigger(definition, tasksched::TASK_TRIGGER_TIME)
+  trigger = definition.Triggers.Create(tasksched::TASK_TRIGGER_TIME)
   trigger.StartBoundary = '2017-09-11T14:02:00'
   # Create an action
   new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_EXEC)

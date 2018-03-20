@@ -248,10 +248,6 @@ module TaskScheduler2
     result
   end
 
-  def self.append_new_trigger(definition, trigger_type)
-    definition.Triggers.create(trigger_type)
-  end
-
   # Deletes the trigger at the specified index.
   #
   def self.delete_trigger(definition, index)
