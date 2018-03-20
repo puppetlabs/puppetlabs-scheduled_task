@@ -63,9 +63,8 @@ module Trigger
   module_function :string_to_int
 
   def date_part_to_int(value, datepart)
-    return 0 if value.nil?
-    return 0 unless value.is_a?(String)
-    return 0 if value.empty?
+    return 0 if value.nil? || value.empty?
+    raise ArgumentError.new('value must be a String') unless value.is_a?(String)
 
     DateTime.parse(value).strftime(datepart).to_i
   end

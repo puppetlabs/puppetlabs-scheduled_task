@@ -28,7 +28,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
   end
 
   describe "#date_part_to_int" do
-    [nil, '', :foo, [], {}].each do |value|
+    [nil, ''].each do |value|
       it "should return 0 given value '#{value}' (#{value.class})" do
         expect(subject.date_part_to_int(value, '')).to be_zero
       end
@@ -44,6 +44,12 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
     ].each do |value|
       it "should return numeric input #{value[:expected]} for date string #{value[:input]}" do
         expect(subject.date_part_to_int(*value[:input])).to eq(value[:expected])
+      end
+    end
+
+    [:foo, [], {}].each do |value|
+      it "should raise ArgumentError given value '#{value}' (#{value.class})" do
+        expect { subject.date_part_to_int(value) }.to raise_error(ArgumentError)
       end
     end
   end
