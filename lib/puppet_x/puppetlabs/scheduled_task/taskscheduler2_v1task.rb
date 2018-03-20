@@ -390,15 +390,18 @@ class TaskScheduler2V1Task
     # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
     trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED unless v2trigger.Enabled
 
+    start_boundary = Trigger.string_to_date(v2trigger.StartBoundary)
+    end_boundary = Trigger.string_to_date(v2trigger.EndBoundary)
+
     v1trigger = {
-      'start_year'              => Trigger.date_part_to_int(v2trigger.StartBoundary, '%Y'),
-      'start_month'             => Trigger.date_part_to_int(v2trigger.StartBoundary, '%m'),
-      'start_day'               => Trigger.date_part_to_int(v2trigger.StartBoundary, '%d'),
-      'end_year'                => Trigger.date_part_to_int(v2trigger.EndBoundary, '%Y'),
-      'end_month'               => Trigger.date_part_to_int(v2trigger.EndBoundary, '%m'),
-      'end_day'                 => Trigger.date_part_to_int(v2trigger.EndBoundary, '%d'),
-      'start_hour'              => Trigger.date_part_to_int(v2trigger.StartBoundary, '%H'),
-      'start_minute'            => Trigger.date_part_to_int(v2trigger.StartBoundary, '%M'),
+      'start_year'              => start_boundary.year,
+      'start_month'             => start_boundary.month,
+      'start_day'               => start_boundary.day,
+      'end_year'                => end_boundary ? end_boundary.year : 0,
+      'end_month'               => end_boundary ? end_boundary.month : 0,
+      'end_day'                 => end_boundary ? end_boundary.day : 0,
+      'start_hour'              => start_boundary.hour,
+      'start_minute'            => start_boundary.minute,
       'minutes_duration'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Duration),
       'minutes_interval'        => Trigger::Duration.to_minutes(v2trigger.Repetition.Interval),
       'flags'                   => trigger_flags,

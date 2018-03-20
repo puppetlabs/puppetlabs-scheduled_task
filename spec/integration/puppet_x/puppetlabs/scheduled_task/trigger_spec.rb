@@ -27,29 +27,25 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
     end
   end
 
-  describe "#date_part_to_int" do
+  describe "#string_to_date" do
     [nil, ''].each do |value|
-      it "should return 0 given value '#{value}' (#{value.class})" do
-        expect(subject.date_part_to_int(value, '')).to be_zero
+      it "should return nil given value '#{value}' (#{value.class})" do
+        expect(subject.string_to_date(value)).to eq(nil)
       end
     end
 
     [
-      { :input => ['2018-01-02T03:04:05', '%Y'], :expected => 2018 },
-      { :input => ['2018-01-02T03:04:05', '%m'], :expected => 1 },
-      { :input => ['2018-01-02T03:04:05', '%d'], :expected => 2 },
-      { :input => ['2018-01-02T03:04:05', '%H'], :expected => 3 },
-      { :input => ['2018-01-02T03:04:05', '%M'], :expected => 4 },
-      { :input => ['2018-01-02T03:04:05', '%S'], :expected => 5 },
+      { :input => '2018-01-02T03:04:05', :expected => DateTime.new(2018, 1, 2, 3, 4, 5) },
+      { :input => '1899-12-30T00:00:00', :expected => DateTime.new(1899, 12, 30, 0, 0, 0) },
     ].each do |value|
-      it "should return numeric input #{value[:expected]} for date string #{value[:input]}" do
-        expect(subject.date_part_to_int(*value[:input])).to eq(value[:expected])
+      it "should return a valid DateTime object for date string #{value[:input]}" do
+        expect(subject.string_to_date(value[:input])).to eq(value[:expected])
       end
     end
 
     [:foo, [], {}].each do |value|
       it "should raise ArgumentError given value '#{value}' (#{value.class})" do
-        expect { subject.date_part_to_int(value) }.to raise_error(ArgumentError)
+        expect { subject.string_to_date(value) }.to raise_error(ArgumentError)
       end
     end
   end
