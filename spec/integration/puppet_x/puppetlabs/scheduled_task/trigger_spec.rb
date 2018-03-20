@@ -129,6 +129,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
 
     [
       { :foo => nil, 'type' => {} },
+      { :type => nil },
       { [] => nil },
       { 'type' => [] },
       { 'type' => 1 },

@@ -113,30 +113,17 @@ module Trigger
       raise TypeError unless hash.is_a?(Hash)
       new_hash = {}
 
-      hash.each do |key, value|
-        key = key.to_s.downcase
-        if key == 'type'
-          new_type_hash = {}
-          raise ArgumentError unless value.is_a?(Hash)
-          value.each{ |subkey, subvalue|
-            subkey = subkey.to_s.downcase
-            if ValidTypeKeys.include?(subkey)
-              new_type_hash[subkey] = subvalue
-            else
-              raise ArgumentError, "Invalid type key '#{subkey}'"
-            end
-          }
-          new_hash[key] = new_type_hash
-        else
-          if ValidKeys.include?(key)
-            new_hash[key] = value
-          else
-            raise ArgumentError, "Invalid key '#{key}'"
-          end
-        end
+      invalid_keys = hash.keys - ValidKeys
+      raise ArgumentError.new("Invalid trigger keys #{invalid_keys}") unless invalid_keys.empty?
+
+      if hash.keys.include?('type')
+        type_hash = hash['type']
+        raise ArgumentError.new("'type' must be a hash") unless type_hash.is_a?(Hash)
+        invalid_keys = type_hash.keys - ValidTypeKeys
+        raise ArgumentError.new("Invalid trigger type keys #{invalid_keys}") unless invalid_keys.empty?
       end
 
-      new_hash
+      hash
     end
 
     # iTrigger is a COM ITrigger instance
@@ -199,6 +186,17 @@ module Trigger
 
       v1trigger
     end
+
+    private
+
+    # converts all keys to lowercase
+    def self.downcase_keys(hash)
+      rekeyed = hash.map do |k, v|
+        [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
+      end
+      Hash[ rekeyed ]
+    end
+
   end
 end
 end
