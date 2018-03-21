@@ -167,7 +167,7 @@ class TaskScheduler2V1Task
 
     @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1)
 
-    append_trigger(task_trigger)
+    Trigger::V2.append_trigger(@definition, task_trigger)
 
     set_account_information('',nil)
 
@@ -203,7 +203,7 @@ class TaskScheduler2V1Task
   #
   # Note - This method name is a mis-nomer. It's actually appending a newly created trigger to the trigger collection.
   def trigger=(v1trigger)
-    append_trigger(v1trigger)
+    Trigger::V2.append_trigger(@definition, v1trigger)
   end
 
   # Returns the flags (integer) that modify the behavior of the work item. You
@@ -252,48 +252,6 @@ class TaskScheduler2V1Task
     end
 
     action
-  end
-
-  def append_trigger(v1trigger)
-    v1trigger = Trigger::V1.canonicalize_and_validate(v1trigger)
-
-    trigger_type = Trigger::V2.type_from_v1type(v1trigger['trigger_type'])
-    trigger_object = @definition.Triggers.Create(trigger_type)
-    trigger_settings = v1trigger['type']
-
-    case v1trigger['trigger_type']
-      when :TASK_TIME_TRIGGER_DAILY
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
-        trigger_object.DaysInterval = trigger_settings['days_interval']
-
-      when :TASK_TIME_TRIGGER_WEEKLY
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
-        trigger_object.DaysOfWeek = trigger_settings['days_of_week']
-        trigger_object.WeeksInterval = trigger_settings['weeks_interval']
-
-      when :TASK_TIME_TRIGGER_MONTHLYDATE
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
-        trigger_object.DaysOfMonth = trigger_settings['days']
-        trigger_object.Monthsofyear = trigger_settings['months']
-
-      when :TASK_TIME_TRIGGER_MONTHLYDOW
-        # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
-        trigger_object.DaysOfWeek = trigger_settings['days_of_week']
-        trigger_object.Monthsofyear = trigger_settings['months']
-        trigger_object.Weeksofmonth = trigger_settings['weeks']
-    end
-
-    # Values for all Trigger Types
-    trigger_object.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
-    trigger_object.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
-    trigger_object.StartBoundary = Trigger.iso8601_datetime(v1trigger['start_year'],
-                                                            v1trigger['start_month'],
-                                                            v1trigger['start_day'],
-                                                            v1trigger['start_hour'],
-                                                            v1trigger['start_minute']
-    )
-
-    v1trigger
   end
 end
 

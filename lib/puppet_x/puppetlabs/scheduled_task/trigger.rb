@@ -213,6 +213,48 @@ module Trigger
       raise ArgumentError.new(_("Unknown V1 trigger Type %{type}") % { type: v1type }) unless V1_TYPE_MAP.keys.include?(v1type)
       V1_TYPE_MAP[v1type]
     end
+
+    def self.append_trigger(definition, v1trigger)
+      v1trigger = Trigger::V1.canonicalize_and_validate(v1trigger)
+
+      trigger_type = type_from_v1type(v1trigger['trigger_type'])
+      trigger_object = definition.Triggers.Create(trigger_type)
+      trigger_settings = v1trigger['type']
+
+      case v1trigger['trigger_type']
+        when :TASK_TIME_TRIGGER_DAILY
+          # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
+          trigger_object.DaysInterval = trigger_settings['days_interval']
+
+        when :TASK_TIME_TRIGGER_WEEKLY
+          # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
+          trigger_object.DaysOfWeek = trigger_settings['days_of_week']
+          trigger_object.WeeksInterval = trigger_settings['weeks_interval']
+
+        when :TASK_TIME_TRIGGER_MONTHLYDATE
+          # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
+          trigger_object.DaysOfMonth = trigger_settings['days']
+          trigger_object.Monthsofyear = trigger_settings['months']
+
+        when :TASK_TIME_TRIGGER_MONTHLYDOW
+          # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
+          trigger_object.DaysOfWeek = trigger_settings['days_of_week']
+          trigger_object.Monthsofyear = trigger_settings['months']
+          trigger_object.Weeksofmonth = trigger_settings['weeks']
+      end
+
+      # Values for all Trigger Types
+      trigger_object.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
+      trigger_object.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
+      trigger_object.StartBoundary = Trigger.iso8601_datetime(v1trigger['start_year'],
+                                                              v1trigger['start_month'],
+                                                              v1trigger['start_day'],
+                                                              v1trigger['start_hour'],
+                                                              v1trigger['start_minute']
+      )
+
+      v1trigger
+    end
   end
 end
 end
