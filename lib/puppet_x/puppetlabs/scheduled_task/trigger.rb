@@ -200,13 +200,28 @@ module Trigger
   end
 
   class V2
+    class Type
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383915%28v=vs.85%29.aspx
+      TASK_TRIGGER_EVENT                 = 0
+      TASK_TRIGGER_TIME                  = 1
+      TASK_TRIGGER_DAILY                 = 2
+      TASK_TRIGGER_WEEKLY                = 3
+      TASK_TRIGGER_MONTHLY               = 4
+      TASK_TRIGGER_MONTHLYDOW            = 5
+      TASK_TRIGGER_IDLE                  = 6
+      TASK_TRIGGER_REGISTRATION          = 7
+      TASK_TRIGGER_BOOT                  = 8
+      TASK_TRIGGER_LOGON                 = 9
+      TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
+    end
+
     V1_TYPE_MAP =
     {
-      :TASK_TIME_TRIGGER_DAILY => TaskScheduler2::TASK_TRIGGER_DAILY,
-      :TASK_TIME_TRIGGER_WEEKLY => TaskScheduler2::TASK_TRIGGER_WEEKLY,
-      :TASK_TIME_TRIGGER_MONTHLYDATE => TaskScheduler2::TASK_TRIGGER_MONTHLY,
-      :TASK_TIME_TRIGGER_MONTHLYDOW => TaskScheduler2::TASK_TRIGGER_MONTHLYDOW,
-      :TASK_TIME_TRIGGER_ONCE => TaskScheduler2::TASK_TRIGGER_TIME,
+      :TASK_TIME_TRIGGER_DAILY => Type::TASK_TRIGGER_DAILY,
+      :TASK_TIME_TRIGGER_WEEKLY => Type::TASK_TRIGGER_WEEKLY,
+      :TASK_TIME_TRIGGER_MONTHLYDATE => Type::TASK_TRIGGER_MONTHLY,
+      :TASK_TIME_TRIGGER_MONTHLYDOW => Type::TASK_TRIGGER_MONTHLYDOW,
+      :TASK_TIME_TRIGGER_ONCE => Type::TASK_TRIGGER_TIME,
     }.freeze
 
     def self.type_from_v1type(v1type)
@@ -222,21 +237,21 @@ module Trigger
       trigger_settings = v1trigger['type']
 
       case trigger_type
-        when TaskScheduler2::TASK_TRIGGER_DAILY
+        when Type::TASK_TRIGGER_DAILY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
           iTrigger.DaysInterval = trigger_settings['days_interval']
 
-        when TaskScheduler2::TASK_TRIGGER_WEEKLY
+        when Type::TASK_TRIGGER_WEEKLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
           iTrigger.DaysOfWeek = trigger_settings['days_of_week']
           iTrigger.WeeksInterval = trigger_settings['weeks_interval']
 
-        when TaskScheduler2::TASK_TRIGGER_MONTHLY
+        when Type::TASK_TRIGGER_MONTHLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
           iTrigger.DaysOfMonth = trigger_settings['days']
           iTrigger.Monthsofyear = trigger_settings['months']
 
-        when TaskScheduler2::TASK_TRIGGER_MONTHLYDOW
+        when Type::TASK_TRIGGER_MONTHLYDOW
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
           iTrigger.DaysOfWeek = trigger_settings['days_of_week']
           iTrigger.Monthsofyear = trigger_settings['months']
