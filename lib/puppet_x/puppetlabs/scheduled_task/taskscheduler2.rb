@@ -30,19 +30,6 @@ module TaskScheduler2
   TASK_COMPATIBILITY_V1 = 1
   TASK_COMPATIBILITY_V2 = 2
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383915%28v=vs.85%29.aspx
-  TASK_TRIGGER_EVENT                 = 0
-  TASK_TRIGGER_TIME                  = 1
-  TASK_TRIGGER_DAILY                 = 2
-  TASK_TRIGGER_WEEKLY                = 3
-  TASK_TRIGGER_MONTHLY               = 4
-  TASK_TRIGGER_MONTHLYDOW            = 5
-  TASK_TRIGGER_IDLE                  = 6
-  TASK_TRIGGER_REGISTRATION          = 7
-  TASK_TRIGGER_BOOT                  = 8
-  TASK_TRIGGER_LOGON                 = 9
-  TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
-
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
   TASK_VALIDATE_ONLY                 = 0x1
   TASK_CREATE                        = 0x2
@@ -248,58 +235,12 @@ module TaskScheduler2
     result
   end
 
-  def self.append_new_trigger(definition, trigger_type)
-    definition.Triggers.create(trigger_type)
-  end
-
   # Deletes the trigger at the specified index.
   #
   def self.delete_trigger(definition, index)
     definition.Triggers.Remove(index)
 
     index
-  end
-
-  # Helpers
-
-  # From https://msdn.microsoft.com/en-us/library/windows/desktop/aa381850(v=vs.85).aspx
-  # https://en.wikipedia.org/wiki/ISO_8601#Durations
-  #
-  # The format for this string is PnYnMnDTnHnMnS, where nY is the number of years, nM is the number of months,
-  # nD is the number of days, 'T' is the date/time separator, nH is the number of hours, nM is the number of minutes,
-  # and nS is the number of seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month,
-  # four days, two hours, and five minutes)
-  def self.duration_to_hash(duration)
-    regex = /^P((?'year'\d+)Y)?((?'month'\d+)M)?((?'day'\d+)D)?(T((?'hour'\d+)H)?((?'minute'\d+)M)?((?'second'\d+)S)?)?$/
-
-    matches = regex.match(duration)
-    return nil if matches.nil?
-
-    {
-      :year => matches['year'],
-      :month => matches['month'],
-      :day => matches['day'],
-      :minute => matches['minute'],
-      :hour => matches['hour'],
-      :second => matches['second'],
-    }
-  end
-
-  # Converts a hash table describing year, month, day etc. into a timelimit string as per
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381850(v=vs.85).aspx
-  # https://en.wikipedia.org/wiki/ISO_8601#Durations
-  # returns PT0S if there is nothing set.
-  def self.hash_to_duration(hash)
-    duration = 'P'
-    duration += hash[:year].to_s + 'Y' unless hash[:year].nil? || hash[:year].zero?
-    duration += hash[:month].to_s + 'M' unless hash[:month].nil? || hash[:month].zero?
-    duration += hash[:day].to_s + 'D' unless hash[:day].nil? || hash[:day].zero?
-    duration += 'T'
-    duration += hash[:hour].to_s + 'H' unless hash[:hour].nil? || hash[:hour].zero?
-    duration += hash[:minute].to_s + 'M' unless hash[:minute].nil? || hash[:minute].zero?
-    duration += hash[:second].to_s + 'S' unless hash[:second].nil? || hash[:second].zero?
-
-    duration == 'PT' ? 'PT0S' : duration
   end
 
   # Private methods

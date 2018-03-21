@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2'
+require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
@@ -23,8 +24,10 @@ RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   end
 end
 
-def create_test_task(task_name = nil, task_compatiblity = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2)
-  tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
+ST = PuppetX::PuppetLabs::ScheduledTask
+
+def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TASK_COMPATIBILITY_V2)
+  tasksched = ST::TaskScheduler2
   task_name = tasksched::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
   definition = tasksched.new_task_definition
   # Set task settings
@@ -32,7 +35,7 @@ def create_test_task(task_name = nil, task_compatiblity = PuppetX::PuppetLabs::S
   tasksched.set_principal(definition, '')
   definition.Settings.Enabled = false
   # Create a trigger
-  trigger = tasksched.append_new_trigger(definition, tasksched::TASK_TRIGGER_TIME)
+  trigger = definition.Triggers.Create(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
   trigger.StartBoundary = '2017-09-11T14:02:00'
   # Create an action
   new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_EXEC)
@@ -133,7 +136,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should have a trigger of type TimeTrigger' do
-        expect(subject.trigger(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_TRIGGER_TIME)
+        expect(subject.trigger(task_definition, 1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
       end
 
       it 'should have a single action' do
