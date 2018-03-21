@@ -214,7 +214,7 @@ module Trigger
       V1_TYPE_MAP[v1type]
     end
 
-    def self.append_trigger(definition, v1trigger)
+    def self.append_v1trigger(definition, v1trigger)
       v1trigger = Trigger::V1.canonicalize_and_validate(v1trigger)
 
       trigger_type = type_from_v1type(v1trigger['trigger_type'])

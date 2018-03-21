@@ -167,7 +167,7 @@ class TaskScheduler2V1Task
 
     @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1)
 
-    Trigger::V2.append_trigger(@definition, task_trigger)
+    Trigger::V2.append_v1trigger(@definition, task_trigger)
 
     set_account_information('',nil)
 
@@ -203,7 +203,7 @@ class TaskScheduler2V1Task
   #
   # Note - This method name is a mis-nomer. It's actually appending a newly created trigger to the trigger collection.
   def trigger=(v1trigger)
-    Trigger::V2.append_trigger(@definition, v1trigger)
+    Trigger::V2.append_v1trigger(@definition, v1trigger)
   end
 
   # Returns the flags (integer) that modify the behavior of the work item. You
