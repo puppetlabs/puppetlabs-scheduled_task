@@ -126,6 +126,75 @@ module Trigger
   end
   end
 
+  class V1
+  class Month
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
+    TASK_JANUARY      = 0x1
+    TASK_FEBRUARY     = 0x2
+    TASK_MARCH        = 0x4
+    TASK_APRIL        = 0x8
+    TASK_MAY          = 0x10
+    TASK_JUNE         = 0x20
+    TASK_JULY         = 0x40
+    TASK_AUGUST       = 0x80
+    TASK_SEPTEMBER    = 0x100
+    TASK_OCTOBER      = 0x200
+    TASK_NOVEMBER     = 0x400
+    TASK_DECEMBER     = 0x800
+
+    MONTHNUM_CONST_MAP = {
+      1  => TASK_JANUARY,
+      2  => TASK_FEBRUARY,
+      3  => TASK_MARCH,
+      4  => TASK_APRIL,
+      5  => TASK_MAY,
+      6  => TASK_JUNE,
+      7  => TASK_JULY,
+      8  => TASK_AUGUST,
+      9  => TASK_SEPTEMBER,
+      10 => TASK_OCTOBER,
+      11 => TASK_NOVEMBER,
+      12 => TASK_DECEMBER,
+    }.freeze
+
+    def self.bitfield_from_months(months)
+      bitfield = 0
+
+      months = [months] unless months.is_a?(Array)
+      months.each do |month|
+        integer_month = Integer(month) rescue nil
+        raise ArgumentError.new('Month must be specified as an integer in the range 1-12') unless integer_month == month.to_f and integer_month.between?(1,12)
+
+        bitfield |= MONTHNUM_CONST_MAP[integer_month]
+      end
+
+      bitfield
+    end
+
+    def self.months_from_bitfield(bitfield)
+      months = []
+
+      MONTHNUM_CONST_MAP.values.each do |month|
+        if bitfield & month != 0
+          months << month_constant_to_number(month)
+        end
+      end
+
+      months
+    end
+
+    private
+
+    def self.month_constant_to_number(constant)
+      month_num = 1
+      while constant >> month_num - 1 > 1
+        month_num += 1
+      end
+      month_num
+    end
+  end
+  end
+
   # TASK_TRIGGER structure approximated as Ruby hash
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1

@@ -291,3 +291,37 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day do
     end
   end
 end
+
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
+  EXPECTED_MONTH_CONVERSIONS =
+  [
+    { :months => 1,            :bitmask => 0b000000000001 },
+    { :months => [1],          :bitmask => 0b000000000001 },
+    { :months => [],           :bitmask => 0 },
+    { :months => [1, 2],       :bitmask => 0b000000000011 },
+    { :months => [1, 12],      :bitmask => 0b100000000001 },
+    { :months => (1..12).to_a, :bitmask => 0b111111111111 },
+  ].freeze
+
+  describe '#bitfield_from_months' do
+    EXPECTED_MONTH_CONVERSIONS.each do |conversion|
+      it "should create expected bitmask #{'%12b' % conversion[:bitmask]} from months #{conversion[:months]}" do
+        expect(subject.class.bitfield_from_months(conversion[:months])).to eq(conversion[:bitmask])
+      end
+    end
+
+    [ nil, 13, 'foo', ['bar'] ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.bitfield_from_months(value) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+  describe '#months_from_bitfield' do
+    EXPECTED_MONTH_CONVERSIONS.each do |conversion|
+      it "should create expected months #{conversion[:months]} from bitmask #{'%08b' % conversion[:bitmask]}" do
+        expect(subject.class.months_from_bitfield(conversion[:bitmask])).to eq([conversion[:months]].flatten)
+      end
+    end
+  end
+end

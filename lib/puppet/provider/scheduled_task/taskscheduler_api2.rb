@@ -95,11 +95,11 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         puppet_trigger['day_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDATE
         puppet_trigger['schedule'] = 'monthly'
-        puppet_trigger['months']   = months_from_bitfield(trigger['type']['months'])
+        puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.months_from_bitfield(trigger['type']['months'])
         puppet_trigger['on']       = days_from_bitfield(trigger['type']['days'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW
         puppet_trigger['schedule']         = 'monthly'
-        puppet_trigger['months']           = months_from_bitfield(trigger['type']['months'])
+        puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.months_from_bitfield(trigger['type']['months'])
         puppet_trigger['which_occurrence'] = occurrence_constant_to_name(trigger['type']['weeks'])
         puppet_trigger['day_of_week']      = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
@@ -320,7 +320,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(days_of_week)
     when 'monthly'
       trigger['type'] = {
-        'months' => bitfield_from_months(puppet_trigger['months'] || (1..12).to_a),
+        'months' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitfield_from_months(puppet_trigger['months'] || (1..12).to_a),
       }
 
       if puppet_trigger.keys.include?('on')
@@ -410,19 +410,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   private
 
-  def bitfield_from_months(months)
-    bitfield = 0
-
-    months = [months] unless months.is_a?(Array)
-    months.each do |month|
-      integer_month = Integer(month) rescue nil
-      self.fail 'Month must be specified as an integer in the range 1-12' unless integer_month == month.to_f and integer_month.between?(1,12)
-
-      bitfield |= scheduler_months[integer_month - 1]
-    end
-
-    bitfield
-  end
 
   def bitfield_from_days(days)
     bitfield = 0
@@ -443,17 +430,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     bitfield
   end
 
-  def months_from_bitfield(bitfield)
-    months = []
-
-    scheduler_months.each do |month|
-      if bitfield & month != 0
-        months << month_constant_to_number(month)
-      end
-    end
-
-    months
-  end
 
   def days_from_bitfield(bitfield)
     days = []
@@ -483,22 +459,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     ]
   end
 
-  def scheduler_months
-    [
-      Win32::TaskScheduler::JANUARY,
-      Win32::TaskScheduler::FEBRUARY,
-      Win32::TaskScheduler::MARCH,
-      Win32::TaskScheduler::APRIL,
-      Win32::TaskScheduler::MAY,
-      Win32::TaskScheduler::JUNE,
-      Win32::TaskScheduler::JULY,
-      Win32::TaskScheduler::AUGUST,
-      Win32::TaskScheduler::SEPTEMBER,
-      Win32::TaskScheduler::OCTOBER,
-      Win32::TaskScheduler::NOVEMBER,
-      Win32::TaskScheduler::DECEMBER
-    ]
-  end
 
   def scheduler_occurrences
     [
@@ -508,14 +468,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       Win32::TaskScheduler::FOURTH_WEEK,
       Win32::TaskScheduler::LAST_WEEK
     ]
-  end
-
-  def month_constant_to_number(constant)
-    month_num = 1
-    while constant >> month_num - 1 > 1
-      month_num += 1
-    end
-    month_num
   end
 
   def occurrence_constant_to_name(constant)
