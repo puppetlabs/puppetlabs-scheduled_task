@@ -76,6 +76,42 @@ module Trigger
   end
   module_function :iso8601_datetime
 
+  class V1
+  class Day
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384014(v=vs.85).aspx
+    TASK_SUNDAY       = 0x1
+    TASK_MONDAY       = 0x2
+    TASK_TUESDAY      = 0x4
+    TASK_WEDNESDAY    = 0x8
+    TASK_THURSDAY     = 0x10
+    TASK_FRIDAY       = 0x20
+    TASK_SATURDAY     = 0x40
+
+    DAY_CONST_MAP = {
+      'sun'   => TASK_SUNDAY,
+      'mon'   => TASK_MONDAY,
+      'tues'  => TASK_TUESDAY,
+      'wed'   => TASK_WEDNESDAY,
+      'thurs' => TASK_THURSDAY,
+      'fri'   => TASK_FRIDAY,
+      'sat'   => TASK_SATURDAY,
+    }.freeze
+
+    def self.bitfield_from_days_of_week(days_of_week)
+      bitfield = 0
+
+      days_of_week = [days_of_week] unless days_of_week.is_a?(Array)
+      days_of_week.each do |day_of_week|
+        bitmask = DAY_CONST_MAP[day_of_week]
+        raise ArgumentError.new("Days_of_week value #{day_of_week} is invalid. Expected sun, mon, tue, wed, thu, fri or sat.") if bitmask.nil?
+        bitfield |= bitmask
+      end
+
+      bitfield
+    end
+  end
+  end
+
   # TASK_TRIGGER structure approximated as Ruby hash
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1

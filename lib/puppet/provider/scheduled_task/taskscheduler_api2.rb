@@ -3,6 +3,8 @@ require 'puppet/parameter'
 if Puppet.features.microsoft_windows?
   require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task')
 end
+require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/trigger')
+
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   desc "This provider manages scheduled tasks on Windows.
@@ -315,7 +317,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       }
 
       trigger['type']['days_of_week'] = if puppet_trigger['day_of_week']
-                                          bitfield_from_days_of_week(puppet_trigger['day_of_week'])
+                                          PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitfield_from_days_of_week(puppet_trigger['day_of_week'])
                                         else
                                           scheduler_days_of_week.inject(0) {|day_flags,day| day_flags |= day}
                                         end
@@ -339,7 +341,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
         trigger['trigger_type']         = Win32::TaskScheduler::MONTHLYDOW
         trigger['type']['weeks']        = occurrence_name_to_constant(puppet_trigger['which_occurrence'])
-        trigger['type']['days_of_week'] = bitfield_from_days_of_week(puppet_trigger['day_of_week'])
+        trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitfield_from_days_of_week(puppet_trigger['day_of_week'])
       else
         self.fail "Don't know how to create a 'monthly' schedule with the options: #{puppet_trigger.keys.sort.join(', ')}"
       end
@@ -439,19 +441,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       self.fail "Day must be specified as an integer in the range 1-31, or as 'last'" unless integer_day = day.to_f and integer_day.between?(1,32)
 
       bitfield |= 1 << integer_day - 1
-    end
-
-    bitfield
-  end
-
-  def bitfield_from_days_of_week(days_of_week)
-    bitfield = 0
-
-    days_of_week = [days_of_week] unless days_of_week.is_a?(Array)
-    days_of_week.each do |day_of_week|
-      bitmask = day_of_week_name_to_constant(day_of_week)
-      self.fail "Days_of_week value #{day_of_week} is invalid. Expected sun, mon, tue, wed, thu, fri or sat." if bitmask.nil?
-      bitfield |= bitmask
     end
 
     bitfield
@@ -557,18 +546,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     when Win32::TaskScheduler::THURSDAY;  'thurs'
     when Win32::TaskScheduler::FRIDAY;    'fri'
     when Win32::TaskScheduler::SATURDAY;  'sat'
-    end
-  end
-
-  def day_of_week_name_to_constant(name)
-    case name
-    when 'sun';   Win32::TaskScheduler::SUNDAY
-    when 'mon';   Win32::TaskScheduler::MONDAY
-    when 'tues';  Win32::TaskScheduler::TUESDAY
-    when 'wed';   Win32::TaskScheduler::WEDNESDAY
-    when 'thurs'; Win32::TaskScheduler::THURSDAY
-    when 'fri';   Win32::TaskScheduler::FRIDAY
-    when 'sat';   Win32::TaskScheduler::SATURDAY
     end
   end
 
