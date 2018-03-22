@@ -97,6 +97,14 @@ module Trigger
       'sat'   => TASK_SATURDAY,
     }.freeze
 
+    def self.names
+      @names ||= DAY_CONST_MAP.keys.freeze
+    end
+
+    def self.values
+      @values ||= DAY_CONST_MAP.values.freeze
+    end
+
     def self.names_to_bitmask(day_names)
       day_names = [day_names].flatten
       invalid_days = day_names - DAY_CONST_MAP.keys
