@@ -97,17 +97,12 @@ module Trigger
       'sat'   => TASK_SATURDAY,
     }.freeze
 
-    def self.bitfield_from_days_of_week(days_of_week)
-      bitfield = 0
+    def self.names_to_bitmask(day_names)
+      day_names = [day_names].flatten
+      invalid_days = day_names - DAY_CONST_MAP.keys
+      raise ArgumentError.new("Days_of_week value #{invalid_days.join(', ')} is invalid. Expected sun, mon, tue, wed, thu, fri or sat.") unless invalid_days.empty?
 
-      days_of_week = [days_of_week] unless days_of_week.is_a?(Array)
-      days_of_week.each do |day_of_week|
-        bitmask = DAY_CONST_MAP[day_of_week]
-        raise ArgumentError.new("Days_of_week value #{day_of_week} is invalid. Expected sun, mon, tue, wed, thu, fri or sat.") if bitmask.nil?
-        bitfield |= bitmask
-      end
-
-      bitfield
+      day_names.inject(0) { |bitmask, day| bitmask |= DAY_CONST_MAP[day] }
     end
   end
   end

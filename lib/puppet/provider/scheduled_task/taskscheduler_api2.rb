@@ -317,7 +317,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       }
 
       trigger['type']['days_of_week'] = if puppet_trigger['day_of_week']
-                                          PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitfield_from_days_of_week(puppet_trigger['day_of_week'])
+                                          PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(puppet_trigger['day_of_week'])
                                         else
                                           scheduler_days_of_week.inject(0) {|day_flags,day| day_flags |= day}
                                         end
@@ -341,7 +341,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
         trigger['trigger_type']         = Win32::TaskScheduler::MONTHLYDOW
         trigger['type']['weeks']        = occurrence_name_to_constant(puppet_trigger['which_occurrence'])
-        trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitfield_from_days_of_week(puppet_trigger['day_of_week'])
+        trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(puppet_trigger['day_of_week'])
       else
         self.fail "Don't know how to create a 'monthly' schedule with the options: #{puppet_trigger.keys.sort.join(', ')}"
       end
