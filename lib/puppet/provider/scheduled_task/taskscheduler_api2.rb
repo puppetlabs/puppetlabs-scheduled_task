@@ -459,17 +459,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     ]
   end
 
-
-  def scheduler_occurrences
-    [
-      Win32::TaskScheduler::FIRST_WEEK,
-      Win32::TaskScheduler::SECOND_WEEK,
-      Win32::TaskScheduler::THIRD_WEEK,
-      Win32::TaskScheduler::FOURTH_WEEK,
-      Win32::TaskScheduler::LAST_WEEK
-    ]
-  end
-
   def occurrence_constant_to_name(constant)
     case constant
     when Win32::TaskScheduler::FIRST_WEEK;  'first'
