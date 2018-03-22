@@ -165,26 +165,15 @@ module Trigger
       month_indexes.inject(0) { |bitmask, month_index| bitmask |= MONTHNUM_CONST_MAP[month_index] }
     end
 
-    def self.months_from_bitfield(bitfield)
-      months = []
-
-      MONTHNUM_CONST_MAP.values.each do |month|
-        if bitfield & month != 0
-          months << month_constant_to_number(month)
-        end
+    def self.bitmask_to_indexes(bitmask)
+      bitmask = Integer(bitmask)
+      if (bitmask < 0 || bitmask > 0b111111111111)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b111111111111.to_s(10)}")
       end
 
-      months
-    end
-
-    private
-
-    def self.month_constant_to_number(constant)
-      month_num = 1
-      while constant >> month_num - 1 > 1
-        month_num += 1
+      MONTHNUM_CONST_MAP.values.each_with_object([]) do |day, indexes|
+        indexes << MONTHNUM_CONST_MAP.key(day) if bitmask & day != 0
       end
-      month_num
     end
   end
   end

@@ -317,11 +317,23 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
     end
   end
 
-  describe '#months_from_bitfield' do
+  describe '#bitmask_to_indexes' do
     EXPECTED_MONTH_CONVERSIONS.each do |conversion|
       it "should create expected months #{conversion[:months]} from bitmask #{'%08b' % conversion[:bitmask]}" do
-        expect(subject.class.months_from_bitfield(conversion[:bitmask])).to eq([conversion[:months]].flatten)
+        expect(subject.class.bitmask_to_indexes(conversion[:bitmask])).to eq([conversion[:months]].flatten)
       end
+    end
+  end
+
+  [ nil, [13], {}, ['bar'] ].each do |value|
+    it "should raise a TypeError with value: #{value}" do
+      expect { subject.class.bitmask_to_indexes(value) }.to raise_error(TypeError)
+    end
+  end
+
+  [ 'foo', -1, 0b111111111111 + 1 ].each do |value|
+    it "should raise an ArgumentError with value: #{value}" do
+      expect { subject.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
     end
   end
 end

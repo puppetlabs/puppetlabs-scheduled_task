@@ -95,11 +95,11 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         puppet_trigger['day_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDATE
         puppet_trigger['schedule'] = 'monthly'
-        puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.months_from_bitfield(trigger['type']['months'])
+        puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
         puppet_trigger['on']       = days_from_bitfield(trigger['type']['days'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW
         puppet_trigger['schedule']         = 'monthly'
-        puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.months_from_bitfield(trigger['type']['months'])
+        puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
         puppet_trigger['which_occurrence'] = occurrence_constant_to_name(trigger['type']['weeks'])
         puppet_trigger['day_of_week']      = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
