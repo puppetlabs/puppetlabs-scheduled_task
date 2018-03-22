@@ -96,7 +96,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDATE
         puppet_trigger['schedule'] = 'monthly'
         puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
-        puppet_trigger['on']       = days_from_bitfield(trigger['type']['days'])
+        puppet_trigger['on']       = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.days_from_bitfield(trigger['type']['days'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW
         puppet_trigger['schedule']         = 'monthly'
         puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
@@ -329,7 +329,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         end
 
         trigger['trigger_type'] = Win32::TaskScheduler::MONTHLYDATE
-        trigger['type']['days'] = bitfield_from_days(puppet_trigger['on'])
+        trigger['type']['days'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.bitfield_from_days(puppet_trigger['on'])
       elsif puppet_trigger.keys.include?('which_occurrence') or puppet_trigger.keys.include?('day_of_week')
         self.fail 'which_occurrence cannot be specified as an array' if puppet_trigger['which_occurrence'].is_a?(Array)
         %w{day_of_week which_occurrence}.each do |field|
@@ -409,45 +409,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   private
-
-
-  def bitfield_from_days(days)
-    bitfield = 0
-
-    days = [days] unless days.is_a?(Array)
-    days.each do |day|
-      # The special "day" of 'last' is represented by day "number"
-      # 32. 'last' has the special meaning of "the last day of the
-      # month", no matter how many days there are in the month.
-      day = 32 if day == 'last'
-
-      integer_day = Integer(day)
-      self.fail "Day must be specified as an integer in the range 1-31, or as 'last'" unless integer_day = day.to_f and integer_day.between?(1,32)
-
-      bitfield |= 1 << integer_day - 1
-    end
-
-    bitfield
-  end
-
-
-  def days_from_bitfield(bitfield)
-    days = []
-
-    i = 0
-    while bitfield > 0
-      if bitfield & 1 > 0
-        # Day 32 has the special meaning of "the last day of the
-        # month", no matter how many days there are in the month.
-        days << (i == 31 ? 'last' : i + 1)
-      end
-
-      bitfield = bitfield >> 1
-      i += 1
-    end
-
-    days
-  end
 
   def scheduler_trigger_types
     [
