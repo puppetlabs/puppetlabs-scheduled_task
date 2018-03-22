@@ -271,16 +271,22 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day do
     end
   end
 
-  describe '#days_of_week_from_bitfield' do
+  describe '#bitmask_to_names' do
     EXPECTED_DAY_CONVERSIONS.each do |conversion|
       it "should create expected days #{conversion[:days]} from bitmask #{'%08b' % conversion[:bitmask]}" do
-        expect(subject.class.days_of_week_from_bitfield(conversion[:bitmask])).to eq([conversion[:days]].flatten)
+        expect(subject.class.bitmask_to_names(conversion[:bitmask])).to eq([conversion[:days]].flatten)
       end
     end
 
-    [ ['bar'] ].each do |value|
+    [ nil, {}, ['bar'] ].each do |value|
       it "should raise an error with invalid value: #{value}" do
-        expect { subject.class.days_of_week_from_bitfield(value) }.to raise_error(TypeError)
+        expect { subject.class.bitmask_to_names(value) }.to raise_error(TypeError)
+      end
+    end
+
+    [ -1, 'foo', 0b1111111 + 1 ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
       end
     end
   end

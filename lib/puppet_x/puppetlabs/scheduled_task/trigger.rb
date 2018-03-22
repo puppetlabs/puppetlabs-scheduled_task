@@ -113,16 +113,15 @@ module Trigger
       day_names.inject(0) { |bitmask, day| bitmask |= DAY_CONST_MAP[day] }
     end
 
-    def self.days_of_week_from_bitfield(bitfield)
-      days_of_week = []
-
-      DAY_CONST_MAP.values.each do |day_of_week|
-        if bitfield & day_of_week != 0
-          days_of_week << DAY_CONST_MAP.key(day_of_week)
-        end
+    def self.bitmask_to_names(bitmask)
+      bitmask = Integer(bitmask)
+      if (bitmask < 0 || bitmask > 0b1111111)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b1111111.to_s(10)}")
       end
 
-      days_of_week
+      DAY_CONST_MAP.values.each_with_object([]) do |day, names|
+        names << DAY_CONST_MAP.key(day) if bitmask & day != 0
+      end
     end
   end
   end
