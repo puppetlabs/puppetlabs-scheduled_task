@@ -259,6 +259,7 @@ module Trigger
       end
 
       # Values for all Trigger Types
+      iTrigger.RandomDelay         = "PT#{v1trigger['random_minutes_interval']}M" unless v1trigger['random_minutes_interval'].nil?   || v1trigger['random_minutes_interval'].zero?
       iTrigger.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
       iTrigger.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
       iTrigger.StartBoundary = Trigger.iso8601_datetime(v1trigger['start_year'],

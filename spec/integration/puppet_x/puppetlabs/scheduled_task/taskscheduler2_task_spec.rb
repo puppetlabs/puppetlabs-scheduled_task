@@ -46,6 +46,7 @@ def triggers
       'trigger_type'            => :TASK_TIME_TRIGGER_ONCE,
     }),
     defaults.merge({
+      'random_minutes_interval' => 0,
       'type'                    => { 'days_interval' => 1 },
       'trigger_type'            => :TASK_TIME_TRIGGER_DAILY,
     }),
@@ -107,7 +108,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
         expect(subject.trigger_count).to eq(1)
         expect(subject.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
         expect(subject.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
-        #expect(task.Definition.Triggers.Item(1).RandomDelay).to eq("PT#{trigger['random_minutes_interval']}M") if trigger['random_minutes_interval']
+        expect(task.Definition.Triggers.Item(1).RandomDelay).to eq("PT#{trigger['random_minutes_interval']}M") if trigger['random_minutes_interval'] && trigger['random_minutes_interval'] > 0
       end
     end
   end
