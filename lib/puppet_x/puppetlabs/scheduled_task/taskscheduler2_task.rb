@@ -1,7 +1,4 @@
 # This class is used to manage V1 compatible tasks using the Task Scheduler V2 API
-# It is designed to be a binary compatible API to puppet/util/windows/taskscheduler.rb but
-# will only surface the features used by the Puppet scheduledtask provider
-#
 require_relative './taskscheduler2'
 require_relative './trigger'
 
@@ -36,7 +33,7 @@ class TaskScheduler2Task
   def enum
     @tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_AT, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1]).map do |item|
+      include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2]).map do |item|
         @tasksched.task_name_from_task_path(item) + '.job'
     end
   end
@@ -165,7 +162,7 @@ class TaskScheduler2Task
     @task = nil
     @task_password = nil
 
-    @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1)
+    @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2)
 
     Trigger::V2.append_v1trigger(@definition, task_trigger)
 
