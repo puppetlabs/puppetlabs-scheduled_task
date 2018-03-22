@@ -157,18 +157,12 @@ module Trigger
       12 => TASK_DECEMBER,
     }.freeze
 
-    def self.bitfield_from_months(months)
-      bitfield = 0
+    def self.indexes_to_bitmask(month_indexes)
+      month_indexes = [month_indexes].flatten.map { |m| Integer(m) rescue m }
+      invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys
+      raise ArgumentError.new('Month must be specified as an integer in the range 1-12') unless invalid_months.empty?
 
-      months = [months] unless months.is_a?(Array)
-      months.each do |month|
-        integer_month = Integer(month) rescue nil
-        raise ArgumentError.new('Month must be specified as an integer in the range 1-12') unless integer_month == month.to_f and integer_month.between?(1,12)
-
-        bitfield |= MONTHNUM_CONST_MAP[integer_month]
-      end
-
-      bitfield
+      month_indexes.inject(0) { |bitmask, month_index| bitmask |= MONTHNUM_CONST_MAP[month_index] }
     end
 
     def self.months_from_bitfield(bitfield)

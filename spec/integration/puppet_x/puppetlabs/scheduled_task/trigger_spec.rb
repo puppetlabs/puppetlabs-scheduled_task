@@ -303,16 +303,16 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
     { :months => (1..12).to_a, :bitmask => 0b111111111111 },
   ].freeze
 
-  describe '#bitfield_from_months' do
+  describe '#indexes_to_bitmask' do
     EXPECTED_MONTH_CONVERSIONS.each do |conversion|
       it "should create expected bitmask #{'%12b' % conversion[:bitmask]} from months #{conversion[:months]}" do
-        expect(subject.class.bitfield_from_months(conversion[:months])).to eq(conversion[:bitmask])
+        expect(subject.class.indexes_to_bitmask(conversion[:months])).to eq(conversion[:bitmask])
       end
     end
 
-    [ nil, 13, 'foo', ['bar'] ].each do |value|
+    [ nil, 13, [13], {}, 'foo', ['bar'] ].each do |value|
       it "should raise an error with invalid value: #{value}" do
-        expect { subject.class.bitfield_from_months(value) }.to raise_error(ArgumentError)
+        expect { subject.class.indexes_to_bitmask(value) }.to raise_error(ArgumentError)
       end
     end
   end

@@ -320,7 +320,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(days_of_week)
     when 'monthly'
       trigger['type'] = {
-        'months' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitfield_from_months(puppet_trigger['months'] || (1..12).to_a),
+        'months' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.indexes_to_bitmask(puppet_trigger['months'] || (1..12).to_a),
       }
 
       if puppet_trigger.keys.include?('on')
