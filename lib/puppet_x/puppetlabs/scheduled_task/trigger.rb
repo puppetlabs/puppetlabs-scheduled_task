@@ -145,22 +145,22 @@ module Trigger
       day_indexes.inject(0) { |bitmask, day_index| bitmask |= 1 << day_index - 1 }
     end
 
-    def self.days_from_bitfield(bitfield)
-      days = []
-
-      i = 0
-      while bitfield > 0
-        if bitfield & 1 > 0
-          # Day 32 has the special meaning of "the last day of the
-          # month", no matter how many days there are in the month.
-          days << (i == 31 ? 'last' : i + 1)
-        end
-
-        bitfield = bitfield >> 1
-        i += 1
+    def self.bitmask_to_indexes(bitmask)
+      bitmask = Integer(bitmask)
+      max_mask = 0b11111111111111111111111111111111
+      if (bitmask < 0 || bitmask > max_mask)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{max_mask.to_s(10)}")
       end
 
-      days
+      (0..31).select do |bit_index|
+        bit_to_check = 1 << bit_index
+        # given position is set in the bitmask
+        (bitmask & bit_to_check) == bit_to_check
+      end.map do |bit_index|
+        # Day 32 has the special meaning of "the last day of the
+        # month", no matter how many days there are in the month.
+        bit_index == 31 ? 'last' : bit_index + 1
+      end
     end
   end
   end
