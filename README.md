@@ -228,6 +228,7 @@ For all triggers:
   You should format dates as YYYY-MM-DD, although other date formats may work (under the hood, this uses Date.parse).
 * `minutes_interval` — The repeat interval in minutes.
 * `minutes_duration` — The duration in minutes, needs to be greater than the minutes_interval.
+* `random_minutes_interval` — The delay time that is randomly added to the start time of the trigger.
 * For daily triggers:
   * `every` — How often the task should run, as a number of days.
     Defaults to 1.
