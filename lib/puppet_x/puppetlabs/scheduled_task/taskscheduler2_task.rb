@@ -176,6 +176,10 @@ class TaskScheduler2Task
     @tasksched.trigger_count(@definition)
   end
 
+  def compatibility
+    @tasksched.compatibility(@definition)
+  end
+
   # Deletes the trigger at the specified index.
   #
   def delete_trigger(index)

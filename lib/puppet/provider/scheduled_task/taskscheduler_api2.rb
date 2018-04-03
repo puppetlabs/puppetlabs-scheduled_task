@@ -62,6 +62,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     account
   end
 
+  def compatibility
+    task.compatibility
+  end
+
   def trigger
     return @triggers if @triggers
 

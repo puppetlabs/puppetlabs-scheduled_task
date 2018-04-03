@@ -192,6 +192,11 @@ The password for the user specified in the 'user' attribute.
 This is only used if specifying a user other than 'SYSTEM'.
 This parameter will not be used to determine if a scheduled task is in sync or not because there is no way to retrieve the password used to set the account information for a task.
 
+##### `compatibility`
+
+The compatibility level associated with the task.
+May currently only be set to 1 for compatibility with tasks on a Windows XP or Windows Server 2003 computer.
+
 ##### `provider`
 
 The specific backend to use for this scheduled_task resource.

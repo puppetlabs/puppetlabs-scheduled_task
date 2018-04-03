@@ -9,6 +9,7 @@ Initial unsupported release of the scheduled_task module.  Adapts the Puppet sch
 ### Added
 
 - Added V2 provider for the V1 Puppet type ([MODULES-6264](https://tickets.puppetlabs.com/browse/MODULES-6264), [MODULES-6266](https://tickets.puppetlabs.com/browse/MODULES-6266))
+- Added `compatibility` flag, allowing users to specify which version of Scheduled Tasks the task should be compatible with ([MODULES-6526](https://tickets.puppetlabs.com/browse/MODULES-6526))
 
 ### Changed
 
