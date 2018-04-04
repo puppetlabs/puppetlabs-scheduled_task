@@ -90,6 +90,14 @@ Puppet::Type.newtype(:scheduled_task) do
 
     newvalue(1)
     defaultto(1)
+
+    validate do |value|
+      raise Puppet::Error.new(_("must be a number")) unless value.is_a?(Integer)
+      super(value)
+    end
+
+    # override default munging of newvalue() to symbol, treating input as number
+    munge { |value| value }
   end
 
   newproperty(:trigger, :array_matching => :all) do

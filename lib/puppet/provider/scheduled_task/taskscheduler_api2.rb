@@ -164,6 +164,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
   end
 
+  def compatibility=(value)
+    task.compatibility = value
+  end
+
   def trigger=(value)
     desired_triggers = value.is_a?(Array) ? value : [value]
     current_triggers = trigger.is_a?(Array) ? trigger : [trigger]
