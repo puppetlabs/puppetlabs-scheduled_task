@@ -43,6 +43,7 @@ test_script:
       bundle exec gem list
       bundle exec gem env
       bundle show json
+      bundle env
   - cmd: |
       bundle exec rake spec SPEC_OPTS='--format documentation'
 notifications:
