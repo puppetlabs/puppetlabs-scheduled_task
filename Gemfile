@@ -64,7 +64,7 @@ group :system_tests do
   gem "master_manipulator",                                                      :require => false
 end
 
-gem 'json', '>= 0'
+gem 'json'
 gem 'puppet', *location_for(ENV['PUPPET_GEM_VERSION'])
 
 # Only explicitly specify Facter/Hiera if a version has been specified.
