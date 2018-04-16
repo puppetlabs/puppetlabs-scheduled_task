@@ -100,7 +100,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW
         puppet_trigger['schedule']         = 'monthly'
         puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
-        puppet_trigger['which_occurrence'] = occurrence_constant_to_name(trigger['type']['weeks'])
+        puppet_trigger['which_occurrence'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.constant_to_name(trigger['type']['weeks'])
         puppet_trigger['day_of_week']      = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
         puppet_trigger['schedule'] = 'once'
@@ -337,7 +337,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         end
 
         trigger['trigger_type']         = Win32::TaskScheduler::MONTHLYDOW
-        trigger['type']['weeks']        = occurrence_name_to_constant(puppet_trigger['which_occurrence'])
+        trigger['type']['weeks']        = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.name_to_constant(puppet_trigger['which_occurrence'])
         trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(puppet_trigger['day_of_week'])
       else
         self.fail "Don't know how to create a 'monthly' schedule with the options: #{puppet_trigger.keys.sort.join(', ')}"
@@ -418,25 +418,5 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW,
       Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
     ]
-  end
-
-  def occurrence_constant_to_name(constant)
-    case constant
-    when Win32::TaskScheduler::FIRST_WEEK;  'first'
-    when Win32::TaskScheduler::SECOND_WEEK; 'second'
-    when Win32::TaskScheduler::THIRD_WEEK;  'third'
-    when Win32::TaskScheduler::FOURTH_WEEK; 'fourth'
-    when Win32::TaskScheduler::LAST_WEEK;   'last'
-    end
-  end
-
-  def occurrence_name_to_constant(name)
-    case name
-    when 'first';  Win32::TaskScheduler::FIRST_WEEK
-    when 'second'; Win32::TaskScheduler::SECOND_WEEK
-    when 'third';  Win32::TaskScheduler::THIRD_WEEK
-    when 'fourth'; Win32::TaskScheduler::FOURTH_WEEK
-    when 'last';   Win32::TaskScheduler::LAST_WEEK
-    end
   end
 end

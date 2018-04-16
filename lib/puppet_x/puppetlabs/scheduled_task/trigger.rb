@@ -217,6 +217,33 @@ module Trigger
   end
   end
 
+  class V1
+  class Occurrence
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381950(v=vs.85).aspx
+    TASK_FIRST_WEEK   = 1
+    TASK_SECOND_WEEK  = 2
+    TASK_THIRD_WEEK   = 3
+    TASK_FOURTH_WEEK  = 4
+    TASK_LAST_WEEK    = 5
+
+    WEEK_OF_MONTH_CONST_MAP = {
+      'first'  => TASK_FIRST_WEEK,
+      'second' => TASK_SECOND_WEEK,
+      'third'  => TASK_THIRD_WEEK,
+      'fourth' => TASK_FOURTH_WEEK,
+      'last'   => TASK_LAST_WEEK,
+    }.freeze
+
+    def self.constant_to_name(constant)
+      WEEK_OF_MONTH_CONST_MAP.key(constant)
+    end
+
+    def self.name_to_constant(name)
+      WEEK_OF_MONTH_CONST_MAP[name]
+    end
+  end
+  end
+
   # TASK_TRIGGER structure approximated as Ruby hash
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1
