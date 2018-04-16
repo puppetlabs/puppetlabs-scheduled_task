@@ -64,6 +64,22 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
+  describe '#normalized_date' do
+    it 'should format the date without leading zeros' do
+      expect(subject.class.normalized_date(2011, 01, 01)).to eq('2011-1-1')
+    end
+  end
+
+  describe '#normalized_time' do
+    it 'should format the time as {24h}:{minutes}' do
+      expect(subject.class.normalized_time(8, 37)).to eq('08:37')
+    end
+
+    it 'should format the time as {24h}:{minutes}' do
+      expect(subject.class.normalized_time(20, 0)).to eq('20:00')
+    end
+  end
+
   describe "#canonicalize_and_validate" do
     [
       {

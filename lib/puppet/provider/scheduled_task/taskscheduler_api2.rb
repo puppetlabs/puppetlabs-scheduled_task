@@ -105,8 +105,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       when Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
         puppet_trigger['schedule'] = 'once'
       end
-      puppet_trigger['start_date'] = self.class.normalized_date(trigger['start_year'], trigger['start_month'], trigger['start_day'])
-      puppet_trigger['start_time'] = self.class.normalized_time(trigger['start_hour'], trigger['start_minute'])
+      puppet_trigger['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_date(trigger['start_year'], trigger['start_month'], trigger['start_day'])
+      puppet_trigger['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_time(trigger['start_hour'], trigger['start_minute'])
       puppet_trigger['enabled']    = trigger['flags'] & Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED == 0
       puppet_trigger['minutes_interval'] = trigger['minutes_interval'] ||= 0
       puppet_trigger['minutes_duration'] = trigger['minutes_duration'] ||= 0
@@ -261,14 +261,6 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     desired['day_of_week'] ||= current_trigger['day_of_week'] if current_trigger.has_key?('day_of_week')
 
     translate_hash_to_trigger(current_trigger) == translate_hash_to_trigger(desired)
-  end
-
-  def self.normalized_date(year, month, day)
-    Date.new(year, month, day).strftime('%Y-%-m-%-d')
-  end
-
-  def self.normalized_time(hour, minute)
-    Time.parse("#{hour}:#{minute}").strftime('%H:%M')
   end
 
   def dummy_time_trigger

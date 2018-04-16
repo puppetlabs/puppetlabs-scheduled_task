@@ -274,6 +274,13 @@ module Trigger
         'weeks'
     ]
 
+    def self.normalized_date(year, month, day)
+      Date.new(year, month, day).strftime('%Y-%-m-%-d')
+    end
+
+    def self.normalized_time(hour, minute)
+      Time.parse("#{hour}:#{minute}").strftime('%H:%M')
+    end
     # canonicalize given trigger hash
     # throws errors if hash structure is invalid
     # @returns original object with downcased keys
