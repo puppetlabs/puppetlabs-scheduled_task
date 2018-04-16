@@ -114,7 +114,20 @@ describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_wi
         :title        => 'Foo',
         :command      => 'C:\Windows\System32\notepad.exe',
         :compatibility => 1,
-      )[:compatibility]).to eq(:'1')
+      )[:compatibility]).to eq(1)
+    end
+
+    it 'should not allow the string value "1"' do
+      expect {
+        described_class.new(
+          :name         => 'Foo',
+          :command      => 'C:\Windows\System32\notepad.exe',
+          :compatibility => "1"
+        )
+      }.to raise_error(
+        Puppet::ResourceError,
+        /Parameter compatibility failed on Scheduled_task\[Foo\]: must be a number/
+      )
     end
 
     it 'should not allow 2' do

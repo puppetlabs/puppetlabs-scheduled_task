@@ -180,6 +180,10 @@ class TaskScheduler2Task
     @tasksched.compatibility(@definition)
   end
 
+  def compatibility=(value)
+    @tasksched.set_compatibility(@definition, value)
+  end
+
   # Deletes the trigger at the specified index.
   #
   def delete_trigger(index)

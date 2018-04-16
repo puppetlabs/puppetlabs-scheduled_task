@@ -179,6 +179,10 @@ class TaskScheduler2V1Task
     @tasksched.compatibility(@definition)
   end
 
+  def compatibility=(value)
+    @tasksched.set_compatibility(@definition, value)
+  end
+
   # Returns the number of triggers associated with the active task.
   #
   def trigger_count
