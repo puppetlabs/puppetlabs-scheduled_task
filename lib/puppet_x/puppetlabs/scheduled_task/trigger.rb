@@ -128,23 +128,21 @@ module Trigger
 
   class V1
   class Days
-    def self.bitfield_from_days(days)
-      bitfield = 0
-
-      days = [days] unless days.is_a?(Array)
-      days.each do |day|
+    def self.indexes_to_bitmask(day_indexes)
+      day_indexes = [day_indexes].flatten.map do |m|
         # The special "day" of 'last' is represented by day "number"
         # 32. 'last' has the special meaning of "the last day of the
         # month", no matter how many days there are in the month.
-        day = 32 if day == 'last'
-
-        integer_day = Integer(day)
-        raise ArgumentError.new("Day must be specified as an integer in the range 1-31, or as 'last'") unless integer_day = day.to_f and integer_day.between?(1,32)
-
-        bitfield |= 1 << integer_day - 1
+        # raises if unable to convert
+        m.is_a?(String) && m.casecmp('last') == 0 ? 32 : Integer(m)
       end
 
-      bitfield
+      invalid_days = day_indexes.find_all { |i| !i.between?(1, 32) }
+      if !invalid_days.empty?
+        raise ArgumentError.new("Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31, or 'last'")
+      end
+
+      day_indexes.inject(0) { |bitmask, day_index| bitmask |= 1 << day_index - 1 }
     end
 
     def self.days_from_bitfield(bitfield)
