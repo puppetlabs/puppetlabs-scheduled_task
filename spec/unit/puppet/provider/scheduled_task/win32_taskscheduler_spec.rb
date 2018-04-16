@@ -1174,13 +1174,15 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe '#normalized_date' do
+  describe '#normalized_date',
+    :if => described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler do
     it 'should format the date without leading zeros' do
       expect(described_class.normalized_date('2011-01-01')).to eq('2011-1-1')
     end
   end
 
-  describe '#normalized_time' do
+  describe '#normalized_time',
+    :if => described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler do
     it 'should format the time as {24h}:{minutes}' do
       expect(described_class.normalized_time('8:37 PM')).to eq('20:37')
     end
