@@ -203,7 +203,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       # Win32::TaskScheduler ends up appending this trigger to the
       # list of triggers for the task, while #add_trigger is only able
       # to replace existing triggers. *shrug*
-      task.trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(trigger_hash)
+      task.trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
     end
   end
 
@@ -254,7 +254,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   def triggers_same?(current_trigger, desired_trigger)
     return false unless current_trigger['schedule'] == desired_trigger['schedule']
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
-    return false if PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(desired_trigger)['trigger_type'] != PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(current_trigger)['trigger_type']
+    return false if PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(desired_trigger)['trigger_type'] != PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(current_trigger)['trigger_type']
 
     desired = desired_trigger.dup
     desired['start_date']  ||= current_trigger['start_date']  if current_trigger.has_key?('start_date')
@@ -263,7 +263,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     desired['on']          ||= current_trigger['on']          if current_trigger.has_key?('on')
     desired['day_of_week'] ||= current_trigger['day_of_week'] if current_trigger.has_key?('day_of_week')
 
-    PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(current_trigger) == PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(desired)
+    PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(current_trigger) == PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(desired)
   end
 
   def validate_trigger(value)
@@ -278,7 +278,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         self.fail "'enabled' is read-only on scheduled_task triggers and should be removed ('enabled' is usually provided in puppet resource scheduled_task)."
       end
 
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(t)
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(t)
     end
 
     true

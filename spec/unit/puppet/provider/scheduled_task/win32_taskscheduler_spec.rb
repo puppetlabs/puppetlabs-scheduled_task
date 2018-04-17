@@ -12,7 +12,7 @@ shared_examples_for "a trigger that handles start_date and start_time" do
         :command => 'C:\Windows\System32\notepad.exe'
       ).translate_hash_to_trigger(trigger_hash)
     else
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(trigger_hash)
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
     end
   end
 
@@ -1192,7 +1192,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe '#translate_hash_to_trigger' do
+  describe '#from_manifest_hash' do
     before :each do
       @puppet_trigger = {
         'start_date' => '2011-1-1',
@@ -1204,7 +1204,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       if provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
         provider.translate_hash_to_trigger(@puppet_trigger)
       else
-        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(@puppet_trigger)
+        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@puppet_trigger)
       end
     end
 
@@ -1577,7 +1577,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       expect(provider.validate_trigger(triggers_to_validate)).to eq(true)
     end
 
-    it 'should use the exception from translate_hash_to_trigger when it fails' do
+    it 'should use the exception from from_manifest_hash when it fails' do
       triggers_to_validate = [
         {'schedule' => 'once', 'start_date' => '2011-09-13', 'start_time' => '13:50'},
         {'schedule' => 'monthly', 'this is invalid' => true}
@@ -1783,7 +1783,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
           translater = resource.provider.method(:translate_hash_to_trigger)
         else
-          translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:translate_hash_to_trigger)
+          translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:from_manifest_hash)
         end
         @mock_task.expects(:trigger=).with(translater.call(@trigger[1]))
         @mock_task.expects(:trigger=).with(translater.call(@trigger[2]))

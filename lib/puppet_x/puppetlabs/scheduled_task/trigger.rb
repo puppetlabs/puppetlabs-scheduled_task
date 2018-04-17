@@ -404,76 +404,76 @@ module Trigger
       }
     end
 
-    # puppet_trigger is a hash created from a manifest
-    def self.translate_hash_to_trigger(puppet_trigger)
+    # manifest_hash is a hash created from a manifest
+    def self.from_manifest_hash(manifest_hash)
       trigger = time_trigger_once_now
 
-      if puppet_trigger['enabled'] == false
+      if manifest_hash['enabled'] == false
         trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED
       else
         trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
       end
 
-      extra_keys = puppet_trigger.keys.sort - ValidManifestKeys
+      extra_keys = manifest_hash.keys.sort - ValidManifestKeys
       raise Puppet::Error.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(extra_keys)}") unless extra_keys.empty?
-      raise Puppet::Error.new("Must specify 'start_time' when defining a trigger") unless puppet_trigger['start_time']
+      raise Puppet::Error.new("Must specify 'start_time' when defining a trigger") unless manifest_hash['start_time']
 
-      case puppet_trigger['schedule']
+      case manifest_hash['schedule']
       when 'daily'
         trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
         trigger['type'] = {
-          'days_interval' => Integer(puppet_trigger['every'] || 1)
+          'days_interval' => Integer(manifest_hash['every'] || 1)
         }
       when 'weekly'
         trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
         trigger['type'] = {
-          'weeks_interval' => Integer(puppet_trigger['every'] || 1)
+          'weeks_interval' => Integer(manifest_hash['every'] || 1)
         }
 
-        days_of_week = puppet_trigger['day_of_week'] || Day.names
+        days_of_week = manifest_hash['day_of_week'] || Day.names
         trigger['type']['days_of_week'] = Day.names_to_bitmask(days_of_week)
       when 'monthly'
         trigger['type'] = {
-          'months' => Month.indexes_to_bitmask(puppet_trigger['months'] || (1..12).to_a),
+          'months' => Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a),
         }
 
-        if puppet_trigger.keys.include?('on')
-          if puppet_trigger.has_key?('day_of_week') or puppet_trigger.has_key?('which_occurrence')
+        if manifest_hash.keys.include?('on')
+          if manifest_hash.has_key?('day_of_week') or manifest_hash.has_key?('which_occurrence')
             raise Puppet::Error.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
           end
 
           trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
-          trigger['type']['days'] = Days.indexes_to_bitmask(puppet_trigger['on'])
-        elsif puppet_trigger.keys.include?('which_occurrence') or puppet_trigger.keys.include?('day_of_week')
-          raise Puppet::Error.new('which_occurrence cannot be specified as an array') if puppet_trigger['which_occurrence'].is_a?(Array)
+          trigger['type']['days'] = Days.indexes_to_bitmask(manifest_hash['on'])
+        elsif manifest_hash.keys.include?('which_occurrence') or manifest_hash.keys.include?('day_of_week')
+          raise Puppet::Error.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
           %w{day_of_week which_occurrence}.each do |field|
-            raise Puppet::Error.new("#{field} must be specified when creating a monthly day-of-week based trigger") unless puppet_trigger.has_key?(field)
+            raise Puppet::Error.new("#{field} must be specified when creating a monthly day-of-week based trigger") unless manifest_hash.has_key?(field)
           end
 
           trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
-          trigger['type']['weeks']        = Occurrence.name_to_constant(puppet_trigger['which_occurrence'])
-          trigger['type']['days_of_week'] = Day.names_to_bitmask(puppet_trigger['day_of_week'])
+          trigger['type']['weeks']        = Occurrence.name_to_constant(manifest_hash['which_occurrence'])
+          trigger['type']['days_of_week'] = Day.names_to_bitmask(manifest_hash['day_of_week'])
         else
-          raise Puppet::Error.new("Don't know how to create a 'monthly' schedule with the options: #{puppet_trigger.keys.sort.join(', ')}")
+          raise Puppet::Error.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
         end
       when 'once'
-        raise Puppet::Error.new("Must specify 'start_date' when defining a one-time trigger") unless puppet_trigger['start_date']
+        raise Puppet::Error.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
 
         trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
       else
-        raise Puppet::Error.new("Unknown schedule type: #{puppet_trigger["schedule"].inspect}")
+        raise Puppet::Error.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
       end
 
       integer_interval = -1
-      if puppet_trigger['minutes_interval']
-        integer_interval = Integer(puppet_trigger['minutes_interval'])
+      if manifest_hash['minutes_interval']
+        integer_interval = Integer(manifest_hash['minutes_interval'])
         raise Puppet::Error.new('minutes_interval must be an integer greater or equal to 0') if integer_interval < 0
         trigger['minutes_interval'] = integer_interval
       end
 
       integer_duration = -1
-      if puppet_trigger['minutes_duration']
-        integer_duration = Integer(puppet_trigger['minutes_duration'])
+      if manifest_hash['minutes_duration']
+        integer_duration = Integer(manifest_hash['minutes_duration'])
         raise Puppet::Error.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0') if integer_duration <= integer_interval && integer_duration != 0
         trigger['minutes_duration'] = integer_duration
       end
@@ -488,7 +488,7 @@ module Trigger
         raise Puppet::Error.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
       end
 
-      if start_date = puppet_trigger['start_date']
+      if start_date = manifest_hash['start_date']
         start_date = Date.parse(start_date)
         raise Puppet::Error.new("start_date must be on or after 1753-01-01") unless start_date >= Date.new(1753, 1, 1)
 
@@ -497,7 +497,7 @@ module Trigger
         trigger['start_day']   = start_date.day
       end
 
-      start_time = Time.parse(puppet_trigger['start_time'])
+      start_time = Time.parse(manifest_hash['start_time'])
       trigger['start_hour']   = start_time.hour
       trigger['start_minute'] = start_time.min
 
