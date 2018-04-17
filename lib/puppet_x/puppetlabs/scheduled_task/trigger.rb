@@ -244,6 +244,15 @@ module Trigger
   end
   end
 
+  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
+  class V1
+  class Flag
+    TASK_TRIGGER_FLAG_HAS_END_DATE         = 0x1
+    TASK_TRIGGER_FLAG_KILL_AT_DURATION_END = 0x2
+    TASK_TRIGGER_FLAG_DISABLED             = 0x4
+  end
+  end
+
   # TASK_TRIGGER structure approximated as Ruby hash
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1
@@ -318,11 +327,10 @@ module Trigger
 
     # iTrigger is a COM ITrigger instance
     def self.from_iTrigger(iTrigger)
-      require 'puppet/util/windows/taskscheduler' # Needed for the WIN32::ScheduledTask flag constants
       trigger_flags = 0
-      trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.Endboundary.empty?
+      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.Endboundary.empty?
       # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
-      trigger_flags = trigger_flags | Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
+      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
 
       start_boundary = Trigger.string_to_date(iTrigger.StartBoundary)
       end_boundary = Trigger.string_to_date(iTrigger.EndBoundary)
@@ -401,9 +409,9 @@ module Trigger
       trigger = time_trigger_once_now
 
       if puppet_trigger['enabled'] == false
-        trigger['flags'] |= Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED
+        trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED
       else
-        trigger['flags'] &= ~Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED
+        trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
       end
 
       extra_keys = puppet_trigger.keys.sort - ValidManifestKeys
