@@ -203,7 +203,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
       # Win32::TaskScheduler ends up appending this trigger to the
       # list of triggers for the task, while #add_trigger is only able
       # to replace existing triggers. *shrug*
-      task.trigger = translate_hash_to_trigger(trigger_hash)
+      task.trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(trigger_hash)
     end
   end
 
@@ -254,7 +254,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   def triggers_same?(current_trigger, desired_trigger)
     return false unless current_trigger['schedule'] == desired_trigger['schedule']
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
-    return false if translate_hash_to_trigger(desired_trigger)['trigger_type'] != translate_hash_to_trigger(current_trigger)['trigger_type']
+    return false if PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(desired_trigger)['trigger_type'] != PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(current_trigger)['trigger_type']
 
     desired = desired_trigger.dup
     desired['start_date']  ||= current_trigger['start_date']  if current_trigger.has_key?('start_date')
@@ -263,106 +263,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     desired['on']          ||= current_trigger['on']          if current_trigger.has_key?('on')
     desired['day_of_week'] ||= current_trigger['day_of_week'] if current_trigger.has_key?('day_of_week')
 
-    translate_hash_to_trigger(current_trigger) == translate_hash_to_trigger(desired)
-  end
-
-  def translate_hash_to_trigger(puppet_trigger)
-    trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now
-
-    if puppet_trigger['enabled'] == false
-      trigger['flags'] |= Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED
-    else
-      trigger['flags'] &= ~Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED
-    end
-
-    extra_keys = puppet_trigger.keys.sort - ['index', 'enabled', 'schedule', 'start_date', 'start_time', 'every', 'months', 'on', 'which_occurrence', 'day_of_week', 'minutes_interval', 'minutes_duration']
-    self.fail "Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(extra_keys)}" unless extra_keys.empty?
-    self.fail "Must specify 'start_time' when defining a trigger" unless puppet_trigger['start_time']
-
-    case puppet_trigger['schedule']
-    when 'daily'
-      trigger['trigger_type'] = Win32::TaskScheduler::DAILY
-      trigger['type'] = {
-        'days_interval' => Integer(puppet_trigger['every'] || 1)
-      }
-    when 'weekly'
-      trigger['trigger_type'] = Win32::TaskScheduler::WEEKLY
-      trigger['type'] = {
-        'weeks_interval' => Integer(puppet_trigger['every'] || 1)
-      }
-
-      days_of_week = puppet_trigger['day_of_week'] || PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names
-      trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(days_of_week)
-    when 'monthly'
-      trigger['type'] = {
-        'months' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.indexes_to_bitmask(puppet_trigger['months'] || (1..12).to_a),
-      }
-
-      if puppet_trigger.keys.include?('on')
-        if puppet_trigger.has_key?('day_of_week') or puppet_trigger.has_key?('which_occurrence')
-          self.fail "Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger"
-        end
-
-        trigger['trigger_type'] = Win32::TaskScheduler::MONTHLYDATE
-        trigger['type']['days'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.indexes_to_bitmask(puppet_trigger['on'])
-      elsif puppet_trigger.keys.include?('which_occurrence') or puppet_trigger.keys.include?('day_of_week')
-        self.fail 'which_occurrence cannot be specified as an array' if puppet_trigger['which_occurrence'].is_a?(Array)
-        %w{day_of_week which_occurrence}.each do |field|
-          self.fail "#{field} must be specified when creating a monthly day-of-week based trigger" unless puppet_trigger.has_key?(field)
-        end
-
-        trigger['trigger_type']         = Win32::TaskScheduler::MONTHLYDOW
-        trigger['type']['weeks']        = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.name_to_constant(puppet_trigger['which_occurrence'])
-        trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(puppet_trigger['day_of_week'])
-      else
-        self.fail "Don't know how to create a 'monthly' schedule with the options: #{puppet_trigger.keys.sort.join(', ')}"
-      end
-    when 'once'
-      self.fail "Must specify 'start_date' when defining a one-time trigger" unless puppet_trigger['start_date']
-
-      trigger['trigger_type'] = Win32::TaskScheduler::ONCE
-    else
-      self.fail "Unknown schedule type: #{puppet_trigger["schedule"].inspect}"
-    end
-
-    integer_interval = -1
-    if puppet_trigger['minutes_interval']
-      integer_interval = Integer(puppet_trigger['minutes_interval'])
-      self.fail 'minutes_interval must be an integer greater or equal to 0' if integer_interval < 0
-      trigger['minutes_interval'] = integer_interval
-    end
-
-    integer_duration = -1
-    if puppet_trigger['minutes_duration']
-      integer_duration = Integer(puppet_trigger['minutes_duration'])
-      self.fail 'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0' if integer_duration <= integer_interval && integer_duration != 0
-      trigger['minutes_duration'] = integer_duration
-    end
-
-    if integer_interval > 0 && integer_duration == -1
-      minutes_in_day = 1440
-      integer_duration = minutes_in_day
-      trigger['minutes_duration'] = minutes_in_day
-    end
-
-    if integer_interval >= integer_duration && integer_interval > 0
-      self.fail 'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
-    end
-
-    if start_date = puppet_trigger['start_date']
-      start_date = Date.parse(start_date)
-      self.fail "start_date must be on or after 1753-01-01" unless start_date >= Date.new(1753, 1, 1)
-
-      trigger['start_year']  = start_date.year
-      trigger['start_month'] = start_date.month
-      trigger['start_day']   = start_date.day
-    end
-
-    start_time = Time.parse(puppet_trigger['start_time'])
-    trigger['start_hour']   = start_time.hour
-    trigger['start_minute'] = start_time.min
-
-    trigger
+    PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(current_trigger) == PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(desired)
   end
 
   def validate_trigger(value)
@@ -377,7 +278,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         self.fail "'enabled' is read-only on scheduled_task triggers and should be removed ('enabled' is usually provided in puppet resource scheduled_task)."
       end
 
-      translate_hash_to_trigger(t)
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(t)
     end
 
     true

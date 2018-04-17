@@ -6,10 +6,14 @@ require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task' if Puppet.fea
 
 shared_examples_for "a trigger that handles start_date and start_time" do
   let(:trigger) do
-    described_class.new(
-      :name => 'Shared Test Task',
-      :command => 'C:\Windows\System32\notepad.exe'
-    ).translate_hash_to_trigger(trigger_hash)
+    if described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler
+      described_class.new(
+        :name => 'Shared Test Task',
+        :command => 'C:\Windows\System32\notepad.exe'
+      ).translate_hash_to_trigger(trigger_hash)
+    else
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(trigger_hash)
+    end
   end
 
   before :each do
@@ -1196,7 +1200,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       }
     end
     let(:provider) { described_class.new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
-    let(:trigger)  { provider.translate_hash_to_trigger(@puppet_trigger) }
+    let(:trigger) do
+      if provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
+        provider.translate_hash_to_trigger(@puppet_trigger)
+      else
+        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.translate_hash_to_trigger(@puppet_trigger)
+      end
+    end
 
     context "working with repeat every x triggers" do
       before :each do
@@ -1770,8 +1780,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
-        @mock_task.expects(:trigger=).with(resource.provider.translate_hash_to_trigger(@trigger[1]))
-        @mock_task.expects(:trigger=).with(resource.provider.translate_hash_to_trigger(@trigger[2]))
+        if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
+          translater = resource.provider.method(:translate_hash_to_trigger)
+        else
+          translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:translate_hash_to_trigger)
+        end
+        @mock_task.expects(:trigger=).with(translater.call(@trigger[1]))
+        @mock_task.expects(:trigger=).with(translater.call(@trigger[2]))
 
         resource.provider.trigger = @trigger
       end
