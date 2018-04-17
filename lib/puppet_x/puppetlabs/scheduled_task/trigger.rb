@@ -274,6 +274,21 @@ module Trigger
         'weeks'
     ]
 
+   ValidManifestKeys = [
+      'index',
+      'enabled',
+      'schedule',
+      'start_date',
+      'start_time',
+      'every',
+      'months',
+      'on',
+      'which_occurrence',
+      'day_of_week',
+      'minutes_interval',
+      'minutes_duration'
+    ].freeze
+
     def self.normalized_date(year, month, day)
       Date.new(year, month, day).strftime('%Y-%-m-%-d')
     end
@@ -381,8 +396,9 @@ module Trigger
       }
     end
 
+    # puppet_trigger is a hash created from a manifest
     def self.translate_hash_to_trigger(puppet_trigger)
-      trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now
+      trigger = time_trigger_once_now
 
       if puppet_trigger['enabled'] == false
         trigger['flags'] |= Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED
@@ -390,27 +406,27 @@ module Trigger
         trigger['flags'] &= ~Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED
       end
 
-      extra_keys = puppet_trigger.keys.sort - ['index', 'enabled', 'schedule', 'start_date', 'start_time', 'every', 'months', 'on', 'which_occurrence', 'day_of_week', 'minutes_interval', 'minutes_duration']
+      extra_keys = puppet_trigger.keys.sort - ValidManifestKeys
       raise Puppet::Error.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(extra_keys)}") unless extra_keys.empty?
       raise Puppet::Error.new("Must specify 'start_time' when defining a trigger") unless puppet_trigger['start_time']
 
       case puppet_trigger['schedule']
       when 'daily'
-        trigger['trigger_type'] = Win32::TaskScheduler::DAILY
+        trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
         trigger['type'] = {
           'days_interval' => Integer(puppet_trigger['every'] || 1)
         }
       when 'weekly'
-        trigger['trigger_type'] = Win32::TaskScheduler::WEEKLY
+        trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
         trigger['type'] = {
           'weeks_interval' => Integer(puppet_trigger['every'] || 1)
         }
 
-        days_of_week = puppet_trigger['day_of_week'] || PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names
-        trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(days_of_week)
+        days_of_week = puppet_trigger['day_of_week'] || Day.names
+        trigger['type']['days_of_week'] = Day.names_to_bitmask(days_of_week)
       when 'monthly'
         trigger['type'] = {
-          'months' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.indexes_to_bitmask(puppet_trigger['months'] || (1..12).to_a),
+          'months' => Month.indexes_to_bitmask(puppet_trigger['months'] || (1..12).to_a),
         }
 
         if puppet_trigger.keys.include?('on')
@@ -418,24 +434,24 @@ module Trigger
             raise Puppet::Error.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
           end
 
-          trigger['trigger_type'] = Win32::TaskScheduler::MONTHLYDATE
-          trigger['type']['days'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.indexes_to_bitmask(puppet_trigger['on'])
+          trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
+          trigger['type']['days'] = Days.indexes_to_bitmask(puppet_trigger['on'])
         elsif puppet_trigger.keys.include?('which_occurrence') or puppet_trigger.keys.include?('day_of_week')
           raise Puppet::Error.new('which_occurrence cannot be specified as an array') if puppet_trigger['which_occurrence'].is_a?(Array)
           %w{day_of_week which_occurrence}.each do |field|
             raise Puppet::Error.new("#{field} must be specified when creating a monthly day-of-week based trigger") unless puppet_trigger.has_key?(field)
           end
 
-          trigger['trigger_type']         = Win32::TaskScheduler::MONTHLYDOW
-          trigger['type']['weeks']        = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.name_to_constant(puppet_trigger['which_occurrence'])
-          trigger['type']['days_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.names_to_bitmask(puppet_trigger['day_of_week'])
+          trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
+          trigger['type']['weeks']        = Occurrence.name_to_constant(puppet_trigger['which_occurrence'])
+          trigger['type']['days_of_week'] = Day.names_to_bitmask(puppet_trigger['day_of_week'])
         else
           raise Puppet::Error.new("Don't know how to create a 'monthly' schedule with the options: #{puppet_trigger.keys.sort.join(', ')}")
         end
       when 'once'
         raise Puppet::Error.new("Must specify 'start_date' when defining a one-time trigger") unless puppet_trigger['start_date']
 
-        trigger['trigger_type'] = Win32::TaskScheduler::ONCE
+        trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
       else
         raise Puppet::Error.new("Unknown schedule type: #{puppet_trigger["schedule"].inspect}")
       end
