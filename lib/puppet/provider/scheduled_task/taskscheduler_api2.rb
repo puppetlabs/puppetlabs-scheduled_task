@@ -221,7 +221,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def create
     clear_task
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(resource[:name], dummy_time_trigger)
+    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(
+      resource[:name],
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.dummy_time_trigger
+    )
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user].each do |prop|
@@ -263,27 +266,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     translate_hash_to_trigger(current_trigger) == translate_hash_to_trigger(desired)
   end
 
-  def dummy_time_trigger
-    now = Time.now
-    {
-      'flags'                   => 0,
-      'random_minutes_interval' => 0,
-      'end_day'                 => 0,
-      'end_year'                => 0,
-      'minutes_interval'        => 0,
-      'end_month'               => 0,
-      'minutes_duration'        => 0,
-      'start_year'              => now.year,
-      'start_month'             => now.month,
-      'start_day'               => now.day,
-      'start_hour'              => now.hour,
-      'start_minute'            => now.min,
-      'trigger_type'            => Win32::TaskScheduler::ONCE,
-    }
-  end
-
   def translate_hash_to_trigger(puppet_trigger)
-    trigger = dummy_time_trigger
+    trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.dummy_time_trigger
 
     if puppet_trigger['enabled'] == false
       trigger['flags'] |= Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED

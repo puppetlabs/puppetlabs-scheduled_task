@@ -362,6 +362,25 @@ module Trigger
       v1trigger
     end
 
+    def self.dummy_time_trigger
+      now = Time.now
+      {
+        'flags'                   => 0,
+        'random_minutes_interval' => 0,
+        'end_day'                 => 0,
+        'end_year'                => 0,
+        'minutes_interval'        => 0,
+        'end_month'               => 0,
+        'minutes_duration'        => 0,
+        'start_year'              => now.year,
+        'start_month'             => now.month,
+        'start_day'               => now.day,
+        'start_hour'              => now.hour,
+        'start_minute'            => now.min,
+        'trigger_type'            => Win32::TaskScheduler::ONCE,
+      }
+    end
+
     private
 
     # converts all keys to lowercase
