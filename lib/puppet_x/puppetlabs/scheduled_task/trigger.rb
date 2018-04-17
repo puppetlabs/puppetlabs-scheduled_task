@@ -298,6 +298,13 @@ module Trigger
       'minutes_duration'
     ].freeze
 
+    ValidManifestScheduleKeys = [
+      'daily',
+      'weekly',
+      'monthly',
+      'once'
+    ].freeze
+
     def self.normalized_date(year, month, day)
       Date.new(year, month, day).strftime('%Y-%-m-%-d')
     end
@@ -404,8 +411,88 @@ module Trigger
       }
     end
 
+    # canonicalize given trigger hash
+    # throws errors if hash structure is invalid
+    # does not throw errors when invalid types are specified
+    # @returns original object with downcased keys
+    def self.canonicalize_and_validate_manifest(manifest_hash)
+      raise TypeError unless manifest_hash.is_a?(Hash)
+      manifest_hash = downcase_keys(manifest_hash)
+
+      # check for valid key usage
+      invalid_keys = manifest_hash.keys - ValidManifestKeys
+      raise ArgumentError.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}") unless invalid_keys.empty?
+
+      if !ValidManifestScheduleKeys.include?(manifest_hash['schedule'])
+        raise ArgumentError.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
+      end
+
+      # required fields
+      %w{start_time}.each do |field|
+        next if manifest_hash.key?(field)
+        raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
+      end
+
+      # specific setting rules for schedule types
+      case manifest_hash['schedule']
+      when 'monthly'
+        if manifest_hash.key?('on')
+          if manifest_hash.key?('day_of_week') || manifest_hash.key?('which_occurrence')
+            raise ArgumentError.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
+          end
+        elsif manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
+          raise ArgumentError.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
+
+          %w{day_of_week which_occurrence}.each do |field|
+            next if manifest_hash.key?(field)
+            raise ArgumentError.new("#{field} must be specified when creating a monthly day-of-week based trigger")
+          end
+        else
+          raise ArgumentError.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
+        end
+      when 'once'
+        raise ArgumentError.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
+      end
+
+      # duration set with / without interval
+      if manifest_hash['minutes_duration']
+        duration = Integer(manifest_hash['minutes_duration'])
+        # defaults to -1 when unspecified
+        interval = Integer(manifest_hash['minutes_interval'] || -1)
+        if duration != 0 && duration <= interval
+          raise ArgumentError.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0')
+        end
+      end
+
+      # interval set with / without duration
+      if manifest_hash['minutes_interval']
+        interval = Integer(manifest_hash['minutes_interval'])
+        # interval < 0
+        if interval < 0
+          raise ArgumentError.new('minutes_interval must be an integer greater or equal to 0')
+        end
+
+        # defaults to a day when unspecified
+        duration = Integer(manifest_hash['minutes_duration'] || 1440)
+
+        if interval > 0 && interval >= duration
+          raise ArgumentError.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
+        end
+      end
+
+      if manifest_hash['start_date']
+        min_date = Date.new(1753, 1, 1)
+        start_date = Date.parse(manifest_hash['start_date'])
+        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
+      end
+
+      manifest_hash
+    end
+
     # manifest_hash is a hash created from a manifest
     def self.from_manifest_hash(manifest_hash)
+      manifest_hash = canonicalize_and_validate_manifest(manifest_hash)
+
       trigger = time_trigger_once_now
 
       if manifest_hash['enabled'] == false
@@ -413,10 +500,6 @@ module Trigger
       else
         trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
       end
-
-      extra_keys = manifest_hash.keys.sort - ValidManifestKeys
-      raise Puppet::Error.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(extra_keys)}") unless extra_keys.empty?
-      raise Puppet::Error.new("Must specify 'start_time' when defining a trigger") unless manifest_hash['start_time']
 
       case manifest_hash['schedule']
       when 'daily'
@@ -438,60 +521,34 @@ module Trigger
         }
 
         if manifest_hash.keys.include?('on')
-          if manifest_hash.has_key?('day_of_week') or manifest_hash.has_key?('which_occurrence')
-            raise Puppet::Error.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
-          end
-
           trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
           trigger['type']['days'] = Days.indexes_to_bitmask(manifest_hash['on'])
         elsif manifest_hash.keys.include?('which_occurrence') or manifest_hash.keys.include?('day_of_week')
-          raise Puppet::Error.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
-          %w{day_of_week which_occurrence}.each do |field|
-            raise Puppet::Error.new("#{field} must be specified when creating a monthly day-of-week based trigger") unless manifest_hash.has_key?(field)
-          end
-
           trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
           trigger['type']['weeks']        = Occurrence.name_to_constant(manifest_hash['which_occurrence'])
           trigger['type']['days_of_week'] = Day.names_to_bitmask(manifest_hash['day_of_week'])
-        else
-          raise Puppet::Error.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
         end
       when 'once'
-        raise Puppet::Error.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
-
         trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
-      else
-        raise Puppet::Error.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
       end
 
       integer_interval = -1
       if manifest_hash['minutes_interval']
         integer_interval = Integer(manifest_hash['minutes_interval'])
-        raise Puppet::Error.new('minutes_interval must be an integer greater or equal to 0') if integer_interval < 0
         trigger['minutes_interval'] = integer_interval
       end
 
-      integer_duration = -1
       if manifest_hash['minutes_duration']
-        integer_duration = Integer(manifest_hash['minutes_duration'])
-        raise Puppet::Error.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0') if integer_duration <= integer_interval && integer_duration != 0
-        trigger['minutes_duration'] = integer_duration
+        trigger['minutes_duration'] = Integer(manifest_hash['minutes_duration'])
       end
 
-      if integer_interval > 0 && integer_duration == -1
+      if integer_interval > 0 && !manifest_hash.key?('minutes_duration')
         minutes_in_day = 1440
-        integer_duration = minutes_in_day
         trigger['minutes_duration'] = minutes_in_day
-      end
-
-      if integer_interval >= integer_duration && integer_interval > 0
-        raise Puppet::Error.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
       end
 
       if start_date = manifest_hash['start_date']
         start_date = Date.parse(start_date)
-        raise Puppet::Error.new("start_date must be on or after 1753-01-01") unless start_date >= Date.new(1753, 1, 1)
-
         trigger['start_year']  = start_date.year
         trigger['start_month'] = start_date.month
         trigger['start_day']   = start_date.day

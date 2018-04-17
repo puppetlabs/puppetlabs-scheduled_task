@@ -48,7 +48,6 @@ shared_examples_for "a trigger that handles start_date and start_time" do
       trigger_hash['start_date'] = '1752-12-31'
 
       expect { date_component }.to raise_error(
-        Puppet::Error,
         'start_date must be on or after 1753-01-01'
       )
     end
@@ -1236,7 +1235,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_interval'] = '-1'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_interval must be an integer greater or equal to 0'
         )
       end
@@ -1260,7 +1258,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '-1'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
@@ -1295,7 +1292,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '10'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
@@ -1313,7 +1309,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '9'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
@@ -1323,7 +1318,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '0'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
         )
       end
@@ -1346,7 +1340,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('start_date')
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           /Must specify 'start_date' when defining a one-time trigger/
         )
       end
@@ -1355,7 +1348,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('start_time')
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           /Must specify 'start_time' when defining a trigger/
         )
       end
@@ -1477,7 +1469,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['which_occurrence'] = 'first'
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
@@ -1486,7 +1477,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['day_of_week'] = 'mon'
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
@@ -1495,7 +1485,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('on')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Don't know how to create a 'monthly' schedule with the options: schedule, start_date, start_time/
         )
       end
@@ -1527,7 +1516,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['on'] = 15
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
@@ -1536,7 +1524,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('which_occurrence')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /which_occurrence must be specified when creating a monthly day-of-week based trigger/
         )
       end
@@ -1545,7 +1532,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('day_of_week')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /day_of_week must be specified when creating a monthly day-of-week based trigger/
         )
       end
@@ -1584,7 +1570,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       ]
 
       expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
-        Puppet::Error,
         /#{Regexp.escape("Unknown trigger option(s): ['this is invalid']")}/
       )
     end
