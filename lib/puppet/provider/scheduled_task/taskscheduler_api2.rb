@@ -223,7 +223,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     clear_task
     @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(
       resource[:name],
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.dummy_time_trigger
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now
     )
     self.command = resource[:command]
 
@@ -267,7 +267,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def translate_hash_to_trigger(puppet_trigger)
-    trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.dummy_time_trigger
+    trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now
 
     if puppet_trigger['enabled'] == false
       trigger['flags'] |= Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED

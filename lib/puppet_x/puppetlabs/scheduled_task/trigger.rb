@@ -362,7 +362,7 @@ module Trigger
       v1trigger
     end
 
-    def self.dummy_time_trigger
+    def self.time_trigger_once_now
       now = Time.now
       {
         'flags'                   => 0,
@@ -377,7 +377,7 @@ module Trigger
         'start_day'               => now.day,
         'start_hour'              => now.hour,
         'start_minute'            => now.min,
-        'trigger_type'            => Win32::TaskScheduler::ONCE,
+        'trigger_type'            => :TASK_TIME_TRIGGER_ONCE,
       }
     end
 
