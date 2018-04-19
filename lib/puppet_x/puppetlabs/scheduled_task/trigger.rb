@@ -514,12 +514,6 @@ module Trigger
 
       trigger = default_trigger_for(manifest_hash['schedule'])
 
-      if manifest_hash['enabled'] == false
-        trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED
-      else
-        trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
-      end
-
       case manifest_hash['schedule']
       when 'daily'
         trigger['type']['days_interval'] = Integer(manifest_hash['every'] || 1)
@@ -531,29 +525,30 @@ module Trigger
       when 'monthly'
         trigger['type']['months'] = Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
 
-        if manifest_hash.keys.include?('on')
+        if manifest_hash.key?('on')
           trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
           trigger['type']['days'] = Days.indexes_to_bitmask(manifest_hash['on'])
-        elsif manifest_hash.keys.include?('which_occurrence') or manifest_hash.keys.include?('day_of_week')
+        elsif  manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
           trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
           trigger['type']['weeks']        = Occurrence.name_to_constant(manifest_hash['which_occurrence'])
           trigger['type']['days_of_week'] = Day.names_to_bitmask(manifest_hash['day_of_week'])
         end
       end
 
-      integer_interval = -1
+      manifest_hash['enabled'] == false ?
+        trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED :
+        trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
+
       if manifest_hash['minutes_interval']
-        integer_interval = Integer(manifest_hash['minutes_interval'])
-        trigger['minutes_interval'] = integer_interval
+        trigger['minutes_interval'] = Integer(manifest_hash['minutes_interval'])
+
+        if trigger['minutes_interval'] > 0 && !manifest_hash.key?('minutes_duration')
+          trigger['minutes_duration'] = 1440 # one day in minutes
+        end
       end
 
       if manifest_hash['minutes_duration']
         trigger['minutes_duration'] = Integer(manifest_hash['minutes_duration'])
-      end
-
-      if integer_interval > 0 && !manifest_hash.key?('minutes_duration')
-        minutes_in_day = 1440
-        trigger['minutes_duration'] = minutes_in_day
       end
 
       if start_date = manifest_hash['start_date']
