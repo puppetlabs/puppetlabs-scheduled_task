@@ -298,12 +298,15 @@ module Trigger
       'minutes_duration'
     ].freeze
 
-    ValidManifestScheduleKeys = [
-      'daily',
-      'weekly',
-      'monthly',
-      'once'
-    ].freeze
+    ScheduleNameDefaultsMap = {
+      'daily' => :TASK_TIME_TRIGGER_DAILY,
+      'weekly' => :TASK_TIME_TRIGGER_WEEKLY,
+      # NOTE: monthly uses context to determine MONTHLYDATE or MONTHLYDOW
+      'monthly' => :TASK_TIME_TRIGGER_MONTHLYDATE,
+      'once' => :TASK_TIME_TRIGGER_ONCE,
+    }.freeze
+
+    ValidManifestScheduleKeys = ScheduleNameDefaultsMap.keys.freeze
 
     def self.normalized_date(year, month, day)
       Date.new(year, month, day).strftime('%Y-%-m-%-d')
@@ -392,8 +395,23 @@ module Trigger
       v1trigger
     end
 
-    def self.time_trigger_once_now
+    def self.default_trigger_settings_for(type = 'once')
+      case type
+      when 'daily'
+        { 'days_interval' => 1 }
+      when 'weekly'
+        {
+          'days_of_week'   => Day.names_to_bitmask(Day.names),
+          'weeks_interval' => 1
+        }
+      when 'monthly'
+        { 'months' => Month.indexes_to_bitmask((1..12).to_a) }
+      end
+    end
+
+    def self.default_trigger_for(type = 'once')
       now = Time.now
+      type_hash = default_trigger_settings_for(type)
       {
         'flags'                   => 0,
         'random_minutes_interval' => 0,
@@ -407,8 +425,9 @@ module Trigger
         'start_day'               => now.day,
         'start_hour'              => now.hour,
         'start_minute'            => now.min,
-        'trigger_type'            => :TASK_TIME_TRIGGER_ONCE,
-      }
+        'trigger_type'            => ScheduleNameDefaultsMap[type],
+      # 'once' has no specific settings, so 'type' should be omitted
+      }.merge( type_hash.nil? ? {} : { 'type' => type_hash })
     end
 
     # canonicalize given trigger hash
@@ -493,7 +512,7 @@ module Trigger
     def self.from_manifest_hash(manifest_hash)
       manifest_hash = canonicalize_and_validate_manifest(manifest_hash)
 
-      trigger = time_trigger_once_now
+      trigger = default_trigger_for(manifest_hash['schedule'])
 
       if manifest_hash['enabled'] == false
         trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED
@@ -503,22 +522,14 @@ module Trigger
 
       case manifest_hash['schedule']
       when 'daily'
-        trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
-        trigger['type'] = {
-          'days_interval' => Integer(manifest_hash['every'] || 1)
-        }
+        trigger['type']['days_interval'] = Integer(manifest_hash['every'] || 1)
       when 'weekly'
-        trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
-        trigger['type'] = {
-          'weeks_interval' => Integer(manifest_hash['every'] || 1)
-        }
+        trigger['type']['weeks_interval'] = Integer(manifest_hash['every'] || 1)
 
         days_of_week = manifest_hash['day_of_week'] || Day.names
         trigger['type']['days_of_week'] = Day.names_to_bitmask(days_of_week)
       when 'monthly'
-        trigger['type'] = {
-          'months' => Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a),
-        }
+        trigger['type']['months'] = Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
 
         if manifest_hash.keys.include?('on')
           trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
@@ -528,8 +539,6 @@ module Trigger
           trigger['type']['weeks']        = Occurrence.name_to_constant(manifest_hash['which_occurrence'])
           trigger['type']['days_of_week'] = Day.names_to_bitmask(manifest_hash['day_of_week'])
         end
-      when 'once'
-        trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
       end
 
       integer_interval = -1

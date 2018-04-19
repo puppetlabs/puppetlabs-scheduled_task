@@ -15,7 +15,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now)
+      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once'))
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.flags = Win32::TaskScheduler::DISABLED
@@ -47,7 +47,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now)
+      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once'))
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.flags = Win32::TaskScheduler::DISABLED

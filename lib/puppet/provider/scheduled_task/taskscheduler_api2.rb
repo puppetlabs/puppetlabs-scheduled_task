@@ -223,7 +223,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     clear_task
     @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(
       resource[:name],
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.time_trigger_once_now
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once')
     )
     self.command = resource[:command]
 
