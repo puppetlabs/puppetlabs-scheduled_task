@@ -31,7 +31,7 @@ class TaskScheduler2Task
   def enum
     @tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2]).map do |item|
+      include_compatibility: [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1]).map do |item|
         @tasksched.task_name_from_task_path(item)
     end
   end
