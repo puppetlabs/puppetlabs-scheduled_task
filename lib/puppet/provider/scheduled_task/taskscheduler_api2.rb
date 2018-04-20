@@ -2,6 +2,7 @@ require 'puppet/parameter'
 
 if Puppet.features.microsoft_windows?
   require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task')
+  require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_task')
 end
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
@@ -12,8 +13,16 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   defaultfor :operatingsystem => :windows
   confine    :operatingsystem => :windows
 
+  def task_scheduler_helper
+    resource[:compatibility] == 1 ? PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task : PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task
+  end
+
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.tasks.collect do |job_file|
+    # Works fine
+    # PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.tasks.collect do |job_file|
+    # Explodes for some reason, see win32_taskscheduler_spec.rb:696
+    # Something in that test doesn't like the enum for the v2 helper but is fine with the v1 adapter
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
       new(
         :provider => :taskscheduler_api2,
@@ -23,13 +32,13 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.exists? resource[:name]
+    task_scheduler_helper.new.exists? resource[:name]
   end
 
   def task
     return @task if @task
 
-    @task ||= PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new
+    @task ||= task_scheduler_helper.new
     @task.activate(resource[:name] + '.job') if exists?
 
     @task
@@ -219,7 +228,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def create
     clear_task
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(resource[:name], dummy_time_trigger)
+    @task = task_scheduler_helper.new(resource[:name], dummy_time_trigger)
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user].each do |prop|
@@ -228,7 +237,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.delete(resource[:name] + '.job')
+    task_scheduler_helper.new.delete(resource[:name] + '.job')
   end
 
   def flush

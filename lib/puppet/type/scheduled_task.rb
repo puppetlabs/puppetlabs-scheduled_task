@@ -89,6 +89,7 @@ Puppet::Type.newtype(:scheduled_task) do
       2003 computer."
 
     newvalue(1)
+    newvalue(2)
     defaultto(1)
 
     validate do |value|
