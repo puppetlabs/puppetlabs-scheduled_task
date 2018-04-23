@@ -6,10 +6,14 @@ require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task' if Puppet.fea
 
 shared_examples_for "a trigger that handles start_date and start_time" do
   let(:trigger) do
-    described_class.new(
-      :name => 'Shared Test Task',
-      :command => 'C:\Windows\System32\notepad.exe'
-    ).translate_hash_to_trigger(trigger_hash)
+    if described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler
+      described_class.new(
+        :name => 'Shared Test Task',
+        :command => 'C:\Windows\System32\notepad.exe'
+      ).translate_hash_to_trigger(trigger_hash)
+    else
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
+    end
   end
 
   before :each do
@@ -44,7 +48,6 @@ shared_examples_for "a trigger that handles start_date and start_time" do
       trigger_hash['start_date'] = '1752-12-31'
 
       expect { date_component }.to raise_error(
-        Puppet::Error,
         'start_date must be on or after 1753-01-01'
       )
     end
@@ -1174,19 +1177,21 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe '#normalized_date' do
+  describe '#normalized_date',
+    :if => described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler do
     it 'should format the date without leading zeros' do
       expect(described_class.normalized_date('2011-01-01')).to eq('2011-1-1')
     end
   end
 
-  describe '#normalized_time' do
+  describe '#normalized_time',
+    :if => described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler do
     it 'should format the time as {24h}:{minutes}' do
       expect(described_class.normalized_time('8:37 PM')).to eq('20:37')
     end
   end
 
-  describe '#translate_hash_to_trigger' do
+  describe '#from_manifest_hash' do
     before :each do
       @puppet_trigger = {
         'start_date' => '2011-1-1',
@@ -1194,7 +1199,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       }
     end
     let(:provider) { described_class.new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
-    let(:trigger)  { provider.translate_hash_to_trigger(@puppet_trigger) }
+    let(:trigger) do
+      if provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
+        provider.translate_hash_to_trigger(@puppet_trigger)
+      else
+        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@puppet_trigger)
+      end
+    end
 
     context "working with repeat every x triggers" do
       before :each do
@@ -1224,7 +1235,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_interval'] = '-1'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_interval must be an integer greater or equal to 0'
         )
       end
@@ -1248,7 +1258,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '-1'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
@@ -1283,7 +1292,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '10'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
@@ -1301,7 +1309,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '9'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
@@ -1311,7 +1318,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['minutes_duration'] = '0'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
         )
       end
@@ -1334,7 +1340,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('start_date')
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           /Must specify 'start_date' when defining a one-time trigger/
         )
       end
@@ -1343,7 +1348,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('start_time')
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
           /Must specify 'start_time' when defining a trigger/
         )
       end
@@ -1465,7 +1469,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['which_occurrence'] = 'first'
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
@@ -1474,7 +1477,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['day_of_week'] = 'mon'
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
@@ -1483,7 +1485,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('on')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Don't know how to create a 'monthly' schedule with the options: schedule, start_date, start_time/
         )
       end
@@ -1515,7 +1516,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['on'] = 15
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
@@ -1524,7 +1524,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('which_occurrence')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /which_occurrence must be specified when creating a monthly day-of-week based trigger/
         )
       end
@@ -1533,7 +1532,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger.delete('day_of_week')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
           /day_of_week must be specified when creating a monthly day-of-week based trigger/
         )
       end
@@ -1565,14 +1563,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       expect(provider.validate_trigger(triggers_to_validate)).to eq(true)
     end
 
-    it 'should use the exception from translate_hash_to_trigger when it fails' do
+    it 'should use the exception from from_manifest_hash when it fails' do
       triggers_to_validate = [
         {'schedule' => 'once', 'start_date' => '2011-09-13', 'start_time' => '13:50'},
         {'schedule' => 'monthly', 'this is invalid' => true}
       ]
 
       expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
-        Puppet::Error,
         /#{Regexp.escape("Unknown trigger option(s): ['this is invalid']")}/
       )
     end
@@ -1583,7 +1580,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       ]
 
       expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
-        Puppet::Error,
         /#{Regexp.escape("Days_of_week value BadDay is invalid")}/
       )
     end
@@ -1769,8 +1765,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
-        @mock_task.expects(:trigger=).with(resource.provider.translate_hash_to_trigger(@trigger[1]))
-        @mock_task.expects(:trigger=).with(resource.provider.translate_hash_to_trigger(@trigger[2]))
+        if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
+          translater = resource.provider.method(:translate_hash_to_trigger)
+        else
+          translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:from_manifest_hash)
+        end
+        @mock_task.expects(:trigger=).with(translater.call(@trigger[1]))
+        @mock_task.expects(:trigger=).with(translater.call(@trigger[2]))
 
         resource.provider.trigger = @trigger
       end

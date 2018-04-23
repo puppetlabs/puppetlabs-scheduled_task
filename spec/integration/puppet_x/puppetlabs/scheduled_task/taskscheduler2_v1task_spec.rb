@@ -4,25 +4,6 @@ require 'spec_helper'
 require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
 require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task' if Puppet.features.microsoft_windows?
 
-def dummy_time_trigger
-  now = Time.now
-  {
-    'flags'                   => 0,
-    'random_minutes_interval' => 0,
-    'end_day'                 => 0,
-    'end_year'                => 0,
-    'minutes_interval'        => 0,
-    'end_month'               => 0,
-    'minutes_duration'        => 0,
-    'start_year'              => now.year,
-    'start_month'             => now.month,
-    'start_day'               => now.day,
-    'start_hour'              => now.hour,
-    'start_minute'            => now.min,
-    'trigger_type'            => Win32::TaskScheduler::ONCE,
-  }
-end
-
 # These integration tests confirm that the tasks created in a V1 scheduled task APi are visible
 # in the V2 API, and that changes in the V2 API will appear in the V1 API.
 
@@ -34,7 +15,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-      task = Win32::TaskScheduler.new(@task_name, dummy_time_trigger)
+      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once'))
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.flags = Win32::TaskScheduler::DISABLED
@@ -66,7 +47,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-      task = Win32::TaskScheduler.new(@task_name, dummy_time_trigger)
+      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once'))
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.flags = Win32::TaskScheduler::DISABLED
