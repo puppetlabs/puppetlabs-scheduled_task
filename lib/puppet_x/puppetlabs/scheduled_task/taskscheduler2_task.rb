@@ -7,9 +7,6 @@ module PuppetLabs
 module ScheduledTask
 
 class TaskScheduler2Task
-  # The error class raised if any task scheduler specific calls fail.
-  class Error < Puppet::Util::Windows::Error; end
-
   public
   # Returns a new TaskScheduler object. If a work_item (and possibly the
   # the trigger) are passed as arguments then a new work item is created and
@@ -42,7 +39,7 @@ class TaskScheduler2Task
   def activate(task_name)
     raise TypeError unless task_name.is_a?(String)
     normal_task_name = normalize_task_name(task_name)
-    raise Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless exists?(normal_task_name)
+    raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless exists?(normal_task_name)
 
     full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normal_task_name
 

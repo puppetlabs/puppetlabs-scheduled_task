@@ -1,9 +1,5 @@
 require 'puppet/parameter'
-
-if Puppet.features.microsoft_windows?
-  require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task')
-end
-require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/trigger')
+require_relative '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task'
 
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
