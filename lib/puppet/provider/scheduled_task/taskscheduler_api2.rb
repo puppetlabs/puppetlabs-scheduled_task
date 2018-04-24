@@ -1,9 +1,5 @@
 require 'puppet/parameter'
-
-if Puppet.features.microsoft_windows?
-  require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task')
-end
-require File.join(File.dirname(__FILE__), '../../../puppet_x/puppetlabs/scheduled_task/trigger')
+require_relative '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task'
 
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
@@ -82,32 +78,32 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
                   # blowing up.
                   nil
                 end
-      next unless trigger and scheduler_trigger_types.include?(trigger['trigger_type'])
+      next unless trigger && PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::V1_TYPE_MAP.keys.include?(trigger['trigger_type'])
 
       puppet_trigger = {}
       case trigger['trigger_type']
-      when Win32::TaskScheduler::TASK_TIME_TRIGGER_DAILY
+      when :TASK_TIME_TRIGGER_DAILY
         puppet_trigger['schedule'] = 'daily'
         puppet_trigger['every']    = trigger['type']['days_interval'].to_s
-      when Win32::TaskScheduler::TASK_TIME_TRIGGER_WEEKLY
+      when :TASK_TIME_TRIGGER_WEEKLY
         puppet_trigger['schedule']    = 'weekly'
         puppet_trigger['every']       = trigger['type']['weeks_interval'].to_s
         puppet_trigger['day_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
-      when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDATE
+      when :TASK_TIME_TRIGGER_MONTHLYDATE
         puppet_trigger['schedule'] = 'monthly'
         puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
         puppet_trigger['on']       = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.bitmask_to_indexes(trigger['type']['days'])
-      when Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW
+      when :TASK_TIME_TRIGGER_MONTHLYDOW
         puppet_trigger['schedule']         = 'monthly'
         puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
         puppet_trigger['which_occurrence'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.constant_to_name(trigger['type']['weeks'])
         puppet_trigger['day_of_week']      = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
-      when Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
+      when :TASK_TIME_TRIGGER_ONCE
         puppet_trigger['schedule'] = 'once'
       end
       puppet_trigger['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_date(trigger['start_year'], trigger['start_month'], trigger['start_day'])
       puppet_trigger['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_time(trigger['start_hour'], trigger['start_minute'])
-      puppet_trigger['enabled']    = trigger['flags'] & Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED == 0
+      puppet_trigger['enabled']    = trigger['flags'] & PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_DISABLED == 0
       puppet_trigger['minutes_interval'] = trigger['minutes_interval'] ||= 0
       puppet_trigger['minutes_duration'] = trigger['minutes_duration'] ||= 0
       puppet_trigger['index']      = i
@@ -282,17 +278,5 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
 
     true
-  end
-
-  private
-
-  def scheduler_trigger_types
-    [
-      Win32::TaskScheduler::TASK_TIME_TRIGGER_DAILY,
-      Win32::TaskScheduler::TASK_TIME_TRIGGER_WEEKLY,
-      Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDATE,
-      Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW,
-      Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE
-    ]
   end
 end

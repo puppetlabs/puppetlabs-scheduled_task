@@ -134,6 +134,8 @@ else
 end
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
+  V1 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1
+
   before :each do
     Puppet::Type.type(:scheduled_task).stubs(:defaultprovider).returns(described_class)
   end
@@ -156,7 +158,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
         it 'should handle a single daily trigger' do
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_DAILY,
+            'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
             'start_year'   => 2011,
             'start_month'  => 9,
             'start_day'    => 12,
@@ -180,7 +182,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
         it 'should handle a single daily with repeat trigger' do
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type'     => Win32::TaskScheduler::TASK_TIME_TRIGGER_DAILY,
+            'trigger_type'     => :TASK_TIME_TRIGGER_DAILY,
             'start_year'       => 2011,
             'start_month'      => 9,
             'start_day'        => 12,
@@ -205,12 +207,12 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single weekly trigger' do
-          scheduled_days_of_week = Win32::TaskScheduler::MONDAY |
-                                   Win32::TaskScheduler::WEDNESDAY |
-                                   Win32::TaskScheduler::FRIDAY |
-                                   Win32::TaskScheduler::SUNDAY
+          scheduled_days_of_week = V1::Day::TASK_MONDAY |
+                                   V1::Day::TASK_WEDNESDAY |
+                                   V1::Day::TASK_FRIDAY |
+                                   V1::Day::TASK_SUNDAY
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_WEEKLY,
+            'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
             'start_year'   => 2011,
             'start_month'  => 9,
             'start_day'    => 12,
@@ -237,15 +239,15 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single monthly date-based trigger' do
-          scheduled_months = Win32::TaskScheduler::JANUARY |
-                             Win32::TaskScheduler::FEBRUARY |
-                             Win32::TaskScheduler::AUGUST |
-                             Win32::TaskScheduler::SEPTEMBER |
-                             Win32::TaskScheduler::DECEMBER
+          scheduled_months = V1::Month::TASK_JANUARY |
+                             V1::Month::TASK_FEBRUARY |
+                             V1::Month::TASK_AUGUST |
+                             V1::Month::TASK_SEPTEMBER |
+                             V1::Month::TASK_DECEMBER
           #                1   3        5        15        'last'
           scheduled_days = 1 | 1 << 2 | 1 << 4 | 1 << 14 | 1 << 31
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDATE,
+            'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
             'start_year'   => 2011,
             'start_month'  => 9,
             'start_day'    => 12,
@@ -272,17 +274,17 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single monthly day-of-week-based trigger' do
-          scheduled_months = Win32::TaskScheduler::JANUARY |
-                             Win32::TaskScheduler::FEBRUARY |
-                             Win32::TaskScheduler::AUGUST |
-                             Win32::TaskScheduler::SEPTEMBER |
-                             Win32::TaskScheduler::DECEMBER
-          scheduled_days_of_week = Win32::TaskScheduler::MONDAY |
-                                   Win32::TaskScheduler::WEDNESDAY |
-                                   Win32::TaskScheduler::FRIDAY |
-                                   Win32::TaskScheduler::SUNDAY
+          scheduled_months = V1::Month::TASK_JANUARY |
+                             V1::Month::TASK_FEBRUARY |
+                             V1::Month::TASK_AUGUST |
+                             V1::Month::TASK_SEPTEMBER |
+                             V1::Month::TASK_DECEMBER
+          scheduled_days_of_week = V1::Day::TASK_MONDAY |
+                                   V1::Day::TASK_WEDNESDAY |
+                                   V1::Day::TASK_FRIDAY |
+                                   V1::Day::TASK_SUNDAY
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_MONTHLYDOW,
+            'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
             'start_year'   => 2011,
             'start_month'  => 9,
             'start_day'    => 12,
@@ -291,7 +293,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'flags'        => 0,
             'type'         => {
               'months'       => scheduled_months,
-              'weeks'        => Win32::TaskScheduler::FIRST_WEEK,
+              'weeks'        => V1::Occurrence::TASK_FIRST_WEEK,
               'days_of_week' => scheduled_days_of_week
             }
           })
@@ -312,7 +314,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
         it 'should handle a single one-time trigger' do
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+            'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
             'start_year'   => 2011,
             'start_month'  => 9,
             'start_day'    => 12,
@@ -336,7 +338,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should handle multiple triggers' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
           'start_day'    => 13,
@@ -345,7 +347,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'flags'        => 0,
         })
         @mock_task.expects(:trigger).with(1).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2012,
           'start_month'  => 11,
           'start_day'    => 14,
@@ -354,7 +356,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'flags'        => 0,
         })
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
           'start_month'  => 12,
           'start_day'    => 15,
@@ -397,7 +399,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should handle multiple triggers with repeat triggers' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type'     => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
           'start_year'       => 2011,
           'start_month'      => 10,
           'start_day'        => 13,
@@ -408,7 +410,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'flags'            => 0,
         })
         @mock_task.expects(:trigger).with(1).returns({
-          'trigger_type'     => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
           'start_year'       => 2012,
           'start_month'      => 11,
           'start_day'        => 14,
@@ -419,7 +421,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'flags'            => 0,
         })
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type'     => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
           'start_year'       => 2013,
           'start_month'      => 12,
           'start_day'        => 15,
@@ -464,7 +466,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should skip triggers Win32::TaskScheduler cannot handle' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
           'start_day'    => 13,
@@ -476,7 +478,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           Win32::TaskScheduler::Error.new('Unhandled trigger type!')
         )
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
           'start_month'  => 12,
           'start_day'    => 15,
@@ -510,7 +512,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should skip trigger types Puppet does not handle' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
           'start_day'    => 13,
@@ -522,7 +524,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'trigger_type' => Win32::TaskScheduler::TASK_EVENT_TRIGGER_AT_LOGON,
         })
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
           'start_month'  => 12,
           'start_day'    => 15,
@@ -595,13 +597,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @mock_task.stubs(:flags).returns(~Win32::TaskScheduler::DISABLED)
         @mock_task.stubs(:trigger_count).returns(1)
         @mock_task.stubs(:trigger).with(0).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
           'start_day'    => 13,
           'start_hour'   => 14,
           'start_minute' => 21,
-          'flags'        => Win32::TaskScheduler::TASK_TRIGGER_FLAG_DISABLED,
+          'flags'        => V1::Flag::TASK_TRIGGER_FLAG_DISABLED,
         })
 
         expect(resource.provider.enabled).to eq(:true)
@@ -650,7 +652,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     it 'should clear the cached list of triggers for the task' do
       @mock_task.stubs(:trigger_count).returns(1)
       @mock_task.stubs(:trigger).with(0).returns({
-        'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+        'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
         'start_year'   => 2011,
         'start_month'  => 10,
         'start_day'    => 13,
@@ -660,7 +662,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       })
       @new_mock_task.stubs(:trigger_count).returns(1)
       @new_mock_task.stubs(:trigger).with(0).returns({
-        'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
+        'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
         'start_year'   => 2012,
         'start_month'  => 11,
         'start_day'    => 14,
@@ -819,9 +821,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it 'should not consider triggers with different monthly types to be the same' do
-      # A trigger of type Win32::TaskScheduler::MONTHLYDATE
+      # A trigger of type :TASK_TIME_TRIGGER_MONTHLYDATE
       current = {'schedule' => 'monthly', 'start_time' => '14:00', 'months' => [1,2,3,4,5,6,7,8,9,10,11,12], 'on' => [9]}
-      # A trigger of type Win32::TaskScheduler::MONTHLYDOW
+      # A trigger of type :TASK_TIME_TRIGGER_MONTHLYDOW
       desired = {'schedule' => 'monthly', 'start_time' => '14:00', 'which_occurrence' => 'second', 'day_of_week' => ['sat']}
 
       expect(provider).not_to be_triggers_same(current, desired)
@@ -1328,8 +1330,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @puppet_trigger['schedule'] = 'once'
       end
 
-      it 'should set the trigger_type to Win32::TaskScheduler::ONCE' do
-        expect(trigger['trigger_type']).to eq(Win32::TaskScheduler::ONCE)
+      it 'should set the trigger_type to :TASK_TIME_TRIGGER_ONCE' do
+        expect(trigger['trigger_type']).to eq(:TASK_TIME_TRIGGER_ONCE)
       end
 
       it 'should not set a type' do
@@ -1402,21 +1404,21 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it "should default 'day_of_week' to be every day of the week" do
-        expect(trigger['type']['days_of_week']).to eq(Win32::TaskScheduler::MONDAY    |
-                                                  Win32::TaskScheduler::TUESDAY   |
-                                                  Win32::TaskScheduler::WEDNESDAY |
-                                                  Win32::TaskScheduler::THURSDAY  |
-                                                  Win32::TaskScheduler::FRIDAY    |
-                                                  Win32::TaskScheduler::SATURDAY  |
-                                                  Win32::TaskScheduler::SUNDAY)
+        expect(trigger['type']['days_of_week']).to eq(V1::Day::TASK_MONDAY    |
+                                                  V1::Day::TASK_TUESDAY   |
+                                                  V1::Day::TASK_WEDNESDAY |
+                                                  V1::Day::TASK_THURSDAY  |
+                                                  V1::Day::TASK_FRIDAY    |
+                                                  V1::Day::TASK_SATURDAY  |
+                                                  V1::Day::TASK_SUNDAY)
       end
 
       it "should use the specified value for 'day_of_week'" do
         @puppet_trigger['day_of_week'] = ['mon', 'wed', 'fri']
 
-        expect(trigger['type']['days_of_week']).to eq(Win32::TaskScheduler::MONDAY    |
-                                                  Win32::TaskScheduler::WEDNESDAY |
-                                                  Win32::TaskScheduler::FRIDAY)
+        expect(trigger['type']['days_of_week']).to eq(V1::Day::TASK_MONDAY    |
+                                                  V1::Day::TASK_WEDNESDAY |
+                                                  V1::Day::TASK_FRIDAY)
       end
 
       it "should default 'start_date' to 'today'" do
@@ -1435,25 +1437,25 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     shared_examples_for 'a monthly schedule' do
       it "should default 'months' to be every month" do
-        expect(trigger['type']['months']).to eq(Win32::TaskScheduler::JANUARY   |
-                                            Win32::TaskScheduler::FEBRUARY  |
-                                            Win32::TaskScheduler::MARCH     |
-                                            Win32::TaskScheduler::APRIL     |
-                                            Win32::TaskScheduler::MAY       |
-                                            Win32::TaskScheduler::JUNE      |
-                                            Win32::TaskScheduler::JULY      |
-                                            Win32::TaskScheduler::AUGUST    |
-                                            Win32::TaskScheduler::SEPTEMBER |
-                                            Win32::TaskScheduler::OCTOBER   |
-                                            Win32::TaskScheduler::NOVEMBER  |
-                                            Win32::TaskScheduler::DECEMBER)
+        expect(trigger['type']['months']).to eq(V1::Month::TASK_JANUARY   |
+                                            V1::Month::TASK_FEBRUARY  |
+                                            V1::Month::TASK_MARCH     |
+                                            V1::Month::TASK_APRIL     |
+                                            V1::Month::TASK_MAY       |
+                                            V1::Month::TASK_JUNE      |
+                                            V1::Month::TASK_JULY      |
+                                            V1::Month::TASK_AUGUST    |
+                                            V1::Month::TASK_SEPTEMBER |
+                                            V1::Month::TASK_OCTOBER   |
+                                            V1::Month::TASK_NOVEMBER  |
+                                            V1::Month::TASK_DECEMBER)
       end
 
       it "should use the specified value for 'months'" do
         @puppet_trigger['months'] = [2, 8]
 
-        expect(trigger['type']['months']).to eq(Win32::TaskScheduler::FEBRUARY  |
-                                            Win32::TaskScheduler::AUGUST)
+        expect(trigger['type']['months']).to eq(V1::Month::TASK_FEBRUARY  |
+                                            V1::Month::TASK_AUGUST)
       end
     end
 
@@ -1901,7 +1903,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'for a ONCE schedule' do
-        task = Win32::TaskScheduler.new(name, { 'trigger_type' => Win32::TaskScheduler::ONCE })
+        task = Win32::TaskScheduler.new(name, { 'trigger_type' => :TASK_TIME_TRIGGER_ONCE })
         expect(task.trigger(0)['start_year']).to eq(@now.year)
         expect(task.trigger(0)['start_month']).to eq(@now.month)
         expect(task.trigger(0)['start_day']).to eq(@now.day)
@@ -1909,7 +1911,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'for a DAILY schedule' do
         trigger = {
-          'trigger_type' => Win32::TaskScheduler::DAILY,
+          'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
           'type' => { 'days_interval' => 1 }
         }
         task = Win32::TaskScheduler.new(name, trigger)
@@ -1921,7 +1923,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'for a WEEKLY schedule' do
         trigger = {
-          'trigger_type' => Win32::TaskScheduler::WEEKLY,
+          'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
           'type' => { 'weeks_interval' => 1, 'days_of_week' => 1 }
         }
         task = Win32::TaskScheduler.new(name, trigger)
@@ -1933,7 +1935,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'for a MONTHLYDATE schedule' do
         trigger = {
-          'trigger_type' => Win32::TaskScheduler::MONTHLYDATE,
+          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
           'type' => { 'days' => 1, 'months' => 1 }
         }
         task = Win32::TaskScheduler.new(name, trigger)
@@ -1945,7 +1947,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'for a MONTHLYDOW schedule' do
         trigger = {
-          'trigger_type' => Win32::TaskScheduler::MONTHLYDOW,
+          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
           'type' => { 'weeks' => 1, 'days_of_week' => 1, 'months' => 1 }
         }
         task = Win32::TaskScheduler.new(name, trigger)
@@ -1957,7 +1959,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     describe 'enforces maximum lengths' do
-      let(:task) { Win32::TaskScheduler.new(name, { 'trigger_type' => Win32::TaskScheduler::ONCE }) }
+      let(:task) { Win32::TaskScheduler.new(name, { 'trigger_type' => :TASK_TIME_TRIGGER_ONCE }) }
 
       it 'on account user name' do
         expect {
@@ -2015,7 +2017,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         task_name = name + "\u16A0\u16C7\u16BB" # ᚠᛇᚻ
 
         begin
-          task = Win32::TaskScheduler.new(task_name, { 'trigger_type' => Win32::TaskScheduler::ONCE })
+          task = Win32::TaskScheduler.new(task_name, { 'trigger_type' => :TASK_TIME_TRIGGER_ONCE })
           task.save()
 
           expect(Puppet::FileSystem.exist?("C:\\Windows\\Tasks\\#{task_name}.job")).to be_truthy
@@ -2029,7 +2031,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         task_name = name + 'abc' # name is a guid, but might not have alpha chars
 
         begin
-          task = Win32::TaskScheduler.new(task_name.upcase, { 'trigger_type' => Win32::TaskScheduler::ONCE })
+          task = Win32::TaskScheduler.new(task_name.upcase, { 'trigger_type' => :TASK_TIME_TRIGGER_ONCE })
           task.save()
 
           expect(task.exists?(task_name.downcase)).to be_truthy
@@ -2042,7 +2044,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     describe 'does not corrupt tasks' do
       it 'when setting maximum length values for all settings' do
         begin
-          task = Win32::TaskScheduler.new(name, { 'trigger_type' => Win32::TaskScheduler::ONCE })
+          task = Win32::TaskScheduler.new(name, { 'trigger_type' => :TASK_TIME_TRIGGER_ONCE })
 
           application_name = 'a' * Win32::TaskScheduler::MAX_PATH
           parameters = 'b' * Win32::TaskScheduler::MAX_PARAMETERS_LENGTH
@@ -2077,7 +2079,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'by preventing a save() not preceded by a set_account_information()' do
         begin
           # creates a default new task with SYSTEM user
-          task = Win32::TaskScheduler.new(name, { 'trigger_type' => Win32::TaskScheduler::ONCE })
+          task = Win32::TaskScheduler.new(name, { 'trigger_type' => :TASK_TIME_TRIGGER_ONCE })
           # save automatically resets the current task
           task.save()
 
