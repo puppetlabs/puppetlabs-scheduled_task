@@ -2,7 +2,7 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task' if Puppet.features.microsoft_windows?
+require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
@@ -53,13 +53,13 @@ def triggers
     defaults.merge({
       'type'         => {
         'weeks_interval' => 1,
-        'days_of_week'   => Win32::TaskScheduler::MONDAY,
+        'days_of_week'   => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day::TASK_MONDAY,
       },
       'trigger_type'            => :TASK_TIME_TRIGGER_WEEKLY,
     }),
     defaults.merge({
       'type'         => {
-        'months' => Win32::TaskScheduler::JANUARY,
+        'months' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month::TASK_JANUARY,
         # Bitwise mask, reference on MSDN:
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380735(v=vs.85).aspx
         # 8192 is for the 14th
@@ -69,9 +69,9 @@ def triggers
     }),
     defaults.merge({
       'type'         => {
-        'months'       => Win32::TaskScheduler::JANUARY,
-        'weeks'        => Win32::TaskScheduler::FIRST_WEEK,
-        'days_of_week' => Win32::TaskScheduler::MONDAY,
+        'months'       => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month::TASK_JANUARY,
+        'weeks'        => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence::TASK_FIRST_WEEK,
+        'days_of_week' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day::TASK_MONDAY,
       },
       'trigger_type'            => :TASK_TIME_TRIGGER_MONTHLYDOW,
     })
