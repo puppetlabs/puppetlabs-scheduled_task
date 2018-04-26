@@ -22,6 +22,7 @@ describe "Should create a scheduled task", :node => host do
     pp = <<-MANIFEST
     scheduled_task {'#{@taskname}':
       ensure      => present,
+      compatibility => 1,
       command     => 'c:\\\\windows\\\\system32\\\\notepad.exe',
       arguments   => "foo bar baz",
       working_dir => 'c:\\\\windows',
@@ -30,6 +31,31 @@ describe "Should create a scheduled task", :node => host do
         start_time => '12:00',
       },
       provider    => 'taskscheduler_api2'
+    }
+    MANIFEST
+    execute_manifest(pp, :catch_failures => true)
+
+    # Ensure it's idempotent
+    execute_manifest(pp, :catch_changes  => true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
+    on(host, query_cmd)
+  end
+
+  it "Should create a task if it does not exist", :tier_high => true do
+    pp = <<-MANIFEST
+    scheduled_task {'#{@taskname}':
+      ensure        => present,
+      compatibility => 1,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      trigger       => {
+        schedule   => daily,
+        start_time => '12:00',
+      },
+      provider      => 'win32_taskscheduler'
     }
     MANIFEST
     execute_manifest(pp, :catch_failures => true)

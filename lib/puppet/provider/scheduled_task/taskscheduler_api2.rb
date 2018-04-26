@@ -10,6 +10,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   defaultfor :operatingsystem => :windows
   confine    :operatingsystem => :windows
 
+  has_feature :compatibility
+
   def self.instances
     PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
