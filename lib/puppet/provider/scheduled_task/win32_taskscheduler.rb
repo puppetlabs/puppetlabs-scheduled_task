@@ -265,7 +265,6 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
     now = Time.now
     {
       'flags'                   => 0,
-      'random_minutes_interval' => 0,
       'end_day'                 => 0,
       'end_year'                => 0,
       'minutes_interval'        => 0,

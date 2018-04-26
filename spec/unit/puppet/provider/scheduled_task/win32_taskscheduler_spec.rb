@@ -554,6 +554,32 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           }
         ])
       end
+
+      it 'should not expose random_minutes_interval' do
+        @mock_task.expects(:trigger_count).returns(1)
+        @mock_task.expects(:trigger).with(0).returns({
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
+          'start_year'   => 2011,
+          'start_month'  => 10,
+          'start_day'    => 13,
+          'start_hour'   => 14,
+          'start_minute' => 21,
+          'flags'        => 0,
+          'random_minutes_interval' => 0,
+        })
+
+        expect(resource.provider.trigger).to match_array([
+          {
+            'start_date'       => '2011-10-13',
+            'start_time'       => '14:21',
+            'schedule'         => 'once',
+            'minutes_interval' => 0,
+            'minutes_duration' => 0,
+            'enabled'          => true,
+            'index'            => 0,
+          },
+        ])
+      end
     end
 
     it 'should get the working directory from the working_directory on the task' do
