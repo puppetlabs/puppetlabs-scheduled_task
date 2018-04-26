@@ -7,6 +7,10 @@ Puppet::Type.newtype(:scheduled_task) do
     except `name`, `command`, and `trigger` are optional; see the description
     of the `trigger` attribute for details on setting schedules."
 
+  feature :compatibility, "The provider accepts compatibility to be
+    set for the given task.",
+    :methods => [:compatibility, :compatibility=]
+
   ensurable
 
   newproperty(:enabled) do
@@ -83,7 +87,7 @@ Puppet::Type.newtype(:scheduled_task) do
       to determine if a scheduled task is in sync or not."
   end
 
-  newproperty(:compatibility) do
+  newproperty(:compatibility, :required_features=>:compatibility) do
     desc "The compatibility level associated with the task. May currently only
       be set to 1 for compatibility with tasks on a Windows XP or Windows Server
       2003 computer."
