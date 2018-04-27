@@ -336,6 +336,10 @@ module Trigger
 
     # iTrigger is a COM ITrigger instance
     def self.from_iTrigger(iTrigger)
+      if Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type).nil?
+        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
+      end
+
       trigger_flags = 0
       trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.EndBoundary.empty?
       # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
@@ -346,6 +350,7 @@ module Trigger
       end_boundary = Trigger.string_to_date(iTrigger.EndBoundary)
 
       v1trigger = {
+        'trigger_type'            => Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type),
         'start_year'              => start_boundary ? start_boundary.year : 0,
         'start_month'             => start_boundary ? start_boundary.month : 0,
         'start_day'               => start_boundary ? start_boundary.day : 0,
@@ -362,36 +367,29 @@ module Trigger
         'random_minutes_interval' => 0,
       }
 
-      case iTrigger.ole_type.to_s
-        when 'ITimeTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
+      case iTrigger.Type
+        when V2::Type::TASK_TRIGGER_TIME
           v1trigger['type'] = { 'once' => nil }
-        when 'IDailyTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
+        when V2::Type::TASK_TRIGGER_DAILY
           v1trigger['type'] = {
             'days_interval' => Trigger.string_to_int(iTrigger.DaysInterval)
           }
-        when 'IWeeklyTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
+        when V2::Type::TASK_TRIGGER_WEEKLY
           v1trigger['type'] = {
             'weeks_interval' => Trigger.string_to_int(iTrigger.WeeksInterval),
             'days_of_week'   => Trigger.string_to_int(iTrigger.DaysOfWeek)
           }
-        when 'IMonthlyTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
+        when V2::Type::TASK_TRIGGER_MONTHLY
           v1trigger['type'] = {
             'days'   => Trigger.string_to_int(iTrigger.DaysOfMonth),
             'months' => Trigger.string_to_int(iTrigger.MonthsOfYear)
           }
-        when 'IMonthlyDOWTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDOW
+        when V2::Type::TASK_TRIGGER_MONTHLYDOW
           v1trigger['type'] = {
             'weeks'        => Trigger.string_to_int(iTrigger.WeeksOfMonth),
             'days_of_week' => Trigger.string_to_int(iTrigger.DaysOfWeek),
             'months'       => Trigger.string_to_int(iTrigger.MonthsOfYear)
           }
-        else
-          raise Error.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
       end
 
       v1trigger

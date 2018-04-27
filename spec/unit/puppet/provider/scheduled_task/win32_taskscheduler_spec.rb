@@ -474,8 +474,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
+        @error_class = task_provider == :win32_taskscheduler ?
+          Win32::TaskScheduler::Error : ArgumentError
         @mock_task.expects(:trigger).with(1).raises(
-          Win32::TaskScheduler::Error.new('Unhandled trigger type!')
+          @error_class.new('Unknown trigger type')
         )
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,

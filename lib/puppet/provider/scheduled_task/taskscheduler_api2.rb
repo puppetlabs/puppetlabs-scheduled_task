@@ -73,11 +73,11 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     task.trigger_count.times do |i|
       trigger = begin
                   task.trigger(i)
-                rescue Win32::TaskScheduler::Error
-                  # Win32::TaskScheduler can't handle all of the
-                  # trigger types Windows uses, so we need to skip the
-                  # unhandled types to prevent "puppet resource" from
-                  # blowing up.
+                rescue ArgumentError
+                  raise unless $!.message.start_with?('Unknown trigger type')
+                  # Code can't handle all of the trigger types Windows uses yet,
+                  # so we need to skip the unhandled types to prevent "puppet resource"
+                  # from blowing up.
                   nil
                 end
       next unless trigger && PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::V1_TYPE_MAP.keys.include?(trigger['trigger_type'])
