@@ -154,6 +154,164 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
     end
   end
 
+  describe '#from_iTrigger' do
+    V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
+    DEFAULT_ITRIGGER_PROPERTIES = {
+      :Id                 => '',
+      :Repetition         => { :Interval => '', :Duration => '', :StopAtDurationEnd => false },
+      :ExecutionTimeLimit => '',
+      :StartBoundary      => '',
+      :EndBoundary        => '',
+      :Enabled            => true,
+    }.freeze
+
+    [
+      { :ole_type => 'ITimeTrigger',       :Type => V2::Type::TASK_TRIGGER_TIME,
+        :RandomDelay  => '',
+       },
+      { :ole_type => 'IDailyTrigger',      :Type => V2::Type::TASK_TRIGGER_DAILY,
+        :DaysInterval => 1,
+        :RandomDelay  => '',
+      },
+      { :ole_type => 'IWeeklyTrigger',     :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+        :DaysOfWeek => 0,
+        :WeeksInterval => 1,
+        :RandomDelay  => '',
+      },
+      { :ole_type => 'IMonthlyTrigger',    :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+        :DaysOfMonth => 0,
+        :MonthsOfYear => 4095,
+        :RunOnLastDayOfMonth => false,
+        :RandomDelay  => '',
+      },
+      { :ole_type => 'IMonthlyDOWTrigger', :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+        :DaysOfWeek => 1,
+        :WeeksOfMonth => 1,
+        :MonthsOfYear => 1,
+        :RunOnLastWeekOfMonth => false,
+        :RandomDelay  => '',
+      },
+    ].each do |trigger_details|
+      it "should convert a default #{trigger_details[:ole_type]}" do
+        iTrigger = DEFAULT_ITRIGGER_PROPERTIES.merge(trigger_details)
+        # stub is not usable outside of specs (like in DEFAULT_ITRIGGER_PROPERTIES)
+        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
+        iTrigger = stub(iTrigger)
+        expect(subject.class.from_iTrigger(iTrigger)).to_not be_nil
+      end
+    end
+
+    FILLED_ITRIGGER_PROPERTIES = {
+      :Id                 => '1',
+      :Repetition         => { :Interval => 'PT20M', :Duration => 'P1M4DT2H5M', :StopAtDurationEnd => false },
+      :ExecutionTimeLimit => 'P1M4DT2H5M',
+      :StartBoundary      => '2005-10-11T13:21:17-08:00',
+      :EndBoundary        => '2005-10-11T13:21:17Z',
+      :Enabled            => true,
+    }.freeze
+
+    CONVERTED_ITRIGGER_V1_HASH = {
+      'start_year' => 2005,
+      'start_month' => 10,
+      'start_day' => 11,
+      'end_year' => 2005,
+      'end_month' => 10,
+      'end_day' => 11,
+      'start_hour' => 13,
+      'start_minute' => 21,
+      'minutes_duration' => 43829 + 5760 + 120 + 5, # P1M4DT2H5M
+      'minutes_interval' => 20, # PT20M
+      'flags' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_HAS_END_DATE,
+      'random_minutes_interval' => 0,
+    }
+
+    [
+      {
+        :iTrigger =>
+        {
+          :ole_type => 'ITimeTrigger',
+          :Type => V2::Type::TASK_TRIGGER_TIME,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
+          'type' => { 'once' => nil },
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :ole_type => 'IDailyTrigger',
+          :Type => V2::Type::TASK_TRIGGER_DAILY,
+          :DaysInterval => 2,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
+          'type' => { 'days_interval' => 2 },
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :ole_type => 'IWeeklyTrigger',
+          :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+          :DaysOfWeek => 0b1111111,
+          :WeeksInterval => 2,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
+          'type' => { 'days_of_week' => 0b1111111, 'weeks_interval' => 2 },
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :ole_type => 'IMonthlyTrigger',
+          :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+          :DaysOfMonth => 0b11111111111111111111111111111111,
+          :MonthsOfYear => 1,
+          :RunOnLastDayOfMonth => true, # ignored
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
+          'type' => { 'days' => 0b11111111111111111111111111111111, 'months' => 1 },
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :ole_type => 'IMonthlyDOWTrigger',
+          :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+          :DaysOfWeek => 0b1111111,
+          :WeeksOfMonth => 0b11111,
+          :MonthsOfYear => 0b111111111111,
+          :RunOnLastWeekOfMonth => true, # ignored
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
+          'type' => { 'weeks' => 0b11111, 'days_of_week' => 0b1111111, 'months' => 0b111111111111 },
+        }
+      },
+    ].each do |trigger_details|
+      it "should convert a full #{trigger_details[:iTrigger][:ole_type]} to the equivalent V1 hash" do
+        iTrigger = FILLED_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
+        # stub is not usable outside of specs (like in DEFAULT_ITRIGGER_PROPERTIES)
+        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
+        iTrigger = stub(iTrigger)
+        converted = CONVERTED_ITRIGGER_V1_HASH.merge(trigger_details[:expected])
+        expect(subject.class.from_iTrigger(iTrigger)).to eq(converted)
+      end
+    end
+  end
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do

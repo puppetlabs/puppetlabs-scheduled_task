@@ -337,22 +337,23 @@ module Trigger
     # iTrigger is a COM ITrigger instance
     def self.from_iTrigger(iTrigger)
       trigger_flags = 0
-      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.Endboundary.empty?
+      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.EndBoundary.empty?
       # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
       trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
 
+      # StartBoundary and EndBoundary may be empty strings per V2 API
       start_boundary = Trigger.string_to_date(iTrigger.StartBoundary)
       end_boundary = Trigger.string_to_date(iTrigger.EndBoundary)
 
       v1trigger = {
-        'start_year'              => start_boundary.year,
-        'start_month'             => start_boundary.month,
-        'start_day'               => start_boundary.day,
+        'start_year'              => start_boundary ? start_boundary.year : 0,
+        'start_month'             => start_boundary ? start_boundary.month : 0,
+        'start_day'               => start_boundary ? start_boundary.day : 0,
         'end_year'                => end_boundary ? end_boundary.year : 0,
         'end_month'               => end_boundary ? end_boundary.month : 0,
         'end_day'                 => end_boundary ? end_boundary.day : 0,
-        'start_hour'              => start_boundary.hour,
-        'start_minute'            => start_boundary.minute,
+        'start_hour'              => start_boundary ? start_boundary.hour : 0,
+        'start_minute'            => start_boundary ? start_boundary.minute : 0,
         'minutes_duration'        => Duration.to_minutes(iTrigger.Repetition.Duration),
         'minutes_interval'        => Duration.to_minutes(iTrigger.Repetition.Interval),
         'flags'                   => trigger_flags,
