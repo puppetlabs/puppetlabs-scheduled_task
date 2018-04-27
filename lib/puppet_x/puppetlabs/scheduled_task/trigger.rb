@@ -264,7 +264,6 @@ module Trigger
       'flags',
       'minutes_duration',
       'minutes_interval',
-      'random_minutes_interval',
       'start_day',
       'start_hour',
       'start_minute',
@@ -357,7 +356,9 @@ module Trigger
         'minutes_duration'        => Duration.to_minutes(iTrigger.Repetition.Duration),
         'minutes_interval'        => Duration.to_minutes(iTrigger.Repetition.Interval),
         'flags'                   => trigger_flags,
-        'random_minutes_interval' => Trigger.string_to_int(iTrigger.Randomdelay)
+        # the V1 COM API always produces a value of 0 here and this is kept for
+        # compatibility in tests but should *never* be used as it's not settable
+        'random_minutes_interval' => 0,
       }
 
       case iTrigger.ole_type.to_s
@@ -414,7 +415,6 @@ module Trigger
       type_hash = default_trigger_settings_for(type)
       {
         'flags'                   => 0,
-        'random_minutes_interval' => 0,
         'end_day'                 => 0,
         'end_year'                => 0,
         'minutes_interval'        => 0,
@@ -637,7 +637,6 @@ module Trigger
       end
 
       # Values for all Trigger Types
-      iTrigger.RandomDelay         = "PT#{v1trigger['random_minutes_interval']}M" unless v1trigger['random_minutes_interval'].nil?   || v1trigger['random_minutes_interval'].zero?
       iTrigger.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
       iTrigger.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
       iTrigger.StartBoundary = Trigger.iso8601_datetime(v1trigger['start_year'],
