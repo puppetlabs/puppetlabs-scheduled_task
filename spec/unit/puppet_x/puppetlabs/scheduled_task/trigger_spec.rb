@@ -322,6 +322,119 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       end
     end
   end
+
+  describe '#to_manifest_hash' do
+    [
+      'once',
+      'daily',
+      'weekly',
+    ].each do |type|
+      it "should convert a default #{type}" do
+        v1trigger = subject.class.default_trigger_for(type)
+        expect(subject.class.to_manifest_hash(v1trigger)).to_not be_nil
+      end
+    end
+
+    it "should fail to convert an unknown trigger type" do
+      v1trigger = { 'trigger_type' => 'foo' }
+      expect { subject.class.to_manifest_hash(v1trigger) }.to raise_error(ArgumentError)
+    end
+
+    FILLED_V1_HASH = {
+      'start_year' => 2005,
+      'start_month' => 10,
+      'start_day' => 11,
+      'end_year' => 2005,
+      'end_month' => 10,
+      'end_day' => 11,
+      'start_hour' => 13,
+      'start_minute' => 21,
+      'minutes_duration' => 20,
+      'minutes_interval' => 20,
+      'flags' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_HAS_END_DATE,
+      'random_minutes_interval' => 0,
+    }
+
+    CONVERTED_MANIFEST_HASH = {
+      'start_date' => '2005-10-11',
+      'start_time' => '13:21',
+      'enabled'    => true,
+      'minutes_interval' => 20,
+      'minutes_duration' => 20,
+    }.freeze
+
+    [
+      {
+        :v1trigger =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
+          'type' => { 'once' => nil },
+        },
+        :expected =>
+        {
+          'schedule' => 'once',
+        }
+      },
+      {
+        :v1trigger =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
+          'type' => { 'days_interval' => 2 },
+        },
+        :expected =>
+        {
+          'schedule' => 'daily',
+          'every'    => '2',
+        }
+      },
+      {
+        :v1trigger =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
+          'type' => { 'days_of_week' => 0b1111111, 'weeks_interval' => 2 },
+        },
+        :expected =>
+        {
+          'schedule'    => 'weekly',
+          'every'       => '2',
+          'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+        }
+      },
+      {
+        :v1trigger =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
+          'type' => { 'days' => 0b11111111111111111111111111111111, 'months' => 1 },
+        },
+        :expected =>
+        {
+          'schedule' => 'monthly',
+          'months'   => [1],
+          'on'       => (1..31).to_a + ['last'],
+        }
+      },
+      {
+        :v1trigger =>
+        {
+          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
+          'type' => { 'weeks' => 5, 'days_of_week' => 0b1111111, 'months' => 0b111111111111 },
+        },
+        :expected =>
+        {
+          'schedule'         => 'monthly',
+          'months'           => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          'which_occurrence' => 'last',
+          'day_of_week'      => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+        }
+      }
+    ].each do |trigger_details|
+      it "should convert a full V1 #{trigger_details[:v1trigger]['trigger_type']} to the equivalent manifest hash" do
+        v1trigger = FILLED_V1_HASH.merge(trigger_details[:v1trigger])
+        converted = CONVERTED_MANIFEST_HASH.merge(trigger_details[:expected])
+        expect(subject.class.to_manifest_hash(v1trigger)).to eq(converted)
+      end
+    end
+  end
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do

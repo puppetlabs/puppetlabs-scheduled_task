@@ -564,6 +564,43 @@ module Trigger
       trigger
     end
 
+    def self.to_manifest_hash(v1trigger)
+      unless V2::V1_TYPE_MAP.keys.include?(v1trigger['trigger_type'])
+        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: v1trigger['trigger_type'] })
+      end
+
+      manifest_hash = {}
+
+      case v1trigger['trigger_type']
+      when :TASK_TIME_TRIGGER_DAILY
+        manifest_hash['schedule'] = 'daily'
+        manifest_hash['every']    = v1trigger['type']['days_interval'].to_s
+      when :TASK_TIME_TRIGGER_WEEKLY
+        manifest_hash['schedule']    = 'weekly'
+        manifest_hash['every']       = v1trigger['type']['weeks_interval'].to_s
+        manifest_hash['day_of_week'] = Day.bitmask_to_names(v1trigger['type']['days_of_week'])
+      when :TASK_TIME_TRIGGER_MONTHLYDATE
+        manifest_hash['schedule'] = 'monthly'
+        manifest_hash['months']   = Month.bitmask_to_indexes(v1trigger['type']['months'])
+        manifest_hash['on']       = Days.bitmask_to_indexes(v1trigger['type']['days'])
+
+      when :TASK_TIME_TRIGGER_MONTHLYDOW
+        manifest_hash['schedule']         = 'monthly'
+        manifest_hash['months']           = Month.bitmask_to_indexes(v1trigger['type']['months'])
+        manifest_hash['which_occurrence'] = Occurrence.constant_to_name(v1trigger['type']['weeks'])
+        manifest_hash['day_of_week']      = Day.bitmask_to_names(v1trigger['type']['days_of_week'])
+      when :TASK_TIME_TRIGGER_ONCE
+        manifest_hash['schedule'] = 'once'
+      end
+      manifest_hash['start_date'] = normalized_date(v1trigger['start_year'], v1trigger['start_month'], v1trigger['start_day'])
+      manifest_hash['start_time'] = normalized_time(v1trigger['start_hour'], v1trigger['start_minute'])
+      manifest_hash['enabled']    = v1trigger['flags'] & Flag::TASK_TRIGGER_FLAG_DISABLED == 0
+      manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
+      manifest_hash['minutes_duration'] = v1trigger['minutes_duration'] ||= 0
+
+      manifest_hash
+    end
+
     private
 
     # converts all keys to lowercase

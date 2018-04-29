@@ -72,45 +72,19 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     @triggers   = []
     task.trigger_count.times do |i|
       trigger = begin
-                  task.trigger(i)
-                rescue ArgumentError
-                  raise unless $!.message.start_with?('Unknown trigger type')
-                  # Code can't handle all of the trigger types Windows uses yet,
-                  # so we need to skip the unhandled types to prevent "puppet resource"
-                  # from blowing up.
-                  nil
-                end
-      next unless trigger && PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::V1_TYPE_MAP.keys.include?(trigger['trigger_type'])
-
-      puppet_trigger = {}
-      case trigger['trigger_type']
-      when :TASK_TIME_TRIGGER_DAILY
-        puppet_trigger['schedule'] = 'daily'
-        puppet_trigger['every']    = trigger['type']['days_interval'].to_s
-      when :TASK_TIME_TRIGGER_WEEKLY
-        puppet_trigger['schedule']    = 'weekly'
-        puppet_trigger['every']       = trigger['type']['weeks_interval'].to_s
-        puppet_trigger['day_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
-      when :TASK_TIME_TRIGGER_MONTHLYDATE
-        puppet_trigger['schedule'] = 'monthly'
-        puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
-        puppet_trigger['on']       = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.bitmask_to_indexes(trigger['type']['days'])
-      when :TASK_TIME_TRIGGER_MONTHLYDOW
-        puppet_trigger['schedule']         = 'monthly'
-        puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
-        puppet_trigger['which_occurrence'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.constant_to_name(trigger['type']['weeks'])
-        puppet_trigger['day_of_week']      = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
-      when :TASK_TIME_TRIGGER_ONCE
-        puppet_trigger['schedule'] = 'once'
+        v1trigger = task.trigger(i)
+        t = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger)
+        t['index'] = i
+        t
+      rescue ArgumentError
+        raise unless $!.message.start_with?('Unknown trigger type')
+        # Code can't handle all of the trigger types Windows uses yet,
+        # so we need to skip the unhandled types to prevent "puppet resource"
+        # from blowing up.
+        nil
       end
-      puppet_trigger['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_date(trigger['start_year'], trigger['start_month'], trigger['start_day'])
-      puppet_trigger['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_time(trigger['start_hour'], trigger['start_minute'])
-      puppet_trigger['enabled']    = trigger['flags'] & PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_DISABLED == 0
-      puppet_trigger['minutes_interval'] = trigger['minutes_interval'] ||= 0
-      puppet_trigger['minutes_duration'] = trigger['minutes_duration'] ||= 0
-      puppet_trigger['index']      = i
-
-      @triggers << puppet_trigger
+      next unless trigger
+      @triggers << trigger
     end
 
     @triggers
