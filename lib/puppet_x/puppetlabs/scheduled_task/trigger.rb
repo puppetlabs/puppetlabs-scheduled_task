@@ -71,8 +71,8 @@ module Trigger
   end
   module_function :string_to_date
 
-  def iso8601_datetime(year, month, day, hour, minute)
-    DateTime.new(year, month, day, hour, minute, 0).iso8601
+  def iso8601_datetime(year, month, day, hour, minute, offset = DateTime.now.offset)
+    DateTime.new(year, month, day, hour, minute, 0, offset).iso8601
   end
   module_function :iso8601_datetime
 

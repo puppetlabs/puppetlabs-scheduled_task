@@ -52,11 +52,15 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
   describe "#iso8601_datetime" do
     [
-      # year, month, day, hour, minute
-      { :input => [2018, 3, 20, 8, 57], :expected => '2018-03-20T08:57:00+00:00' },
-      { :input => [1899, 12, 30, 0, 0], :expected => '1899-12-30T00:00:00+00:00' },
+      # year, month, day, hour, minute with 0 offset specified
+      { :input => [2018, 3, 20, 8, 57, 0], :expected => '2018-03-20T08:57:00+00:00' },
+      { :input => [1899, 12, 30, 0, 0, 0], :expected => '1899-12-30T00:00:00+00:00' },
+      # don't specify timezone, using default offset
+      { :input => [2018, 3, 20, 8, 57], :expected => "2018-03-20T08:57:00#{DateTime.now.zone}" },
+      { :input => [1899, 12, 30, 0, 0], :expected => "1899-12-30T00:00:00#{DateTime.now.zone}" },
     ].each do |value|
       it "should return formatted date string #{value[:expected]} for date components #{value[:input]}" do
+        # The timestring returned is localized so the UTC offset will vary between systems
         expect(subject.iso8601_datetime(*value[:input])).to eq(value[:expected])
       end
     end
