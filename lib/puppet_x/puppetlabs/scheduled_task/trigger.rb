@@ -405,7 +405,10 @@ module Trigger
           'weeks_interval' => 1
         }
       when 'monthly'
-        { 'months' => Month.indexes_to_bitmask((1..12).to_a) }
+        {
+          'months' => Month.indexes_to_bitmask((1..12).to_a),
+          'days' => 0
+        }
       end
     end
 

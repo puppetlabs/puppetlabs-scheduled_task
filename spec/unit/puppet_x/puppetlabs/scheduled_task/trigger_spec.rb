@@ -328,6 +328,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       'once',
       'daily',
       'weekly',
+      'monthly',
     ].each do |type|
       it "should convert a default #{type}" do
         v1trigger = subject.class.default_trigger_for(type)
