@@ -67,53 +67,13 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def trigger
-    return @triggers if @triggers
-
-    @triggers   = []
-    task.trigger_count.times do |i|
-      trigger = begin
-                  task.trigger(i)
-                rescue Win32::TaskScheduler::Error
-                  # Win32::TaskScheduler can't handle all of the
-                  # trigger types Windows uses, so we need to skip the
-                  # unhandled types to prevent "puppet resource" from
-                  # blowing up.
-                  nil
-                end
-      next unless trigger && PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::V1_TYPE_MAP.keys.include?(trigger['trigger_type'])
-
-      puppet_trigger = {}
-      case trigger['trigger_type']
-      when :TASK_TIME_TRIGGER_DAILY
-        puppet_trigger['schedule'] = 'daily'
-        puppet_trigger['every']    = trigger['type']['days_interval'].to_s
-      when :TASK_TIME_TRIGGER_WEEKLY
-        puppet_trigger['schedule']    = 'weekly'
-        puppet_trigger['every']       = trigger['type']['weeks_interval'].to_s
-        puppet_trigger['day_of_week'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
-      when :TASK_TIME_TRIGGER_MONTHLYDATE
-        puppet_trigger['schedule'] = 'monthly'
-        puppet_trigger['months']   = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
-        puppet_trigger['on']       = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days.bitmask_to_indexes(trigger['type']['days'])
-      when :TASK_TIME_TRIGGER_MONTHLYDOW
-        puppet_trigger['schedule']         = 'monthly'
-        puppet_trigger['months']           = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month.bitmask_to_indexes(trigger['type']['months'])
-        puppet_trigger['which_occurrence'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Occurrence.constant_to_name(trigger['type']['weeks'])
-        puppet_trigger['day_of_week']      = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day.bitmask_to_names(trigger['type']['days_of_week'])
-      when :TASK_TIME_TRIGGER_ONCE
-        puppet_trigger['schedule'] = 'once'
-      end
-      puppet_trigger['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_date(trigger['start_year'], trigger['start_month'], trigger['start_day'])
-      puppet_trigger['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.normalized_time(trigger['start_hour'], trigger['start_minute'])
-      puppet_trigger['enabled']    = trigger['flags'] & PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_DISABLED == 0
-      puppet_trigger['minutes_interval'] = trigger['minutes_interval'] ||= 0
-      puppet_trigger['minutes_duration'] = trigger['minutes_duration'] ||= 0
-      puppet_trigger['index']      = i
-
-      @triggers << puppet_trigger
-    end
-
-    @triggers
+    @triggers ||= task.trigger_count.times.map do |i|
+      v1trigger = task.trigger(i)
+      # nil trigger definitions are unsupported ITrigger types
+      next if v1trigger.nil?
+      index = { 'index' => i }
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger).merge(index)
+    end.compact
   end
 
   def user_insync?(current, should)
@@ -197,11 +157,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
 
     needed_triggers.each do |trigger_hash|
-      # Even though this is an assignment, the API for
-      # Win32::TaskScheduler ends up appending this trigger to the
-      # list of triggers for the task, while #add_trigger is only able
-      # to replace existing triggers. *shrug*
-      task.trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
+      v1trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
+      task.append_trigger(v1trigger)
     end
   end
 
@@ -265,17 +222,12 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def validate_trigger(value)
-    value = [value] unless value.is_a?(Array)
-
-    value.each do |t|
-      if t.has_key?('index')
-        self.fail "'index' is read-only on scheduled_task triggers and should be removed ('index' is usually provided in puppet resource scheduled_task)."
+    [value].flatten.each do |t|
+      %w[index enabled].each do |key|
+        if t.key?(key)
+          self.fail "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
+        end
       end
-
-      if t.has_key?('enabled')
-        self.fail "'enabled' is read-only on scheduled_task triggers and should be removed ('enabled' is usually provided in puppet resource scheduled_task)."
-      end
-
       PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(t)
     end
 

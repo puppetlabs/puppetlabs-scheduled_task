@@ -138,7 +138,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
 
       task = subject.activate(@task_name)
       expect(subject.delete_trigger(0)).to be(1)
-      subject.trigger = new_trigger
+      subject.append_trigger(new_trigger)
       subject.save
       ps_cmd = '([string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Triggers.StartBoundary) -split \'T\')[0]'
       expect('2112-12-12').to be_same_as_powershell_command(ps_cmd)

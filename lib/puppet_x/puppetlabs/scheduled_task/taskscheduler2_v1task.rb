@@ -201,13 +201,14 @@ class TaskScheduler2V1Task
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
     trigger_object = @tasksched.trigger(@definition, index + 1)
-    trigger_object.nil? ? nil : Trigger::V1.from_iTrigger(trigger_object)
+    trigger_object.nil? || Trigger::V2::V1_TYPE_MAP.key(trigger_object.Type).nil? ?
+      nil :
+      Trigger::V1.from_iTrigger(trigger_object)
   end
 
-  # Sets the trigger for the currently active task.
+  # Appends a new trigger for the currently active task.
   #
-  # Note - This method name is a mis-nomer. It's actually appending a newly created trigger to the trigger collection.
-  def trigger=(v1trigger)
+  def append_trigger(v1trigger)
     Trigger::V2.append_v1trigger(@definition, v1trigger)
   end
 

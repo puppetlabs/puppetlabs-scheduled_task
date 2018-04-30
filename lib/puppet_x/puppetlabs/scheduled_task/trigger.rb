@@ -336,23 +336,29 @@ module Trigger
 
     # iTrigger is a COM ITrigger instance
     def self.from_iTrigger(iTrigger)
+      if Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type).nil?
+        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
+      end
+
       trigger_flags = 0
-      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.Endboundary.empty?
+      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.EndBoundary.empty?
       # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
       trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
 
+      # StartBoundary and EndBoundary may be empty strings per V2 API
       start_boundary = Trigger.string_to_date(iTrigger.StartBoundary)
       end_boundary = Trigger.string_to_date(iTrigger.EndBoundary)
 
       v1trigger = {
-        'start_year'              => start_boundary.year,
-        'start_month'             => start_boundary.month,
-        'start_day'               => start_boundary.day,
+        'trigger_type'            => Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type),
+        'start_year'              => start_boundary ? start_boundary.year : 0,
+        'start_month'             => start_boundary ? start_boundary.month : 0,
+        'start_day'               => start_boundary ? start_boundary.day : 0,
         'end_year'                => end_boundary ? end_boundary.year : 0,
         'end_month'               => end_boundary ? end_boundary.month : 0,
         'end_day'                 => end_boundary ? end_boundary.day : 0,
-        'start_hour'              => start_boundary.hour,
-        'start_minute'            => start_boundary.minute,
+        'start_hour'              => start_boundary ? start_boundary.hour : 0,
+        'start_minute'            => start_boundary ? start_boundary.minute : 0,
         'minutes_duration'        => Duration.to_minutes(iTrigger.Repetition.Duration),
         'minutes_interval'        => Duration.to_minutes(iTrigger.Repetition.Interval),
         'flags'                   => trigger_flags,
@@ -361,36 +367,29 @@ module Trigger
         'random_minutes_interval' => 0,
       }
 
-      case iTrigger.ole_type.to_s
-        when 'ITimeTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_ONCE
+      case iTrigger.Type
+        when V2::Type::TASK_TRIGGER_TIME
           v1trigger['type'] = { 'once' => nil }
-        when 'IDailyTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_DAILY
+        when V2::Type::TASK_TRIGGER_DAILY
           v1trigger['type'] = {
             'days_interval' => Trigger.string_to_int(iTrigger.DaysInterval)
           }
-        when 'IWeeklyTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_WEEKLY
+        when V2::Type::TASK_TRIGGER_WEEKLY
           v1trigger['type'] = {
             'weeks_interval' => Trigger.string_to_int(iTrigger.WeeksInterval),
             'days_of_week'   => Trigger.string_to_int(iTrigger.DaysOfWeek)
           }
-        when 'IMonthlyTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
+        when V2::Type::TASK_TRIGGER_MONTHLY
           v1trigger['type'] = {
             'days'   => Trigger.string_to_int(iTrigger.DaysOfMonth),
             'months' => Trigger.string_to_int(iTrigger.MonthsOfYear)
           }
-        when 'IMonthlyDOWTrigger'
-          v1trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDOW
+        when V2::Type::TASK_TRIGGER_MONTHLYDOW
           v1trigger['type'] = {
             'weeks'        => Trigger.string_to_int(iTrigger.WeeksOfMonth),
             'days_of_week' => Trigger.string_to_int(iTrigger.DaysOfWeek),
             'months'       => Trigger.string_to_int(iTrigger.MonthsOfYear)
           }
-        else
-          raise Error.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
       end
 
       v1trigger
@@ -406,7 +405,10 @@ module Trigger
           'weeks_interval' => 1
         }
       when 'monthly'
-        { 'months' => Month.indexes_to_bitmask((1..12).to_a) }
+        {
+          'months' => Month.indexes_to_bitmask((1..12).to_a),
+          'days' => 0
+        }
       end
     end
 
@@ -563,6 +565,43 @@ module Trigger
       trigger['start_minute'] = start_time.min
 
       trigger
+    end
+
+    def self.to_manifest_hash(v1trigger)
+      unless V2::V1_TYPE_MAP.keys.include?(v1trigger['trigger_type'])
+        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: v1trigger['trigger_type'] })
+      end
+
+      manifest_hash = {}
+
+      case v1trigger['trigger_type']
+      when :TASK_TIME_TRIGGER_DAILY
+        manifest_hash['schedule'] = 'daily'
+        manifest_hash['every']    = v1trigger['type']['days_interval'].to_s
+      when :TASK_TIME_TRIGGER_WEEKLY
+        manifest_hash['schedule']    = 'weekly'
+        manifest_hash['every']       = v1trigger['type']['weeks_interval'].to_s
+        manifest_hash['day_of_week'] = Day.bitmask_to_names(v1trigger['type']['days_of_week'])
+      when :TASK_TIME_TRIGGER_MONTHLYDATE
+        manifest_hash['schedule'] = 'monthly'
+        manifest_hash['months']   = Month.bitmask_to_indexes(v1trigger['type']['months'])
+        manifest_hash['on']       = Days.bitmask_to_indexes(v1trigger['type']['days'])
+
+      when :TASK_TIME_TRIGGER_MONTHLYDOW
+        manifest_hash['schedule']         = 'monthly'
+        manifest_hash['months']           = Month.bitmask_to_indexes(v1trigger['type']['months'])
+        manifest_hash['which_occurrence'] = Occurrence.constant_to_name(v1trigger['type']['weeks'])
+        manifest_hash['day_of_week']      = Day.bitmask_to_names(v1trigger['type']['days_of_week'])
+      when :TASK_TIME_TRIGGER_ONCE
+        manifest_hash['schedule'] = 'once'
+      end
+      manifest_hash['start_date'] = normalized_date(v1trigger['start_year'], v1trigger['start_month'], v1trigger['start_day'])
+      manifest_hash['start_time'] = normalized_time(v1trigger['start_hour'], v1trigger['start_minute'])
+      manifest_hash['enabled']    = v1trigger['flags'] & Flag::TASK_TRIGGER_FLAG_DISABLED == 0
+      manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
+      manifest_hash['minutes_duration'] = v1trigger['minutes_duration'] ||= 0
+
+      manifest_hash
     end
 
     private

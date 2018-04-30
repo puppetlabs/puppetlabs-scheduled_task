@@ -474,9 +474,14 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
-        @mock_task.expects(:trigger).with(1).raises(
-          Win32::TaskScheduler::Error.new('Unhandled trigger type!')
-        )
+        if task_provider == :win32_taskscheduler
+          @mock_task.expects(:trigger).with(1).raises(
+            Win32::TaskScheduler::Error.new('Unknown trigger type')
+          )
+        else
+          @mock_task.expects(:trigger).with(1).returns(nil)
+        end
+
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
@@ -520,9 +525,11 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
-        @mock_task.expects(:trigger).with(1).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_EVENT_TRIGGER_AT_LOGON,
-        })
+        @trigger1 = task_provider == :win32_taskscheduler ?
+          { 'trigger_type' => Win32::TaskScheduler::TASK_EVENT_TRIGGER_AT_LOGON, } :
+          nil
+        @mock_task.expects(:trigger).with(1).returns(@trigger1)
+
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
@@ -1795,11 +1802,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         resource.provider.stubs(:trigger).returns(current_triggers)
         if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
           translater = resource.provider.method(:translate_hash_to_trigger)
+          expected_method = :trigger=
         else
           translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:from_manifest_hash)
+          expected_method = :append_trigger
         end
-        @mock_task.expects(:trigger=).with(translater.call(@trigger[1]))
-        @mock_task.expects(:trigger=).with(translater.call(@trigger[2]))
+        @mock_task.expects(expected_method).with(translater.call(@trigger[1]))
+        @mock_task.expects(expected_method).with(translater.call(@trigger[2]))
 
         resource.provider.trigger = @trigger
       end
