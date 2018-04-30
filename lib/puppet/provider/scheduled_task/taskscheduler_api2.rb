@@ -67,15 +67,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def trigger
-    return @triggers if @triggers
-
-    @triggers   = []
-    task.trigger_count.times do |i|
-      trigger = begin
+    @triggers ||= task.trigger_count.times.map do |i|
+      begin
         v1trigger = task.trigger(i)
-        t = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger)
-        t['index'] = i
-        t
+        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger).merge({'index' => i})
       rescue ArgumentError
         raise unless $!.message.start_with?('Unknown trigger type')
         # Code can't handle all of the trigger types Windows uses yet,
@@ -83,11 +78,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
         # from blowing up.
         nil
       end
-      next unless trigger
-      @triggers << trigger
-    end
-
-    @triggers
+    end.compact
   end
 
   def user_insync?(current, should)
