@@ -222,17 +222,12 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def validate_trigger(value)
-    value = [value] unless value.is_a?(Array)
-
-    value.each do |t|
-      if t.has_key?('index')
-        self.fail "'index' is read-only on scheduled_task triggers and should be removed ('index' is usually provided in puppet resource scheduled_task)."
+    [value].flatten.each do |t|
+      %w[index enabled].each do |key|
+        if t.key?(key)
+          self.fail "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
+        end
       end
-
-      if t.has_key?('enabled')
-        self.fail "'enabled' is read-only on scheduled_task triggers and should be removed ('enabled' is usually provided in puppet resource scheduled_task)."
-      end
-
       PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(t)
     end
 
