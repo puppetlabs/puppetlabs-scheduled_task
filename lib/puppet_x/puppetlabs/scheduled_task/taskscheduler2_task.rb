@@ -201,10 +201,9 @@ class TaskScheduler2Task
       Trigger::V1.from_iTrigger(trigger_object)
   end
 
-  # Sets the trigger for the currently active task.
+  # Appends a new trigger for the currently active task.
   #
-  # Note - This method name is a mis-nomer. It's actually appending a newly created trigger to the trigger collection.
-  def trigger=(v1trigger)
+  def append_trigger(v1trigger)
     Trigger::V2.append_v1trigger(@definition, v1trigger)
   end
 

@@ -157,11 +157,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
 
     needed_triggers.each do |trigger_hash|
-      # Even though this is an assignment, the API for
-      # Win32::TaskScheduler ends up appending this trigger to the
-      # list of triggers for the task, while #add_trigger is only able
-      # to replace existing triggers. *shrug*
-      task.trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
+      v1trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
+      task.append_trigger(v1trigger)
     end
   end
 

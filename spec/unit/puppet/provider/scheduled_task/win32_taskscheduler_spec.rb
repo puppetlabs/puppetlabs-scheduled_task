@@ -1802,11 +1802,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         resource.provider.stubs(:trigger).returns(current_triggers)
         if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
           translater = resource.provider.method(:translate_hash_to_trigger)
+          expected_method = :trigger=
         else
           translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:from_manifest_hash)
+          expected_method = :append_trigger
         end
-        @mock_task.expects(:trigger=).with(translater.call(@trigger[1]))
-        @mock_task.expects(:trigger=).with(translater.call(@trigger[2]))
+        @mock_task.expects(expected_method).with(translater.call(@trigger[1]))
+        @mock_task.expects(expected_method).with(translater.call(@trigger[2]))
 
         resource.provider.trigger = @trigger
       end
