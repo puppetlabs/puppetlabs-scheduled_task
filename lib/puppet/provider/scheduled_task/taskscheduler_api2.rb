@@ -68,16 +68,11 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def trigger
     @triggers ||= task.trigger_count.times.map do |i|
-      begin
-        v1trigger = task.trigger(i)
-        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger).merge({'index' => i})
-      rescue ArgumentError
-        raise unless $!.message.start_with?('Unknown trigger type')
-        # Code can't handle all of the trigger types Windows uses yet,
-        # so we need to skip the unhandled types to prevent "puppet resource"
-        # from blowing up.
-        nil
-      end
+      v1trigger = task.trigger(i)
+      # nil trigger definitions are unsupported ITrigger types
+      next if v1trigger.nil?
+      index = { 'index' => i }
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger).merge(index)
     end.compact
   end
 

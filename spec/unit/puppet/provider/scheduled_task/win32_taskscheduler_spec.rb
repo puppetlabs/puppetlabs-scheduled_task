@@ -474,11 +474,14 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
-        @error_class = task_provider == :win32_taskscheduler ?
-          Win32::TaskScheduler::Error : ArgumentError
-        @mock_task.expects(:trigger).with(1).raises(
-          @error_class.new('Unknown trigger type')
-        )
+        if task_provider == :win32_taskscheduler
+          @mock_task.expects(:trigger).with(1).raises(
+            Win32::TaskScheduler::Error.new('Unknown trigger type')
+          )
+        else
+          @mock_task.expects(:trigger).with(1).returns(nil)
+        end
+
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
@@ -522,9 +525,11 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
-        @mock_task.expects(:trigger).with(1).returns({
-          'trigger_type' => Win32::TaskScheduler::TASK_EVENT_TRIGGER_AT_LOGON,
-        })
+        @trigger1 = task_provider == :win32_taskscheduler ?
+          { 'trigger_type' => Win32::TaskScheduler::TASK_EVENT_TRIGGER_AT_LOGON, } :
+          nil
+        @mock_task.expects(:trigger).with(1).returns(@trigger1)
+
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
