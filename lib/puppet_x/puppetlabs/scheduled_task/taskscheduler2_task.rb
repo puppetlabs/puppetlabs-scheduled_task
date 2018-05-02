@@ -212,14 +212,14 @@ class TaskScheduler2Task
   #
   def flags
     flags = 0
-    flags = flags | Win32::TaskScheduler::DISABLED if !@definition.Settings.Enabled
+    flags = flags | PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED if !@definition.Settings.Enabled
     flags
   end
 
   # Sets an OR'd value of flags that modify the behavior of the work item.
   #
   def flags=(flags)
-    @definition.Settings.Enabled = (flags & Win32::TaskScheduler::DISABLED == 0)
+    @definition.Settings.Enabled = (flags & PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED == 0)
   end
 
   # Returns whether or not the scheduled task exists.
