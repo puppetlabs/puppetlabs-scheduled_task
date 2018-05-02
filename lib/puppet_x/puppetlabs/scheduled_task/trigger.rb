@@ -1,3 +1,5 @@
+require 'time'
+
 # @api private
 module PuppetX
 module PuppetLabs
@@ -62,19 +64,20 @@ module Trigger
   end
   module_function :string_to_int
 
-  def string_to_date(value)
+  def iso8601_datetime_to_local(value)
     return nil if value.nil?
     raise ArgumentError.new('value must be a String') unless value.is_a?(String)
     return nil if value.empty?
 
-    DateTime.parse(value)
+    # defaults to parsing as local with no timezone passed
+    Time.parse(value).getlocal
   end
-  module_function :string_to_date
+  module_function :iso8601_datetime_to_local
 
-  def iso8601_datetime(year, month, day, hour, minute)
-    DateTime.new(year, month, day, hour, minute, 0).iso8601
+  def date_components_to_local_iso8601_datetime(year, month, day, hour, minute)
+    Time.local(year, month, day, hour, minute, 0).iso8601
   end
-  module_function :iso8601_datetime
+  module_function :date_components_to_local_iso8601_datetime
 
   class V1
   class Day
@@ -307,13 +310,6 @@ module Trigger
 
     ValidManifestScheduleKeys = ScheduleNameDefaultsMap.keys.freeze
 
-    def self.normalized_date(year, month, day)
-      Date.new(year, month, day).strftime('%Y-%-m-%-d')
-    end
-
-    def self.normalized_time(hour, minute)
-      Time.parse("#{hour}:#{minute}").strftime('%H:%M')
-    end
     # canonicalize given trigger hash
     # throws errors if hash structure is invalid
     # @returns original object with downcased keys
@@ -346,8 +342,8 @@ module Trigger
       trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
 
       # StartBoundary and EndBoundary may be empty strings per V2 API
-      start_boundary = Trigger.string_to_date(iTrigger.StartBoundary)
-      end_boundary = Trigger.string_to_date(iTrigger.EndBoundary)
+      start_boundary = Trigger.iso8601_datetime_to_local(iTrigger.StartBoundary)
+      end_boundary = Trigger.iso8601_datetime_to_local(iTrigger.EndBoundary)
 
       v1trigger = {
         'trigger_type'            => Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type),
@@ -358,7 +354,7 @@ module Trigger
         'end_month'               => end_boundary ? end_boundary.month : 0,
         'end_day'                 => end_boundary ? end_boundary.day : 0,
         'start_hour'              => start_boundary ? start_boundary.hour : 0,
-        'start_minute'            => start_boundary ? start_boundary.minute : 0,
+        'start_minute'            => start_boundary ? start_boundary.min : 0,
         'minutes_duration'        => Duration.to_minutes(iTrigger.Repetition.Duration),
         'minutes_interval'        => Duration.to_minutes(iTrigger.Repetition.Interval),
         'flags'                   => trigger_flags,
@@ -553,16 +549,19 @@ module Trigger
         trigger['minutes_duration'] = Integer(manifest_hash['minutes_duration'])
       end
 
-      if start_date = manifest_hash['start_date']
-        start_date = Date.parse(start_date)
-        trigger['start_year']  = start_date.year
-        trigger['start_month'] = start_date.month
-        trigger['start_day']   = start_date.day
-      end
+      # manifests specify datetime in the local timezone, same as V1 trigger
+      datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
+      # Time.parse always assumes local time
+      local_manifest_date = Time.parse(datetime_string)
 
-      start_time = Time.parse(manifest_hash['start_time'])
-      trigger['start_hour']   = start_time.hour
-      trigger['start_minute'] = start_time.min
+      # today has already been filled in to default trigger structure, only override if necessary
+      if manifest_hash['start_date']
+        trigger['start_year']   = local_manifest_date.year
+        trigger['start_month']  = local_manifest_date.month
+        trigger['start_day']    = local_manifest_date.day
+      end
+      trigger['start_hour']   = local_manifest_date.hour
+      trigger['start_minute'] = local_manifest_date.min
 
       trigger
     end
@@ -595,8 +594,19 @@ module Trigger
       when :TASK_TIME_TRIGGER_ONCE
         manifest_hash['schedule'] = 'once'
       end
-      manifest_hash['start_date'] = normalized_date(v1trigger['start_year'], v1trigger['start_month'], v1trigger['start_day'])
-      manifest_hash['start_time'] = normalized_time(v1trigger['start_hour'], v1trigger['start_minute'])
+
+      # V1 triggers are local time already, same as manifest
+      local_trigger_date = Time.local(
+        v1trigger['start_year'],
+        v1trigger['start_month'],
+        v1trigger['start_day'],
+        v1trigger['start_hour'],
+        v1trigger['start_minute'],
+        0
+      )
+
+      manifest_hash['start_date'] = local_trigger_date.strftime('%Y-%-m-%-d')
+      manifest_hash['start_time'] = local_trigger_date.strftime('%H:%M')
       manifest_hash['enabled']    = v1trigger['flags'] & Flag::TASK_TRIGGER_FLAG_DISABLED == 0
       manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
       manifest_hash['minutes_duration'] = v1trigger['minutes_duration'] ||= 0
@@ -678,11 +688,12 @@ module Trigger
       # Values for all Trigger Types
       iTrigger.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
       iTrigger.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
-      iTrigger.StartBoundary = Trigger.iso8601_datetime(v1trigger['start_year'],
-                                                        v1trigger['start_month'],
-                                                        v1trigger['start_day'],
-                                                        v1trigger['start_hour'],
-                                                        v1trigger['start_minute']
+      iTrigger.StartBoundary = Trigger.date_components_to_local_iso8601_datetime(
+        v1trigger['start_year'],
+        v1trigger['start_month'],
+        v1trigger['start_day'],
+        v1trigger['start_hour'],
+        v1trigger['start_minute']
       )
 
       v1trigger

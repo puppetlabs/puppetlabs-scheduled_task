@@ -27,59 +27,45 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
     end
   end
 
-  describe "#string_to_date" do
+  describe "#iso8601_datetime_to_local" do
     [nil, ''].each do |value|
       it "should return nil given value '#{value}' (#{value.class})" do
-        expect(subject.string_to_date(value)).to eq(nil)
+        expect(subject.iso8601_datetime_to_local(value)).to eq(nil)
       end
     end
 
     [
-      { :input => '2018-01-02T03:04:05', :expected => DateTime.new(2018, 1, 2, 3, 4, 5) },
-      { :input => '1899-12-30T00:00:00', :expected => DateTime.new(1899, 12, 30, 0, 0, 0) },
+      { :input => '2018-01-02T03:04:05', :expected => Time.local(2018, 1, 2, 3, 4, 5).getutc },
+      { :input => '1899-12-30T00:00:00', :expected => Time.local(1899, 12, 30, 0, 0, 0).getutc },
     ].each do |value|
-      it "should return a valid DateTime object for date string #{value[:input]}" do
-        expect(subject.string_to_date(value[:input])).to eq(value[:expected])
+      it "should return a valid Time object for date string #{value[:input]} in the local timezone" do
+        converted = subject.iso8601_datetime_to_local(value[:input])
+        expect(converted).to eq(value[:expected])
+        expect(converted.to_s).to eq(converted.localtime.to_s)
       end
     end
 
     [:foo, [], {}].each do |value|
       it "should raise ArgumentError given value '#{value}' (#{value.class})" do
-        expect { subject.string_to_date(value) }.to raise_error(ArgumentError)
+        expect { subject.iso8601_datetime_to_local(value) }.to raise_error(ArgumentError)
       end
     end
   end
 
-  describe "#iso8601_datetime" do
+  describe "#date_components_to_local_iso8601_datetime" do
     [
-      # year, month, day, hour, minute
-      { :input => [2018, 3, 20, 8, 57], :expected => '2018-03-20T08:57:00+00:00' },
-      { :input => [1899, 12, 30, 0, 0], :expected => '1899-12-30T00:00:00+00:00' },
+      # must append DST influenced local timezone to end of expected string
+      { :input => [2018, 3, 20, 8, 57], :expected => "2018-03-20T08:57:00" + Time.local(2018, 3, 20).to_datetime.zone },
+      { :input => [1899, 12, 30, 0, 0], :expected => "1899-12-30T00:00:00" + Time.local(1899, 12, 30).to_datetime.zone },
     ].each do |value|
-      it "should return formatted date string #{value[:expected]} for date components #{value[:input]}" do
-        expect(subject.iso8601_datetime(*value[:input])).to eq(value[:expected])
+      it "should return local timezone formatted ISO8601 date string #{value[:expected]} for date components #{value[:input]}" do
+        expect(subject.date_components_to_local_iso8601_datetime(*value[:input])).to eq(value[:expected])
       end
     end
   end
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
-  describe '#normalized_date' do
-    it 'should format the date without leading zeros' do
-      expect(subject.class.normalized_date(2011, 01, 01)).to eq('2011-1-1')
-    end
-  end
-
-  describe '#normalized_time' do
-    it 'should format the time as {24h}:{minutes}' do
-      expect(subject.class.normalized_time(8, 37)).to eq('08:37')
-    end
-
-    it 'should format the time as {24h}:{minutes}' do
-      expect(subject.class.normalized_time(20, 0)).to eq('20:00')
-    end
-  end
-
   describe "#canonicalize_and_validate" do
     [
       {
@@ -220,18 +206,21 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       :Id                 => '1',
       :Repetition         => { :Interval => 'PT20M', :Duration => 'P1M4DT2H5M', :StopAtDurationEnd => false },
       :ExecutionTimeLimit => 'P1M4DT2H5M',
-      :StartBoundary      => '2005-10-11T13:21:17-08:00',
+      # StartBoundary is usually specified in local time without TZ
+      :StartBoundary      => '2005-10-11T13:21:17' + Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone,
       :EndBoundary        => '2005-10-11T13:21:17Z',
       :Enabled            => true,
     }.freeze
+
+    UTC_END = Time.utc(2005, 10, 11, 13, 21, 17, 0)
 
     CONVERTED_ITRIGGER_V1_HASH = {
       'start_year' => 2005,
       'start_month' => 10,
       'start_day' => 11,
-      'end_year' => 2005,
-      'end_month' => 10,
-      'end_day' => 11,
+      'end_year' => UTC_END.year, # 2005,
+      'end_month' => UTC_END.month, # 10,
+      'end_day' => UTC_END.day, # 11,
       'start_hour' => 13,
       'start_minute' => 21,
       'minutes_duration' => 43829 + 5760 + 120 + 5, # P1M4DT2H5M
@@ -312,7 +301,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
         }
       },
     ].each do |trigger_details|
-      it "should convert a full #{trigger_details[:iTrigger][:ole_type]} to the equivalent V1 hash" do
+      it "should convert a full ITrigger type #{trigger_details[:iTrigger][:Type]} to the equivalent V1 hash" do
         iTrigger = FILLED_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
         # stub is not usable outside of specs (like in DEFAULT_ITRIGGER_PROPERTIES)
         iTrigger[:Repetition] = stub(iTrigger[:Repetition])
@@ -341,6 +330,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       expect { subject.class.to_manifest_hash(v1trigger) }.to raise_error(ArgumentError)
     end
 
+    # V1 Hash uses local dates / times
     FILLED_V1_HASH = {
       'start_year' => 2005,
       'start_month' => 10,
@@ -356,6 +346,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       'random_minutes_interval' => 0,
     }
 
+    # manifest specifies dates / times as local time
     CONVERTED_MANIFEST_HASH = {
       'start_date' => '2005-10-11',
       'start_time' => '13:21',
