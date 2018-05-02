@@ -1,5 +1,5 @@
 require 'puppet/parameter'
-require_relative '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task'
+require_relative '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
 
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
@@ -13,7 +13,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   has_feature :compatibility
 
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.tasks.collect do |job_file|
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
       new(
         :provider => :taskscheduler_api2,
@@ -23,13 +23,13 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.exists? resource[:name]
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.exists? resource[:name]
   end
 
   def task
     return @task if @task
 
-    @task ||= PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new
+    @task ||= PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new
     @task.activate(resource[:name] + '.job') if exists?
 
     @task
@@ -176,7 +176,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def create
     clear_task
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(
+    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new(
       resource[:name],
       PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once')
     )
@@ -188,7 +188,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.delete(resource[:name] + '.job')
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.delete(resource[:name] + '.job')
   end
 
   def flush

@@ -29,6 +29,9 @@ module TaskScheduler2
   TASK_COMPATIBILITY_AT = 0
   TASK_COMPATIBILITY_V1 = 1
   TASK_COMPATIBILITY_V2 = 2
+  TASK_COMPATIBILITY_V3 = 3
+  TASK_COMPATIBILITY_V4 = 4
+  TASK_COMPATIBILITY_V6 = 6
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
   TASK_VALIDATE_ONLY                 = 0x1

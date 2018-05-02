@@ -124,7 +124,7 @@ case task_provider
 when :win32_taskscheduler
   concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
 when :taskscheduler_api2
-  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
+  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task
 end
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
