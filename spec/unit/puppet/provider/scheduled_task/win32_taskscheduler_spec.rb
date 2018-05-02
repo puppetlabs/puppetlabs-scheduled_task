@@ -120,17 +120,18 @@ describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if =
   end
 end
 
-# The Win32::TaskScheduler and PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task classes should be
-# API compatible and behave the same way.  What differs is which Windows API is used to query
-# and affect the system.  This means for testing, any tests should be the same no matter what
-# provider or concrete class (which the provider uses) is used.
-klass_list = Puppet.features.microsoft_windows? ? [Win32::TaskScheduler, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task] : []
-klass_list.each do |concrete_klass|
+# The win32_taskscheduler and taskscheduler_api2 providers should be API compatible and behave
+# the same way.  What differs is which Windows API is used to query and affect the system.
+# This means for testing, any tests should be the same no matter what provider or concrete class
+# (which the provider uses) is used.
+task_providers = Puppet.features.microsoft_windows? ? [:win32_taskscheduler, :taskscheduler_api2] : []
+task_providers.each do |task_provider|
 
-if concrete_klass == PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
-  task_provider = :taskscheduler_api2
-else
-  task_provider = :win32_taskscheduler
+case task_provider
+when :win32_taskscheduler
+  concrete_klass = Win32::TaskScheduler
+when :taskscheduler_api2
+  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
 end
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
