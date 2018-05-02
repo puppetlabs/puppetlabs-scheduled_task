@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task' if Puppet.features.microsoft_windows?
+require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task'
 
 shared_examples_for "a trigger that handles start_date and start_time" do
   let(:trigger) do
