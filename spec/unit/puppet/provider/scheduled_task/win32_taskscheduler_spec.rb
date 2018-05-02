@@ -616,19 +616,19 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'whether the task is enabled' do
       it 'should report tasks with the disabled bit set as disabled' do
-        @mock_task.stubs(:flags).returns(Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
 
         expect(resource.provider.enabled).to eq(:false)
       end
 
       it 'should report tasks without the disabled bit set as enabled' do
-        @mock_task.stubs(:flags).returns(~Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
 
         expect(resource.provider.enabled).to eq(:true)
       end
 
       it 'should not consider triggers for determining if the task is enabled' do
-        @mock_task.stubs(:flags).returns(~Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
         @mock_task.stubs(:trigger_count).returns(1)
         @mock_task.stubs(:trigger).with(0).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
@@ -1733,13 +1733,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     describe '#enabled=' do
       it 'should set the disabled flag if the task should be disabled' do
         @mock_task.stubs(:flags).returns(0)
-        @mock_task.expects(:flags=).with(Win32::TaskScheduler::DISABLED)
+        @mock_task.expects(:flags=).with(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
 
         resource.provider.enabled = :false
       end
 
       it 'should clear the disabled flag if the task should be enabled' do
-        @mock_task.stubs(:flags).returns(Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
         @mock_task.expects(:flags=).with(0)
 
         resource.provider.enabled = :true
