@@ -608,6 +608,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       expect(resource.provider.arguments).to eq('these are my arguments')
     end
 
+    it 'should get the compatibility from the parameters on the task' do
+      skip("provider #{resource.provider} doesn't support compatibility") unless resource.provider.respond_to?(:compatibility)
+      @mock_task.expects(:compatibility).returns(3)
+
+      expect(resource.provider.compatibility).to eq(3)
+    end
+
     it 'should get the user from the account_information on the task' do
       @mock_task.expects(:account_information).returns('this is my user')
 
@@ -1853,25 +1860,36 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         resource.provider.user = 'my_user_name'
       end
     end
+
+    describe '#compatibility=' do
+      it 'should set the parameters on the task' do
+        skip("provider #{resource.provider} doesn't support compatibility") unless resource.provider.respond_to?(:compatibility)
+        @mock_task.expects(:compatibility=).with(1)
+
+        resource.provider.compatibility = 1
+      end
+    end
   end
 
   describe '#create' do
     let(:resource) do
       Puppet::Type.type(:scheduled_task).new(
-        :name        => 'Test Task',
-        :enabled     => @enabled,
-        :command     => @command,
-        :arguments   => @arguments,
-        :working_dir => @working_dir,
-        :trigger     => { 'schedule' => 'once', 'start_date' => '2011-09-27', 'start_time' => '17:00' }
+        :name          => 'Test Task',
+        :enabled       => @enabled,
+        :command       => @command,
+        :arguments     => @arguments,
+        :compatibility => @compatibility,
+        :working_dir   => @working_dir,
+        :trigger       => { 'schedule' => 'once', 'start_date' => '2011-09-27', 'start_time' => '17:00' }
       )
     end
 
     before :each do
-      @enabled     = :true
-      @command     = 'C:\Windows\System32\notepad.exe'
-      @arguments   = '/a /list /of /arguments'
-      @working_dir = 'C:\Windows\Some\Directory'
+      @enabled       = :true
+      @command       = 'C:\Windows\System32\notepad.exe'
+      @arguments     = '/a /list /of /arguments'
+      @compatibility = 1
+      @working_dir   = 'C:\Windows\Some\Directory'
 
       @mock_task = stub
       @mock_task.responds_like(concrete_klass.new)
@@ -1888,6 +1906,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @mock_task.stubs(:trigger=)
       else
         @mock_task.stubs(:append_trigger)
+        # also allow compatibility to set given newer provider allows it
+        @mock_task.stubs(:compatibility=)
       end
       @mock_task.stubs(:save)
       concrete_klass.stubs(:new).returns(@mock_task)
@@ -1903,6 +1923,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     it 'should set the arguments' do
       resource.provider.expects(:arguments=).with(@arguments)
+
+      resource.provider.create
+    end
+
+    it 'should set the compatibility' do
+      skip("provider #{resource.provider} doesn't support compatibility") unless resource.provider.respond_to?(:compatibility)
+      resource.provider.expects(:compatibility=).with(@compatibility)
 
       resource.provider.create
     end

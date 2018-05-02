@@ -157,8 +157,6 @@ class TaskScheduler2Task
     @task = nil
     @task_password = nil
 
-    @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2)
-
     Trigger::V2.append_v1trigger(@definition, task_trigger)
 
     set_account_information('',nil)
