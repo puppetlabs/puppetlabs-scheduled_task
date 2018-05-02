@@ -41,7 +41,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def enabled
-    task.flags & Win32::TaskScheduler::DISABLED == 0 ? :true : :false
+    task.flags & PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED == 0 ? :true : :false
   end
 
   def command
@@ -118,9 +118,9 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def enabled=(value)
     if value == :true
-      task.flags = task.flags & ~Win32::TaskScheduler::DISABLED
+      task.flags = task.flags & ~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED
     else
-      task.flags = task.flags | Win32::TaskScheduler::DISABLED
+      task.flags = task.flags | PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED
     end
   end
 
