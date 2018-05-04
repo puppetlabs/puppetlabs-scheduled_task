@@ -144,10 +144,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
   describe 'when retrieving' do
     before :each do
       @mock_task = stub
-      @mock_task.responds_like(Win32::TaskScheduler.new)
+      @mock_task.responds_like(concrete_klass.new)
       described_class.any_instance.stubs(:task).returns(@mock_task)
 
-      Win32::TaskScheduler.stubs(:new).returns(@mock_task)
+      concrete_klass.stubs(:new).returns(@mock_task)
     end
     let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
@@ -1874,7 +1874,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @working_dir = 'C:\Windows\Some\Directory'
 
       @mock_task = stub
-      @mock_task.responds_like(Win32::TaskScheduler.new)
+      @mock_task.responds_like(concrete_klass.new)
       @mock_task.stubs(:exists?).returns(true)
       @mock_task.stubs(:activate)
       @mock_task.stubs(:application_name=)
@@ -1884,9 +1884,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @mock_task.stubs(:flags)
       @mock_task.stubs(:flags=)
       @mock_task.stubs(:trigger_count).returns(0)
-      @mock_task.stubs(:trigger=)
+      if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
+        @mock_task.stubs(:trigger=)
+      else
+        @mock_task.stubs(:append_trigger)
+      end
       @mock_task.stubs(:save)
-      Win32::TaskScheduler.stubs(:new).returns(@mock_task)
+      concrete_klass.stubs(:new).returns(@mock_task)
 
       described_class.any_instance.stubs(:sync_triggers)
     end
