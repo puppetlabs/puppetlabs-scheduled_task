@@ -176,10 +176,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def create
     clear_task
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new(
-      resource[:name],
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once')
-    )
+    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new(resource[:name])
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility].each do |prop|

@@ -11,19 +11,18 @@ module ScheduledTask
 
 class TaskScheduler2V1Task
   public
-  # Returns a new TaskScheduler object. If a work_item (and possibly the
-  # the trigger) are passed as arguments then a new work item is created and
-  # associated with that trigger, although you can still activate other tasks
+  # Returns a new TaskScheduler object. If a work_item is passed as an argument
+  # then a new work item is created, although you can still activate other tasks
   # with the same handle.
   #
   # This is really just a bit of convenience. Passing arguments to the
   # constructor is the same as calling TaskScheduler.new plus
   # TaskScheduler#new_work_item.
   #
-  def initialize(work_item = nil, trigger = nil)
+  def initialize(work_item = nil)
     @tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
 
-    new_work_item(work_item, trigger) if work_item && trigger
+    new_work_item(work_item) if work_item
   end
 
   # Returns an array of scheduled task names.
@@ -154,8 +153,8 @@ class TaskScheduler2V1Task
   # trigger variable is a hash of options that define when the scheduled
   # job should run.
   #
-  def new_work_item(task_name, task_trigger)
-    raise TypeError unless task_trigger.is_a?(Hash)
+  def new_work_item(task_name, task_trigger = nil)
+    raise TypeError unless task_trigger.nil? || task_trigger.is_a?(Hash)
 
     @full_task_path = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
     @definition = @tasksched.new_task_definition
@@ -164,7 +163,7 @@ class TaskScheduler2V1Task
 
     @tasksched.set_compatibility(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1)
 
-    Trigger::V2.append_v1trigger(@definition, task_trigger)
+    Trigger::V2.append_v1trigger(@definition, task_trigger) if task_trigger
 
     set_account_information('',nil)
 

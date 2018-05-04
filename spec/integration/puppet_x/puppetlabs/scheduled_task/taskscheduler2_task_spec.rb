@@ -86,7 +86,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       before(:each) do
         @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-        task = subject.class.new(@task_name, trigger)
+        task = subject.class.new(@task_name)
+        task.append_trigger(trigger)
         task.application_name = 'cmd.exe'
         task.parameters = '/c exit 0'
         task.save
@@ -113,7 +114,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
   context "When managing a task" do
     before(:each) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-      task = subject.class.new(@task_name, triggers[0])
+      task = subject.class.new(@task_name)
+      task.append_trigger(triggers[0])
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.save
