@@ -13,7 +13,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   has_feature :compatibility
 
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.tasks.collect do |job_file|
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
       new(
         :provider => :taskscheduler_api2,

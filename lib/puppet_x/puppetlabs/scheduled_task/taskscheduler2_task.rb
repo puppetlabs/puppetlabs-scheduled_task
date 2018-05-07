@@ -24,8 +24,9 @@ class TaskScheduler2Task
 
   # Returns an array of scheduled task names.
   #
-  def enum
-    @tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
+  def self.tasks
+    tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
+    tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: [
         PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V6,
@@ -35,10 +36,9 @@ class TaskScheduler2Task
         PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_AT,
         PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1
       ]).map do |item|
-        @tasksched.task_name_from_task_path(item)
+        tasksched.task_name_from_task_path(item)
     end
   end
-  alias :tasks :enum
 
   # Activate the specified task.
   #
@@ -229,7 +229,7 @@ class TaskScheduler2Task
   # Returns whether or not the scheduled task exists.
   def exists?(job_name)
     # task name comparison is case insensitive
-    enum.any? { |name| name.casecmp(job_name) == 0 }
+    self.class.tasks.any? { |name| name.casecmp(job_name) == 0 }
   end
 
   private

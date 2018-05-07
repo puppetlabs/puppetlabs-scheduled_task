@@ -10,7 +10,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   confine    :operatingsystem => :windows
 
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.tasks.collect do |job_file|
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
       new(
         :provider => :win32_taskscheduler,
