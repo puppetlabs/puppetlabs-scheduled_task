@@ -88,11 +88,19 @@ Puppet::Type.newtype(:scheduled_task) do
   end
 
   newproperty(:compatibility, :required_features=>:compatibility) do
-    desc "The compatibility level associated with the task. May currently only
-      be set to 1 for compatibility with tasks on a Windows XP or Windows Server
-      2003 computer."
+    desc "The compatibility level associated with the task. May currently be set
+      to 1 for compatibility with tasks on a Windows XP or Windows Server
+      2003 computer, 2 for compatibility with tasks on a Windows 2008 computer,
+      3 for compatibility with new features for tasks introduced in Windows 7
+      and 2008R2, 4 for compatibility with new features for tasks introduced in
+      Windows 8, Server 2012R2 and Server 2016, or 6 for compatibility with new
+      features for tasks introduced in Windows 10"
 
     newvalue(1)
+    newvalue(2)
+    newvalue(3)
+    newvalue(4)
+    newvalue(6)
     defaultto(1)
 
     validate do |value|

@@ -85,7 +85,7 @@ class TaskScheduler2V1Task
   #
   # Calling task.set_account_information('SYSTEM', nil) will generally not
   # work, except for one special case where flags are also set like:
-  # task.flags = Win32::TaskScheduler::TASK_FLAG_RUN_ONLY_IF_LOGGED_ON
+  # task.flags = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_RUN_ONLY_IF_LOGGED_ON
   #
   # This must be done prior to the 1st save() call for the task to be
   # properly registered and visible through the MMC snap-in / schtasks.exe
@@ -217,14 +217,14 @@ class TaskScheduler2V1Task
   #
   def flags
     flags = 0
-    flags = flags | Win32::TaskScheduler::DISABLED if !@definition.Settings.Enabled
+    flags = flags | PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED if !@definition.Settings.Enabled
     flags
   end
 
   # Sets an OR'd value of flags that modify the behavior of the work item.
   #
   def flags=(flags)
-    @definition.Settings.Enabled = (flags & Win32::TaskScheduler::DISABLED == 0)
+    @definition.Settings.Enabled = (flags & PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED == 0)
   end
 
   # Returns whether or not the scheduled task exists.

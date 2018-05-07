@@ -29,6 +29,9 @@ module TaskScheduler2
   TASK_COMPATIBILITY_AT = 0
   TASK_COMPATIBILITY_V1 = 1
   TASK_COMPATIBILITY_V2 = 2
+  TASK_COMPATIBILITY_V3 = 3
+  TASK_COMPATIBILITY_V4 = 4
+  TASK_COMPATIBILITY_V6 = 6
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
   TASK_VALIDATE_ONLY                 = 0x1
@@ -53,6 +56,21 @@ module TaskScheduler2
   TASK_RUNLEVEL_HIGHEST = 1
 
   RESERVED_FOR_FUTURE_USE = 0
+
+  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381283(v=vs.85).aspx
+  TASK_FLAG_INTERACTIVE                  = 0x1
+  TASK_FLAG_DELETE_WHEN_DONE             = 0x2
+  TASK_FLAG_DISABLED                     = 0x4
+  TASK_FLAG_START_ONLY_IF_IDLE           = 0x10
+  TASK_FLAG_KILL_ON_IDLE_END             = 0x20
+  TASK_FLAG_DONT_START_IF_ON_BATTERIES   = 0x40
+  TASK_FLAG_KILL_IF_GOING_ON_BATTERIES   = 0x80
+  TASK_FLAG_RUN_ONLY_IF_DOCKED           = 0x100
+  TASK_FLAG_HIDDEN                       = 0x200
+  TASK_FLAG_RUN_IF_CONNECTED_TO_INTERNET = 0x400
+  TASK_FLAG_RESTART_ON_IDLE_RESUME       = 0x800
+  TASK_FLAG_SYSTEM_REQUIRED              = 0x1000
+  TASK_FLAG_RUN_ONLY_IF_LOGGED_ON        = 0x2000
 
   def self.folder_path_from_task_path(task_path)
     path = task_path.rpartition('\\')[0]

@@ -2,19 +2,12 @@
 require 'spec_helper'
 
 require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task' if Puppet.features.microsoft_windows?
+require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
 
 shared_examples_for "a trigger that handles start_date and start_time" do
   let(:trigger) do
-    if described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler
-      described_class.new(
-        :name => 'Shared Test Task',
-        :command => 'C:\Windows\System32\notepad.exe'
-      ).translate_hash_to_trigger(trigger_hash)
-    else
       PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
     end
-  end
 
   before :each do
     Win32::TaskScheduler.any_instance.stubs(:save)
@@ -120,17 +113,18 @@ describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if =
   end
 end
 
-# The Win32::TaskScheduler and PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task classes should be
-# API compatible and behave the same way.  What differs is which Windows API is used to query
-# and affect the system.  This means for testing, any tests should be the same no matter what
-# provider or concrete class (which the provider uses) is used.
-klass_list = Puppet.features.microsoft_windows? ? [Win32::TaskScheduler, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task] : []
-klass_list.each do |concrete_klass|
+# The win32_taskscheduler and taskscheduler_api2 providers should be API compatible and behave
+# the same way.  What differs is which Windows API is used to query and affect the system.
+# This means for testing, any tests should be the same no matter what provider or concrete class
+# (which the provider uses) is used.
+task_providers = Puppet.features.microsoft_windows? ? [:win32_taskscheduler, :taskscheduler_api2] : []
+task_providers.each do |task_provider|
 
-if concrete_klass == PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
-  task_provider = :taskscheduler_api2
-else
-  task_provider = :win32_taskscheduler
+case task_provider
+when :win32_taskscheduler
+  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
+when :taskscheduler_api2
+  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task
 end
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
@@ -143,10 +137,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
   describe 'when retrieving' do
     before :each do
       @mock_task = stub
-      @mock_task.responds_like(Win32::TaskScheduler.new)
+      @mock_task.responds_like(concrete_klass.new)
       described_class.any_instance.stubs(:task).returns(@mock_task)
 
-      Win32::TaskScheduler.stubs(:new).returns(@mock_task)
+      concrete_klass.stubs(:new).returns(@mock_task)
     end
     let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
@@ -474,13 +468,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
-        if task_provider == :win32_taskscheduler
-          @mock_task.expects(:trigger).with(1).raises(
-            Win32::TaskScheduler::Error.new('Unknown trigger type')
-          )
-        else
           @mock_task.expects(:trigger).with(1).returns(nil)
-        end
 
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
@@ -525,10 +513,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
         })
-        @trigger1 = task_provider == :win32_taskscheduler ?
-          { 'trigger_type' => Win32::TaskScheduler::TASK_EVENT_TRIGGER_AT_LOGON, } :
-          nil
-        @mock_task.expects(:trigger).with(1).returns(@trigger1)
+        @mock_task.expects(:trigger).with(1).returns(nil)
 
         @mock_task.expects(:trigger).with(2).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
@@ -607,6 +592,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       expect(resource.provider.arguments).to eq('these are my arguments')
     end
 
+    it 'should get the compatibility from the parameters on the task' do
+      skip("provider #{resource.provider} doesn't support compatibility") unless resource.provider.respond_to?(:compatibility)
+      @mock_task.expects(:compatibility).returns(3)
+
+      expect(resource.provider.compatibility).to eq(3)
+    end
+
     it 'should get the user from the account_information on the task' do
       @mock_task.expects(:account_information).returns('this is my user')
 
@@ -615,19 +607,19 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'whether the task is enabled' do
       it 'should report tasks with the disabled bit set as disabled' do
-        @mock_task.stubs(:flags).returns(Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
 
         expect(resource.provider.enabled).to eq(:false)
       end
 
       it 'should report tasks without the disabled bit set as enabled' do
-        @mock_task.stubs(:flags).returns(~Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
 
         expect(resource.provider.enabled).to eq(:true)
       end
 
       it 'should not consider triggers for determining if the task is enabled' do
-        @mock_task.stubs(:flags).returns(~Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
         @mock_task.stubs(:trigger_count).returns(1)
         @mock_task.stubs(:trigger).with(0).returns({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
@@ -1212,20 +1204,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe '#normalized_date',
-    :if => described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler do
-    it 'should format the date without leading zeros' do
-      expect(described_class.normalized_date('2011-01-01')).to eq('2011-1-1')
-    end
-  end
-
-  describe '#normalized_time',
-    :if => described_class == Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler do
-    it 'should format the time as {24h}:{minutes}' do
-      expect(described_class.normalized_time('8:37 PM')).to eq('20:37')
-    end
-  end
-
   describe '#from_manifest_hash' do
     before :each do
       @puppet_trigger = {
@@ -1235,12 +1213,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
     let(:provider) { described_class.new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
     let(:trigger) do
-      if provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
-        provider.translate_hash_to_trigger(@puppet_trigger)
-      else
         PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@puppet_trigger)
       end
-    end
 
     context "working with repeat every x triggers" do
       before :each do
@@ -1732,13 +1706,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     describe '#enabled=' do
       it 'should set the disabled flag if the task should be disabled' do
         @mock_task.stubs(:flags).returns(0)
-        @mock_task.expects(:flags=).with(Win32::TaskScheduler::DISABLED)
+        @mock_task.expects(:flags=).with(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
 
         resource.provider.enabled = :false
       end
 
       it 'should clear the disabled flag if the task should be enabled' do
-        @mock_task.stubs(:flags).returns(Win32::TaskScheduler::DISABLED)
+        @mock_task.stubs(:flags).returns(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
         @mock_task.expects(:flags=).with(0)
 
         resource.provider.enabled = :true
@@ -1800,15 +1774,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
-        if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderWin32_taskscheduler)
-          translater = resource.provider.method(:translate_hash_to_trigger)
-          expected_method = :trigger=
-        else
-          translater = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.method(:from_manifest_hash)
-          expected_method = :append_trigger
-        end
-        @mock_task.expects(expected_method).with(translater.call(@trigger[1]))
-        @mock_task.expects(expected_method).with(translater.call(@trigger[2]))
+        @mock_task.expects(:append_trigger).with(PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@trigger[1]))
+        @mock_task.expects(:append_trigger).with(PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@trigger[2]))
 
         resource.provider.trigger = @trigger
       end
@@ -1852,28 +1819,39 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         resource.provider.user = 'my_user_name'
       end
     end
+
+    describe '#compatibility=' do
+      it 'should set the parameters on the task' do
+        skip("provider #{resource.provider} doesn't support compatibility") unless resource.provider.respond_to?(:compatibility)
+        @mock_task.expects(:compatibility=).with(1)
+
+        resource.provider.compatibility = 1
+      end
+    end
   end
 
   describe '#create' do
     let(:resource) do
       Puppet::Type.type(:scheduled_task).new(
-        :name        => 'Test Task',
-        :enabled     => @enabled,
-        :command     => @command,
-        :arguments   => @arguments,
-        :working_dir => @working_dir,
-        :trigger     => { 'schedule' => 'once', 'start_date' => '2011-09-27', 'start_time' => '17:00' }
+        :name          => 'Test Task',
+        :enabled       => @enabled,
+        :command       => @command,
+        :arguments     => @arguments,
+        :compatibility => @compatibility,
+        :working_dir   => @working_dir,
+        :trigger       => { 'schedule' => 'once', 'start_date' => '2011-09-27', 'start_time' => '17:00' }
       )
     end
 
     before :each do
-      @enabled     = :true
-      @command     = 'C:\Windows\System32\notepad.exe'
-      @arguments   = '/a /list /of /arguments'
-      @working_dir = 'C:\Windows\Some\Directory'
+      @enabled       = :true
+      @command       = 'C:\Windows\System32\notepad.exe'
+      @arguments     = '/a /list /of /arguments'
+      @compatibility = 1
+      @working_dir   = 'C:\Windows\Some\Directory'
 
       @mock_task = stub
-      @mock_task.responds_like(Win32::TaskScheduler.new)
+      @mock_task.responds_like(concrete_klass.new)
       @mock_task.stubs(:exists?).returns(true)
       @mock_task.stubs(:activate)
       @mock_task.stubs(:application_name=)
@@ -1883,9 +1861,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @mock_task.stubs(:flags)
       @mock_task.stubs(:flags=)
       @mock_task.stubs(:trigger_count).returns(0)
-      @mock_task.stubs(:trigger=)
+      @mock_task.stubs(:append_trigger)
+      if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderTaskscheduler_api2)
+        # allow compatibility to set given newer provider allows it
+        @mock_task.stubs(:compatibility=)
+      end
       @mock_task.stubs(:save)
-      Win32::TaskScheduler.stubs(:new).returns(@mock_task)
+      concrete_klass.stubs(:new).returns(@mock_task)
 
       described_class.any_instance.stubs(:sync_triggers)
     end
@@ -1898,6 +1880,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     it 'should set the arguments' do
       resource.provider.expects(:arguments=).with(@arguments)
+
+      resource.provider.create
+    end
+
+    it 'should set the compatibility' do
+      skip("provider #{resource.provider} doesn't support compatibility") unless resource.provider.respond_to?(:compatibility)
+      resource.provider.expects(:compatibility=).with(@compatibility)
 
       resource.provider.create
     end
