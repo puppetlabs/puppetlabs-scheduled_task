@@ -11,7 +11,7 @@ module ScheduledTask
 
 class TaskScheduler2V1Task
   public
-  # Returns a new TaskScheduler object. If a work_item is passed as an argument
+  # Returns a new TaskScheduler object. If a task_name is passed as an argument
   # then a new work item is created, although you can still activate other tasks
   # with the same handle.
   #
@@ -19,10 +19,10 @@ class TaskScheduler2V1Task
   # constructor is the same as calling TaskScheduler.new plus
   # TaskScheduler#new_work_item.
   #
-  def initialize(work_item = nil)
+  def initialize(task_name = nil)
     @tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
 
-    new_work_item(work_item) if work_item
+    new_work_item(task_name) if task_name
   end
 
   # Returns an array of scheduled task names.
