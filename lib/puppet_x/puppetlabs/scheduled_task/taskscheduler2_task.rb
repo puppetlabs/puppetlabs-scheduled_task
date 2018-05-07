@@ -17,26 +17,23 @@ class TaskScheduler2Task
   # TaskScheduler#new_work_item.
   #
   def initialize(task_name = nil)
-    @tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
-
     new_work_item(task_name) if task_name
   end
 
   # Returns an array of scheduled task names.
   #
   def self.tasks
-    tasksched = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2
-    tasksched.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER,
+    TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: [
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V6,
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V4,
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V3,
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2,
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_AT,
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1
+        TaskScheduler2::TASK_COMPATIBILITY_V6,
+        TaskScheduler2::TASK_COMPATIBILITY_V4,
+        TaskScheduler2::TASK_COMPATIBILITY_V3,
+        TaskScheduler2::TASK_COMPATIBILITY_V2,
+        TaskScheduler2::TASK_COMPATIBILITY_AT,
+        TaskScheduler2::TASK_COMPATIBILITY_V1
       ]).map do |item|
-        tasksched.task_name_from_task_path(item)
+        TaskScheduler2.task_name_from_task_path(item)
     end
   end
 
@@ -47,11 +44,11 @@ class TaskScheduler2Task
     normal_task_name = self.class.normalize_task_name(task_name)
     raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless self.class.exists?(normal_task_name)
 
-    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normal_task_name
+    full_taskname = TaskScheduler2::ROOT_FOLDER + normal_task_name
 
-    @task = @tasksched.task(full_taskname)
+    @task = TaskScheduler2.task(full_taskname)
     @full_task_path = full_taskname
-    @definition = @tasksched.task_definition(@task)
+    @definition = TaskScheduler2.task_definition(@task)
     @task_password = nil
 
     @task
@@ -60,8 +57,8 @@ class TaskScheduler2Task
   # Delete the specified task name.
   #
   def self.delete(task_name)
-    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(full_taskname)
+    full_taskname = TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
+    TaskScheduler2.delete(full_taskname)
   end
 
   # Saves the current task. Tasks must be saved before they can be activated.
@@ -72,7 +69,7 @@ class TaskScheduler2Task
   #
   def save(file = nil)
     task_object = @task.nil? ? @full_task_path : @task
-    @tasksched.save(task_object, @definition, @task_password)
+    TaskScheduler2.save(task_object, @definition, @task_password)
   end
 
   # Sets the +user+ and +password+ for the given task. If the user and
@@ -86,21 +83,21 @@ class TaskScheduler2Task
   #
   # Calling task.set_account_information('SYSTEM', nil) will generally not
   # work, except for one special case where flags are also set like:
-  # task.flags = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_RUN_ONLY_IF_LOGGED_ON
+  # task.flags = TaskScheduler2::TASK_FLAG_RUN_ONLY_IF_LOGGED_ON
   #
   # This must be done prior to the 1st save() call for the task to be
   # properly registered and visible through the MMC snap-in / schtasks.exe
   #
   def set_account_information(user, password)
     @task_password = password
-    @tasksched.set_principal(@definition, user)
+    TaskScheduler2.set_principal(@definition, user)
   end
 
   # Returns the user associated with the task or nil if no user has yet
   # been associated with the task.
   #
   def account_information
-    principal = @tasksched.principal(@definition)
+    principal = TaskScheduler2.principal(@definition)
     principal.nil? ? nil : principal.UserId
   end
 
@@ -158,8 +155,8 @@ class TaskScheduler2Task
   def new_work_item(task_name, task_trigger = nil)
     raise TypeError unless task_trigger.nil? || task_trigger.is_a?(Hash)
 
-    @full_task_path = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
-    @definition = @tasksched.new_task_definition
+    @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
+    @definition = TaskScheduler2.new_task_definition
     @task = nil
     @task_password = nil
 
@@ -174,15 +171,15 @@ class TaskScheduler2Task
   # Returns the number of triggers associated with the active task.
   #
   def trigger_count
-    @tasksched.trigger_count(@definition)
+    TaskScheduler2.trigger_count(@definition)
   end
 
   def compatibility
-    @tasksched.compatibility(@definition)
+    TaskScheduler2.compatibility(@definition)
   end
 
   def compatibility=(value)
-    @tasksched.set_compatibility(@definition, value)
+    TaskScheduler2.set_compatibility(@definition, value)
   end
 
   # Deletes the trigger at the specified index.
@@ -190,7 +187,7 @@ class TaskScheduler2Task
   def delete_trigger(index)
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
-    @tasksched.delete_trigger(@definition, index + 1)
+    TaskScheduler2.delete_trigger(@definition, index + 1)
   end
 
   # Returns a hash that describes the trigger at the given index for the
@@ -199,7 +196,7 @@ class TaskScheduler2Task
   def trigger(index)
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
-    trigger_object = @tasksched.trigger(@definition, index + 1)
+    trigger_object = TaskScheduler2.trigger(@definition, index + 1)
     trigger_object.nil? || Trigger::V2::V1_TYPE_MAP.key(trigger_object.Type).nil? ?
       nil :
       Trigger::V1.from_iTrigger(trigger_object)
@@ -216,14 +213,14 @@ class TaskScheduler2Task
   #
   def flags
     flags = 0
-    flags = flags | PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED if !@definition.Settings.Enabled
+    flags = flags | TaskScheduler2::TASK_FLAG_DISABLED if !@definition.Settings.Enabled
     flags
   end
 
   # Sets an OR'd value of flags that modify the behavior of the work item.
   #
   def flags=(flags)
-    @definition.Settings.Enabled = (flags & PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED == 0)
+    @definition.Settings.Enabled = (flags & TaskScheduler2::TASK_FLAG_DISABLED == 0)
   end
 
   # Returns whether or not the scheduled task exists.
@@ -246,14 +243,14 @@ class TaskScheduler2Task
   # Find the first TASK_ACTION_EXEC action
   def default_action(create_if_missing: false)
     action = nil
-    (1..@tasksched.action_count(@definition)).each do |i|
-      index_action = @tasksched.action(@definition, i)
-      action = index_action if index_action.Type == PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_EXEC
+    (1..TaskScheduler2.action_count(@definition)).each do |i|
+      index_action = TaskScheduler2.action(@definition, i)
+      action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_EXEC
       break if action
     end
 
     if action.nil? && create_if_missing
-      action = @tasksched.create_action(@definition, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_EXEC)
+      action = TaskScheduler2.create_action(@definition, TaskScheduler2::TASK_ACTION_EXEC)
     end
 
     action
