@@ -45,7 +45,7 @@ class TaskScheduler2Task
   def activate(task_name)
     raise TypeError unless task_name.is_a?(String)
     normal_task_name = normalize_task_name(task_name)
-    raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless exists?(normal_task_name)
+    raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless self.class.exists?(normal_task_name)
 
     full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normal_task_name
 
@@ -227,9 +227,9 @@ class TaskScheduler2Task
   end
 
   # Returns whether or not the scheduled task exists.
-  def exists?(job_name)
+  def self.exists?(job_name)
     # task name comparison is case insensitive
-    self.class.tasks.any? { |name| name.casecmp(job_name) == 0 }
+    tasks.any? { |name| name.casecmp(job_name) == 0 }
   end
 
   private

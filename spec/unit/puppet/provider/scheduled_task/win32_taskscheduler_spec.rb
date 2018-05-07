@@ -647,7 +647,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
     it "should delegate to #{concrete_klass.name.to_s} using the resource's name" do
-      @mock_task.expects(:exists?).with('Test Task').returns(true)
+      concrete_klass.expects(:exists?).with('Test Task').returns(true)
 
       expect(resource.provider.exists?).to eq(true)
     end
@@ -661,7 +661,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @new_mock_task.responds_like(concrete_klass.new)
       concrete_klass.stubs(:new).returns(@mock_task, @new_mock_task)
 
-      described_class.any_instance.stubs(:exists?).returns(false)
+      # prevents a lookup / task enumeration on non-Windows systems
+      concrete_klass.stubs(:exists?).returns(false)
     end
     let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
@@ -1606,7 +1607,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     before :each do
       @mock_task = stub
       @mock_task.responds_like(concrete_klass.new)
-      @mock_task.stubs(:exists?).returns(true)
       @mock_task.stubs(:activate)
       concrete_klass.stubs(:new).returns(@mock_task)
 
@@ -1619,6 +1619,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'should save the task' do
+        # prevents a lookup / task enumeration on non-Windows systems
+        concrete_klass.stubs(:exists?).returns(true)
+
         @mock_task.expects(:set_account_information).with(nil, nil)
         @mock_task.expects(:save)
 
@@ -1674,7 +1677,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     before :each do
         @mock_task = stub
         @mock_task.responds_like(concrete_klass.new)
-        @mock_task.stubs(:exists?).returns(true)
+        # prevents a lookup / task enumeration on non-Windows systems
+        concrete_klass.stubs(:exists?).returns(true)
         @mock_task.stubs(:activate)
         concrete_klass.stubs(:new).returns(@mock_task)
     end
@@ -1731,7 +1735,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       before :each do
         @mock_task = stub
         @mock_task.responds_like(concrete_klass.new)
-        @mock_task.stubs(:exists?).returns(true)
         @mock_task.stubs(:activate)
         concrete_klass.stubs(:new).returns(@mock_task)
       end
@@ -1785,7 +1788,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       before :each do
         @mock_task = stub
         @mock_task.responds_like(concrete_klass.new)
-        @mock_task.stubs(:exists?).returns(true)
         @mock_task.stubs(:activate)
         concrete_klass.stubs(:new).returns(@mock_task)
       end
@@ -1852,7 +1854,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       @mock_task = stub
       @mock_task.responds_like(concrete_klass.new)
-      @mock_task.stubs(:exists?).returns(true)
       @mock_task.stubs(:activate)
       @mock_task.stubs(:application_name=)
       @mock_task.stubs(:parameters=)

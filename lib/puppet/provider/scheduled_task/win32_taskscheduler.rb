@@ -20,7 +20,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.exists? resource[:name]
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.exists? resource[:name]
   end
 
   def task

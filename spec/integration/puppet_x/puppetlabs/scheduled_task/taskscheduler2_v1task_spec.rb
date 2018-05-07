@@ -28,7 +28,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     end
 
     it 'should be visible by the V2 API' do
-      expect(subjectv2.exists?(@task_name)).to be true
+      expect(subjectv2.class.exists?(@task_name)).to be true
     end
 
     it 'should have same properties in the V2 API' do
@@ -60,7 +60,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     end
 
     it 'should be visible by the V2 API' do
-      expect(subjectv2.exists?(@task_name)).to be true
+      expect(subjectv2.class.exists?(@task_name)).to be true
     end
 
     it 'should have same properties in the V1 API' do

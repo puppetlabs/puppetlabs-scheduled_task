@@ -23,7 +23,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.exists? resource[:name]
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.exists? resource[:name]
   end
 
   def task

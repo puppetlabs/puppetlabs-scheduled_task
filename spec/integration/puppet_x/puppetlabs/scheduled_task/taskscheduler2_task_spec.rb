@@ -94,11 +94,11 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       end
 
       after(:each) do
-        subject.delete(@task_name) if subject.exists?(@task_name)
+        subject.delete(@task_name) if subject.class.exists?(@task_name)
       end
 
       it 'and should return the same properties as those set' do
-        expect(subject.exists?(@task_name)).to be true
+        expect(subject.class.exists?(@task_name)).to be true
 
         task = subject.activate(@task_name)
 
@@ -122,13 +122,13 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     end
 
     after(:each) do
-      subject.delete(@task_name) if subject.exists?(@task_name)
+      subject.delete(@task_name) if subject.class.exists?(@task_name)
     end
 
     it 'should be able to determine if the task exists or not' do
       bad_task_name = SecureRandom.uuid.to_s
-      expect(subject.exists?(@task_name)).to be(true)
-      expect(subject.exists?(bad_task_name)).to be(false)
+      expect(subject.class.exists?(@task_name)).to be(true)
+      expect(subject.class.exists?(bad_task_name)).to be(false)
     end
 
     it 'should able to update a trigger' do
