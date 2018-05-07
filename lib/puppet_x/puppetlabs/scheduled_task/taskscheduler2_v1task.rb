@@ -42,7 +42,7 @@ class TaskScheduler2V1Task
   #
   def activate(task_name)
     raise TypeError unless task_name.is_a?(String)
-    normal_task_name = normalize_task_name(task_name)
+    normal_task_name = self.class.normalize_task_name(task_name)
     raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless self.class.exists?(normal_task_name)
 
     full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normal_task_name
@@ -58,7 +58,7 @@ class TaskScheduler2V1Task
   # Delete the specified task name.
   #
   def delete(task_name)
-    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
+    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
     @tasksched.delete(full_taskname)
   end
 
@@ -156,7 +156,7 @@ class TaskScheduler2V1Task
   def new_work_item(task_name, task_trigger = nil)
     raise TypeError unless task_trigger.nil? || task_trigger.is_a?(Hash)
 
-    @full_task_path = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
+    @full_task_path = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
     @definition = @tasksched.new_task_definition
     @task = nil
     @task_password = nil
@@ -235,7 +235,7 @@ class TaskScheduler2V1Task
   private
   # :stopdoc:
 
-  def normalize_task_name(task_name)
+  def self.normalize_task_name(task_name)
     # The Puppet provider and some other instances may pass a '.job' suffix as per the V1 API
     # This is not needed for the V2 API so we just remove it
     task_name = task_name.slice(0,task_name.length - 4) if task_name.end_with?('.job')
