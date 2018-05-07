@@ -57,9 +57,9 @@ class TaskScheduler2V1Task
 
   # Delete the specified task name.
   #
-  def delete(task_name)
-    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
-    @tasksched.delete(full_taskname)
+  def self.delete(task_name)
+    full_taskname = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(full_taskname)
   end
 
   # Saves the current task. Tasks must be saved before they can be activated.

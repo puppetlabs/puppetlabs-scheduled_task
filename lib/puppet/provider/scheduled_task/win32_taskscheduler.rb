@@ -174,7 +174,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.delete(resource[:name] + '.job')
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.delete(resource[:name] + '.job')
   end
 
   def flush

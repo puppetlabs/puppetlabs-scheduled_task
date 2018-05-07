@@ -94,7 +94,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       end
 
       after(:each) do
-        subject.delete(@task_name) if subject.class.exists?(@task_name)
+        subject.class.delete(@task_name) if subject.class.exists?(@task_name)
       end
 
       it 'and should return the same properties as those set' do
@@ -122,7 +122,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     end
 
     after(:each) do
-      subject.delete(@task_name) if subject.class.exists?(@task_name)
+      subject.class.delete(@task_name) if subject.class.exists?(@task_name)
     end
 
     it 'should be able to determine if the task exists or not' do

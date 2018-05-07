@@ -185,7 +185,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.delete(resource[:name] + '.job')
+    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.delete(resource[:name] + '.job')
   end
 
   def flush
