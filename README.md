@@ -149,7 +149,7 @@ scheduled_task { 'Disk Cleanup Monthly First Saturday':
 
 ### Provider
 
-* win32_taskscheduler: This provider manages scheduled tasks on Windows using the legacy API.
+* win32_taskscheduler: This legacy provider manages scheduled tasks on Windows imitating the legacy API.
 * taskscheduler_api2: Adapts the Puppet scheduled_task resource to use the modern Version 2 API.
 
 ### Type
@@ -194,8 +194,20 @@ This parameter will not be used to determine if a scheduled task is in sync or n
 
 ##### `compatibility`
 
+This provider feature is only available with the `taskscheduler_api2` provider.
+
 The compatibility level associated with the task.
-May currently only be set to 1 for compatibility with tasks on a Windows XP or Windows Server 2003 computer.
+Defaults to 1 for backward compatibility.
+Can be set to:
+
+- `1` for compatibility with tasks on a Windows XP or Windows Server 2003 computer
+- `2` for compatibility with tasks on a Windows 2008 computer
+- `3` for compatibility with new features for tasks introduced in Windows 7 and 2008R2
+- `4` for compatibility with new features for tasks introduced in Windows 8, Server 2012R2 and Server 2016
+- `6` for compatibility with new features for tasks introduced in Windows 10
+  - **NOTE:** This compatibility setting is _not_ documented and we recommend that you do not use it.
+
+See the [Microsoft documentation on compatibility levels and their differences](https://msdn.microsoft.com/en-us/library/windows/desktop/aa384138\(v=vs.85\).aspx) for more information.
 
 ##### `provider`
 
@@ -206,11 +218,12 @@ Available providers are:
 
 ###### win32_taskscheduler
 
-This provider manages scheduled tasks on Windows using the legacy API.
+This legacy provider manages scheduled tasks on Windows using the v2 api but only manages scheduled tasks whose compatibility level is set to 1 (Windows XP or Windows Server 2003).
+It is a backward compatible update and replaces the provider of the same name in Puppet core.
 
 ###### taskscheduler_api2
 
-This provider manages scheduled tasks on Windows using the v2 api.
+This provider manages scheduled tasks on Windows using the v2 api and can manage scheduled tasks of any compatibility level.
 
 * Default for `operatingsystem` == `windows`.
 
