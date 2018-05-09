@@ -39,19 +39,21 @@ class TaskScheduler2Task
 
   # Activate the specified task.
   #
-  def activate(task_name)
+  def self.activate(task_name)
     raise TypeError unless task_name.is_a?(String)
-    normal_task_name = self.class.normalize_task_name(task_name)
-    raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless self.class.exists?(normal_task_name)
+    normal_task_name = normalize_task_name(task_name)
+    raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless exists?(normal_task_name)
 
     full_taskname = TaskScheduler2::ROOT_FOLDER + normal_task_name
+    task = TaskScheduler2.task(full_taskname)
 
-    @task = TaskScheduler2.task(full_taskname)
-    @full_task_path = full_taskname
-    @definition = TaskScheduler2.task_definition(@task)
-    @task_password = nil
+    adapter = new()
+    adapter.instance_variable_set(:@task, task)
+    adapter.instance_variable_set(:@full_task_path, full_taskname)
+    adapter.instance_variable_set(:@definition, TaskScheduler2.task_definition(task))
+    adapter.instance_variable_set(:@task_password, nil)
 
-    self
+    adapter
   end
 
   # Delete the specified task name.

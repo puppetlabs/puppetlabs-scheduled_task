@@ -25,7 +25,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def task
     @task ||= exists? ?
-      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new.activate(resource[:name] + '.job') :
+      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.activate(resource[:name] + '.job') :
       PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new
   end
 
