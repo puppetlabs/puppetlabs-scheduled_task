@@ -79,14 +79,14 @@ end
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
 describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet.features.microsoft_windows? do
-  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new() }
+  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task }
 
   triggers.each do |trigger|
     context "should be able to create a #{trigger['trigger_type']} trigger" do
       before(:each) do
         @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-        task = subject.class.new(@task_name)
+        task = subject.new(@task_name)
         task.append_trigger(trigger)
         task.application_name = 'cmd.exe'
         task.parameters = '/c exit 0'
@@ -94,13 +94,13 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       end
 
       after(:each) do
-        subject.class.delete(@task_name) if subject.class.exists?(@task_name)
+        subject.delete(@task_name) if subject.exists?(@task_name)
       end
 
       it 'and should return the same properties as those set' do
-        expect(subject.class.exists?(@task_name)).to be true
+        expect(subject.exists?(@task_name)).to be true
 
-        task = subject.activate(@task_name)
+        task = subject.new.activate(@task_name)
 
         expect(task.parameters).to eq('/c exit 0')
         expect(task.application_name).to eq('cmd.exe')
@@ -114,7 +114,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
   context "When managing a task" do
     before(:each) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-      task = subject.class.new(@task_name)
+      task = subject.new(@task_name)
       task.append_trigger(triggers[0])
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
@@ -122,13 +122,13 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     end
 
     after(:each) do
-      subject.class.delete(@task_name) if subject.class.exists?(@task_name)
+      subject.delete(@task_name) if subject.exists?(@task_name)
     end
 
     it 'should be able to determine if the task exists or not' do
       bad_task_name = SecureRandom.uuid.to_s
-      expect(subject.class.exists?(@task_name)).to be(true)
-      expect(subject.class.exists?(bad_task_name)).to be(false)
+      expect(subject.exists?(@task_name)).to be(true)
+      expect(subject.exists?(bad_task_name)).to be(false)
     end
 
     it 'should able to update a trigger' do
@@ -138,7 +138,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
         'start_day'               => 12,
       })
 
-      task = subject.activate(@task_name)
+      task = subject.new.activate(@task_name)
       expect(task.delete_trigger(0)).to be(1)
       task.append_trigger(new_trigger)
       task.save
@@ -149,7 +149,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     it 'should be able to update a command' do
       new_application_name = 'notepad.exe'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Execute)'
-      task = subject.activate(@task_name)
+      task = subject.new.activate(@task_name)
 
       expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
       task.application_name = new_application_name
@@ -160,7 +160,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     it 'should be able to update command parameters' do
       new_parameters = '/nonsense /utter /nonsense'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Arguments)'
-      task = subject.activate(@task_name)
+      task = subject.new.activate(@task_name)
 
       expect('/c exit 0').to be_same_as_powershell_command(ps_cmd)
       task.parameters = new_parameters
@@ -171,7 +171,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     it 'should be able to update the working directory' do
       new_working_directory = 'C:\Somewhere'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].WorkingDirectory)'
-      task = subject.activate(@task_name)
+      task = subject.new.activate(@task_name)
 
       expect('').to be_same_as_powershell_command(ps_cmd)
       task.working_directory = new_working_directory

@@ -9,7 +9,7 @@ require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task' if Puppet.fea
 
 describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
-  let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new() }
+  let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task }
 
   context "When created by a V1 API" do
     before(:all) do
@@ -28,12 +28,12 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     end
 
     it 'should be visible by the V2 API' do
-      expect(subjectv2.class.exists?(@task_name)).to be true
+      expect(subjectv2.exists?(@task_name)).to be true
     end
 
     it 'should have same properties in the V2 API' do
       subjectv1.activate(@task_name)
-      v2task = subjectv2.activate(@task_name)
+      v2task = subjectv2.new.activate(@task_name)
 
       expect(v2task.flags).to eq(subjectv1.flags)
       expect(v2task.parameters).to eq(subjectv1.parameters)
@@ -60,12 +60,12 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
     end
 
     it 'should be visible by the V2 API' do
-      expect(subjectv2.class.exists?(@task_name)).to be true
+      expect(subjectv2.exists?(@task_name)).to be true
     end
 
     it 'should have same properties in the V1 API' do
       arguments_after = '/c exit 255'
-      v2task = subjectv2.activate(@task_name)
+      v2task = subjectv2.new.activate(@task_name)
       v2task.parameters = arguments_after
       v2task.save
 
