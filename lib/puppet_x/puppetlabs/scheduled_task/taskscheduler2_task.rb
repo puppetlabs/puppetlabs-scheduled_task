@@ -51,7 +51,7 @@ class TaskScheduler2Task
     @definition = TaskScheduler2.task_definition(@task)
     @task_password = nil
 
-    @task
+    self
   end
 
   # Delete the specified task name.

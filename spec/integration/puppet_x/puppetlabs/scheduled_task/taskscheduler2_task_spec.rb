@@ -102,11 +102,11 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
 
         task = subject.activate(@task_name)
 
-        expect(subject.parameters).to eq('/c exit 0')
-        expect(subject.application_name).to eq('cmd.exe')
-        expect(subject.trigger_count).to eq(1)
-        expect(subject.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
-        expect(subject.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
+        expect(task.parameters).to eq('/c exit 0')
+        expect(task.application_name).to eq('cmd.exe')
+        expect(task.trigger_count).to eq(1)
+        expect(task.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
+        expect(task.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
       end
     end
   end
@@ -139,9 +139,9 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       })
 
       task = subject.activate(@task_name)
-      expect(subject.delete_trigger(0)).to be(1)
-      subject.append_trigger(new_trigger)
-      subject.save
+      expect(task.delete_trigger(0)).to be(1)
+      task.append_trigger(new_trigger)
+      task.save
       ps_cmd = '([string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Triggers.StartBoundary) -split \'T\')[0]'
       expect('2112-12-12').to be_same_as_powershell_command(ps_cmd)
     end
@@ -152,8 +152,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       task = subject.activate(@task_name)
 
       expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
-      subject.application_name = new_application_name
-      subject.save
+      task.application_name = new_application_name
+      task.save
       expect(new_application_name).to be_same_as_powershell_command(ps_cmd)
     end
 
@@ -163,8 +163,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       task = subject.activate(@task_name)
 
       expect('/c exit 0').to be_same_as_powershell_command(ps_cmd)
-      subject.parameters = new_parameters
-      subject.save
+      task.parameters = new_parameters
+      task.save
       expect(new_parameters).to be_same_as_powershell_command(ps_cmd)
     end
 
@@ -174,8 +174,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
       task = subject.activate(@task_name)
 
       expect('').to be_same_as_powershell_command(ps_cmd)
-      subject.working_directory = new_working_directory
-      subject.save
+      task.working_directory = new_working_directory
+      task.save
       expect(new_working_directory).to be_same_as_powershell_command(ps_cmd)
     end
   end
