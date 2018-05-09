@@ -27,12 +27,9 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def task
-    return @task if @task
-
-    @task ||= PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new
-    @task.activate(resource[:name] + '.job') if exists?
-
-    @task
+    @task ||= exists? ?
+      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.activate(resource[:name] + '.job') :
+      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new
   end
 
   def enabled
