@@ -653,77 +653,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe '#clear_task' do
-    before :each do
-      @mock_task     = stub
-      @new_mock_task = stub
-      @mock_task.responds_like(concrete_klass.new)
-      @new_mock_task.responds_like(concrete_klass.new)
-      concrete_klass.stubs(:new).returns(@mock_task, @new_mock_task)
-
-      # prevents a lookup / task enumeration on non-Windows systems
-      concrete_klass.stubs(:exists?).returns(false)
-    end
-    let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
-
-    it 'should clear the cached task object' do
-      expect(resource.provider.task).to eq(@mock_task)
-      expect(resource.provider.task).to eq(@mock_task)
-
-      resource.provider.clear_task
-
-      expect(resource.provider.task).to eq(@new_mock_task)
-    end
-
-    it 'should clear the cached list of triggers for the task' do
-      @mock_task.stubs(:trigger_count).returns(1)
-      @mock_task.stubs(:trigger).with(0).returns({
-        'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-        'start_year'   => 2011,
-        'start_month'  => 10,
-        'start_day'    => 13,
-        'start_hour'   => 14,
-        'start_minute' => 21,
-        'flags'        => 0,
-      })
-      @new_mock_task.stubs(:trigger_count).returns(1)
-      @new_mock_task.stubs(:trigger).with(0).returns({
-        'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-        'start_year'   => 2012,
-        'start_month'  => 11,
-        'start_day'    => 14,
-        'start_hour'   => 15,
-        'start_minute' => 22,
-        'flags'        => 0,
-      })
-
-      mock_task_trigger = {
-        'start_date'       => '2011-10-13',
-        'start_time'       => '14:21',
-        'schedule'         => 'once',
-        'minutes_interval' => 0,
-        'minutes_duration' => 0,
-        'enabled'          => true,
-        'index'            => 0,
-      }
-
-      expect(resource.provider.trigger).to eq([mock_task_trigger])
-      expect(resource.provider.trigger).to eq([mock_task_trigger])
-
-      resource.provider.clear_task
-
-      expect(resource.provider.trigger).to eq([{
-        'start_date'       => '2012-11-14',
-        'start_time'       => '15:22',
-        'schedule'         => 'once',
-        'minutes_interval' => 0,
-        'minutes_duration' => 0,
-        'enabled'          => true,
-        'index'            => 0,
-      }])
-    end
-  end
-
   describe '.instances' do
     it 'should use the list of .job files to construct the list of scheduled_tasks' do
       job_files = ['foo.job', 'bar.job', 'baz.job']
@@ -1914,6 +1843,56 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       resource.provider.expects(:trigger=)
 
       resource.provider.create
+    end
+
+    describe 'should reset any internal state prior' do
+      before :each do
+        @new_mock_task = stub
+        @new_mock_task.responds_like(concrete_klass.new)
+        @new_mock_task.stubs(:application_name=)
+        @new_mock_task.stubs(:parameters=)
+        @new_mock_task.stubs(:working_directory=)
+        @new_mock_task.stubs(:flags)
+        @new_mock_task.stubs(:flags=)
+        @new_mock_task.stubs(:delete_trigger)
+        @new_mock_task.stubs(:append_trigger)
+        @new_mock_task.stubs(:set_account_information)
+        @new_mock_task.stubs(:compatibility=)
+        concrete_klass.stubs(:new).returns(@mock_task, @new_mock_task)
+
+        # prevents a lookup / task enumeration on non-Windows systems
+        concrete_klass.stubs(:exists?).returns(false)
+      end
+
+      it 'by clearing the cached task object' do
+        @new_mock_task.stubs(:trigger_count).returns(0)
+
+        expect(resource.provider.task).to eq(@mock_task)
+        expect(resource.provider.task).to eq(@mock_task)
+
+        resource.provider.create
+
+        expect(resource.provider.task).to eq(@new_mock_task)
+      end
+
+      it 'by clearing the cached list of triggers for the task' do
+        @mock_task.stubs(:trigger_count).returns(1)
+        default_once = V1.default_trigger_for('once')
+        @mock_task.stubs(:trigger).with(0).returns(default_once)
+
+        @new_mock_task.stubs(:trigger_count).returns(1)
+        default_daily = V1.default_trigger_for('daily')
+        @new_mock_task.stubs(:trigger).with(0).returns(default_daily)
+
+        converted_once = V1.to_manifest_hash(default_once).merge({'index' => 0})
+        expect(resource.provider.trigger).to eq([converted_once])
+        expect(resource.provider.trigger).to eq([converted_once])
+
+        resource.provider.create
+
+        converted_daily = V1.to_manifest_hash(default_daily).merge({'index' => 0})
+        expect(resource.provider.trigger).to eq([converted_daily])
+      end
     end
   end
 

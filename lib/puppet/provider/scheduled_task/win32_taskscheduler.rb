@@ -32,11 +32,6 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
     @task
   end
 
-  def clear_task
-    @task       = nil
-    @triggers   = nil
-  end
-
   def enabled
     task.flags & PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED == 0 ? :true : :false
   end
@@ -164,7 +159,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def create
-    clear_task
+    @triggers = nil
     @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(resource[:name])
     self.command = resource[:command]
 
