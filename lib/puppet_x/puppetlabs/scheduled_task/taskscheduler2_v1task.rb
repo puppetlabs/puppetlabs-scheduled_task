@@ -17,10 +17,10 @@ class TaskScheduler2V1Task
   #
   # This is really just a bit of convenience. Passing arguments to the
   # constructor is the same as calling TaskScheduler.new plus
-  # TaskScheduler#new_work_item.
+  # TaskScheduler#new_task.
   #
   def initialize(task_name = nil)
-    new_work_item(task_name) if task_name
+    new_task(task_name) if task_name
   end
 
   # Returns an array of scheduled task names.
@@ -150,7 +150,7 @@ class TaskScheduler2V1Task
   # trigger variable is a hash of options that define when the scheduled
   # job should run.
   #
-  def new_work_item(task_name, task_trigger = nil)
+  def new_task(task_name, task_trigger = nil)
     raise TypeError unless task_trigger.nil? || task_trigger.is_a?(Hash)
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
@@ -166,7 +166,6 @@ class TaskScheduler2V1Task
 
     self
   end
-  alias :new_task :new_work_item
 
   def compatibility
     TaskScheduler2.compatibility(@definition)
