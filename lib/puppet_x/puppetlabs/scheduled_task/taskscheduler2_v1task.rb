@@ -164,7 +164,7 @@ class TaskScheduler2V1Task
 
     set_account_information('',nil)
 
-    @definition
+    self
   end
   alias :new_task :new_work_item
 
