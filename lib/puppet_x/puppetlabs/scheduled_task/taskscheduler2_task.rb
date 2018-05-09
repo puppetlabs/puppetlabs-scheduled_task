@@ -9,15 +9,17 @@ module ScheduledTask
 class TaskScheduler2Task
   public
   # Returns a new TaskScheduler object. If a task_name is passed as an argument
-  # then a new work item is created, although you can still activate other tasks
-  # with the same handle.
-  #
-  # This is really just a bit of convenience. Passing arguments to the
-  # constructor is the same as calling TaskScheduler.new plus
-  # TaskScheduler#new_task.
+  # then a new work item is created with that name.
   #
   def initialize(task_name = nil)
-    new_task(task_name) if task_name
+    @task = nil
+    if task_name
+      @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
+    end
+    @definition = TaskScheduler2.new_task_definition
+    @task_password = nil
+
+    set_account_information('',nil)
   end
 
   # Returns an array of scheduled task names.
@@ -148,25 +150,6 @@ class TaskScheduler2Task
     action = default_action(create_if_missing: false)
     action.WorkingDirectory = dir
     dir
-  end
-
-  # Creates a new work item (scheduled job) with the given +trigger+. The
-  # trigger variable is a hash of options that define when the scheduled
-  # job should run.
-  #
-  def new_task(task_name, task_trigger = nil)
-    raise TypeError unless task_trigger.nil? || task_trigger.is_a?(Hash)
-
-    @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
-    @definition = TaskScheduler2.new_task_definition
-    @task = nil
-    @task_password = nil
-
-    Trigger::V2.append_v1trigger(@definition, task_trigger) if task_trigger
-
-    set_account_information('',nil)
-
-    self
   end
 
   # Returns the number of triggers associated with the active task.
