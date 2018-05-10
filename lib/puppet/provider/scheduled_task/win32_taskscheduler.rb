@@ -1,5 +1,5 @@
 require 'puppet/parameter'
-require_relative '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_v1task'
+require_relative '../../../puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 
 Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
@@ -10,7 +10,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   confine    :operatingsystem => :windows
 
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.tasks.collect do |job_file|
+    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.tasks.collect do |job_file|
       job_title = File.basename(job_file, '.job')
       new(
         :provider => :win32_taskscheduler,
@@ -20,12 +20,12 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.exists? resource[:name]
+    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.exists? resource[:name]
   end
 
   def task
     @task ||=
-      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(resource[:name])
+      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(resource[:name])
   end
 
   def enabled
@@ -156,7 +156,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def create
     @triggers = nil
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.new(resource[:name])
+    @task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(resource[:name])
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user].each do |prop|
@@ -165,7 +165,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.delete(resource[:name] + '.job')
+    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(resource[:name] + '.job')
   end
 
   def flush

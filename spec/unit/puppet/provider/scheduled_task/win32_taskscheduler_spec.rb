@@ -11,7 +11,7 @@ shared_examples_for "a trigger that handles start_date and start_time" do
 
   before :each do
     Win32::TaskScheduler.any_instance.stubs(:save)
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task.any_instance.stubs(:save)
+    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.any_instance.stubs(:save)
   end
 
   describe 'the given start_date' do
@@ -122,7 +122,7 @@ task_providers.each do |task_provider|
 
 case task_provider
 when :win32_taskscheduler
-  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task
+  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::V1Adapter
 when :taskscheduler_api2
   concrete_klass = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task
 end
