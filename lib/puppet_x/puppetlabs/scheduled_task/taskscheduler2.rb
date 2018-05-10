@@ -1,5 +1,3 @@
-require 'puppet/util/windows'
-
 # The TaskScheduler2 class encapsulates taskscheduler settings and behavior using the v2 API
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383600(v=vs.85).aspx
 

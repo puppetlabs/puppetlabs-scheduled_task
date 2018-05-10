@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/v1adapter' if Puppet.features.microsoft_windows?
+require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 # These integration tests confirm that the tasks created in a V1 scheduled task APi are visible
 # in the V2 API, and that changes in the V2 API will appear in the V1 API.
