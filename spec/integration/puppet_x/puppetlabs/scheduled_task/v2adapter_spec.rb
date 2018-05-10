@@ -2,7 +2,7 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
+require 'puppet_x/puppetlabs/scheduled_task/v2adapter'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
@@ -78,8 +78,8 @@ end
 
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
-describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet.features.microsoft_windows? do
-  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task }
+describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features.microsoft_windows? do
+  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::V2Adapter }
 
   triggers.each do |trigger|
     context "should be able to create a #{trigger['trigger_type']} trigger" do

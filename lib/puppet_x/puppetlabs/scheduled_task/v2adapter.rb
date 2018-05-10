@@ -6,7 +6,7 @@ module PuppetX
 module PuppetLabs
 module ScheduledTask
 
-class TaskScheduler2Task
+class V2Adapter
   public
   # Returns a new TaskScheduler object. If a task_name is passed as an argument
   # an existing task will be returned if one exists, otherwise a new task is
