@@ -33,7 +33,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
 
     it 'should have same properties in the V2 API' do
       subjectv1.activate(@task_name)
-      v2task = subjectv2.activate(@task_name)
+      v2task = subjectv2.new(@task_name)
 
       expect(v2task.flags).to eq(subjectv1.flags)
       expect(v2task.parameters).to eq(subjectv1.parameters)
@@ -65,7 +65,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2V1Task", :if => Pupp
 
     it 'should have same properties in the V1 API' do
       arguments_after = '/c exit 255'
-      v2task = subjectv2.activate(@task_name)
+      v2task = subjectv2.new(@task_name)
       v2task.parameters = arguments_after
       v2task.save
 

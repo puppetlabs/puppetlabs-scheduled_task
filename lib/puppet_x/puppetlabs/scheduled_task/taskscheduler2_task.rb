@@ -9,14 +9,23 @@ module ScheduledTask
 class TaskScheduler2Task
   public
   # Returns a new TaskScheduler object. If a task_name is passed as an argument
-  # then a new work item is created with that name.
+  # an existing task will be returned if one exists, otherwise a new task is
+  # created by that name (but is not yet saved to the system).
   #
   def initialize(task_name = nil)
-    @task = nil
+    raise TypeError unless task_name.nil? || task_name.is_a?(String)
+
     if task_name
       @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
     end
-    @definition = TaskScheduler2.new_task_definition
+
+    @task = task_name && self.class.exists?(task_name) ?
+      TaskScheduler2.task(@full_task_path) :
+      nil
+
+    @definition = @task.nil? ?
+      TaskScheduler2.new_task_definition :
+      TaskScheduler2.task_definition(@task)
     @task_password = nil
 
     set_account_information('',nil)
@@ -37,25 +46,6 @@ class TaskScheduler2Task
       ]).map do |item|
         TaskScheduler2.task_name_from_task_path(item)
     end
-  end
-
-  # Activate the specified task.
-  #
-  def self.activate(task_name)
-    raise TypeError unless task_name.is_a?(String)
-    normal_task_name = normalize_task_name(task_name)
-    raise Puppet::Util::Windows::Error.new(_("Scheduled Task %{task_name} does not exist") % { task_name: normal_task_name }) unless exists?(normal_task_name)
-
-    full_taskname = TaskScheduler2::ROOT_FOLDER + normal_task_name
-    task = TaskScheduler2.task(full_taskname)
-
-    adapter = new()
-    adapter.instance_variable_set(:@task, task)
-    adapter.instance_variable_set(:@full_task_path, full_taskname)
-    adapter.instance_variable_set(:@definition, TaskScheduler2.task_definition(task))
-    adapter.instance_variable_set(:@task_password, nil)
-
-    adapter
   end
 
   # Delete the specified task name.
