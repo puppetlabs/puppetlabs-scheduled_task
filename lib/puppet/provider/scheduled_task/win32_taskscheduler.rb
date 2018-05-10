@@ -10,11 +10,10 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   confine    :operatingsystem => :windows
 
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.tasks.collect do |job_file|
-      job_title = File.basename(job_file, '.job')
+    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.tasks.collect do |task_name|
       new(
         :provider => :win32_taskscheduler,
-        :name     => job_title
+        :name     => task_name
       )
     end
   end
@@ -165,7 +164,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(resource[:name] + '.job')
+    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(resource[:name])
   end
 
   def flush

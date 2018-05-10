@@ -16,7 +16,7 @@ class V2Adapter
     raise TypeError unless task_name.nil? || task_name.is_a?(String)
 
     if task_name
-      @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
+      @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
     end
 
     @task = task_name && self.class.exists?(task_name) ?
@@ -57,17 +57,13 @@ class V2Adapter
   # Delete the specified task name.
   #
   def self.delete(task_name)
-    full_taskname = TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
-    TaskScheduler2.delete(full_taskname)
+    TaskScheduler2.delete(TaskScheduler2::ROOT_FOLDER + task_name)
   end
 
   # Saves the current task. Tasks must be saved before they can be activated.
   # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
   #
-  # If +file+ (an absolute path) is specified then the job is saved to that
-  # file instead. A '.job' extension is recommended but not enforced.
-  #
-  def save(file = nil)
+  def save
     task_object = @task.nil? ? @full_task_path : @task
     TaskScheduler2.save(task_object, @definition, @task_password)
   end
@@ -205,14 +201,6 @@ class V2Adapter
 
   private
   # :stopdoc:
-
-  def self.normalize_task_name(task_name)
-    # The Puppet provider and some other instances may pass a '.job' suffix as per the V1 API
-    # This is not needed for the V2 API so we just remove it
-    task_name = task_name.slice(0,task_name.length - 4) if task_name.end_with?('.job')
-
-    task_name
-  end
 
   # Find the first TASK_ACTION_EXEC action
   def default_action(create_if_missing: false)

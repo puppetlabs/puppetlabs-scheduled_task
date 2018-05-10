@@ -19,7 +19,7 @@ class V1Adapter
     raise TypeError unless task_name.nil? || task_name.is_a?(String)
 
     if task_name
-      @full_task_path = TaskScheduler2::ROOT_FOLDER + self.class.normalize_task_name(task_name)
+      @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
     end
 
     @task = task_name && self.class.exists?(task_name) ?
@@ -37,36 +37,30 @@ class V1Adapter
 
   # Returns an array of scheduled task names.
   #
-  # Emulates V1 tasks by appending the '.job' suffix
-  #
   def self.tasks
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: [TaskScheduler2::TASK_COMPATIBILITY_AT, TaskScheduler2::TASK_COMPATIBILITY_V1]).map do |item|
-        TaskScheduler2.task_name_from_task_path(item) + '.job'
+        TaskScheduler2.task_name_from_task_path(item)
     end
   end
 
   # Returns whether or not the scheduled task exists.
   def self.exists?(job_name)
     # task name comparison is case insensitive
-    tasks.any? { |name| name.casecmp(job_name + '.job') == 0 }
+    tasks.any? { |name| name.casecmp(job_name) == 0 }
   end
 
   # Delete the specified task name.
   #
   def self.delete(task_name)
-    full_taskname = TaskScheduler2::ROOT_FOLDER + normalize_task_name(task_name)
-    TaskScheduler2.delete(full_taskname)
+    TaskScheduler2.delete(TaskScheduler2::ROOT_FOLDER + task_name)
   end
 
   # Saves the current task. Tasks must be saved before they can be activated.
   # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
   #
-  # If +file+ (an absolute path) is specified then the job is saved to that
-  # file instead. A '.job' extension is recommended but not enforced.
-  #
-  def save(file = nil)
+  def save
     task_object = @task.nil? ? @full_task_path : @task
     TaskScheduler2.save(task_object, @definition, @task_password)
   end
@@ -204,14 +198,6 @@ class V1Adapter
 
   private
   # :stopdoc:
-
-  def self.normalize_task_name(task_name)
-    # The Puppet provider and some other instances may pass a '.job' suffix as per the V1 API
-    # This is not needed for the V2 API so we just remove it
-    task_name = task_name.slice(0,task_name.length - 4) if task_name.end_with?('.job')
-
-    task_name
-  end
 
   # Find the first TASK_ACTION_EXEC action
   def default_action(create_if_missing: false)

@@ -654,12 +654,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
   end
 
   describe '.instances' do
-    it 'should use the list of .job files to construct the list of scheduled_tasks' do
-      job_files = ['foo.job', 'bar.job', 'baz.job']
+    it 'should use the list of task names to construct the list of scheduled_tasks' do
+      job_files = ['foo', 'bar', 'baz']
       concrete_klass.stubs(:tasks).returns(job_files)
       job_files.each do |job|
-        job = File.basename(job, '.job')
-
         described_class.expects(:new).with(:provider => task_provider, :name => job)
       end
 
