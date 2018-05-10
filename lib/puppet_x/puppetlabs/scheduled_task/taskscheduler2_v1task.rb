@@ -47,6 +47,12 @@ class TaskScheduler2V1Task
     end
   end
 
+  # Returns whether or not the scheduled task exists.
+  def self.exists?(job_name)
+    # task name comparison is case insensitive
+    tasks.any? { |name| name.casecmp(job_name + '.job') == 0 }
+  end
+
   # Delete the specified task name.
   #
   def self.delete(task_name)
@@ -194,12 +200,6 @@ class TaskScheduler2V1Task
   #
   def flags=(flags)
     @definition.Settings.Enabled = (flags & TaskScheduler2::TASK_FLAG_DISABLED == 0)
-  end
-
-  # Returns whether or not the scheduled task exists.
-  def self.exists?(job_name)
-    # task name comparison is case insensitive
-    tasks.any? { |name| name.casecmp(job_name + '.job') == 0 }
   end
 
   private
