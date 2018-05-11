@@ -79,31 +79,51 @@ end
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
 describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features.microsoft_windows? do
-  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::V2Adapter }
+  subject = PuppetX::PuppetLabs::ScheduledTask::V2Adapter
 
-  triggers.each do |trigger|
-    context "should be able to create a #{trigger['trigger_type']} trigger" do
-      before(:each) do
-        @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
+  context "should be able to create trigger" do
+    before(:all) do
+      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
+      task = subject.new(@task_name)
+      task.application_name = 'cmd.exe'
+      task.parameters = '/c exit 0'
+      task.save
+    end
+
+    after(:all) do
+      subject.delete(@task_name) if subject.exists?(@task_name)
+    end
+
+    it "and return the same application_name and properties as those originally set" do
+      expect(subject).to be_exists(@task_name)
+
+      task = subject.new(@task_name)
+      # verify initial task configuration
+      expect(task.parameters).to eq('/c exit 0')
+      expect(task.application_name).to eq('cmd.exe')
+    end
+
+    triggers.each do |trigger|
+      after(:each) do
         task = subject.new(@task_name)
-        task.append_trigger(trigger)
-        task.application_name = 'cmd.exe'
-        task.parameters = '/c exit 0'
+        1.upto(task.trigger_count).each { |i| task.delete_trigger(0) }
         task.save
       end
 
-      after(:each) do
-        subject.delete(@task_name) if subject.exists?(@task_name)
-      end
+      it "#{trigger['trigger_type']} and return the same properties as those set" do
+        # verifying task exists guarantees that .new below loads existing task
+        expect(subject).to be_exists(@task_name)
 
-      it 'and should return the same properties as those set' do
-        expect(subject.exists?(@task_name)).to be true
+        # append the trigger of given type
+        task = subject.new(@task_name)
+        task.append_trigger(trigger)
+        task.save
 
+        # reload a new task object by name
         task = subject.new(@task_name)
 
-        expect(task.parameters).to eq('/c exit 0')
-        expect(task.application_name).to eq('cmd.exe')
+        # trigger specific validation
         expect(task.trigger_count).to eq(1)
         expect(task.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
         expect(task.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
