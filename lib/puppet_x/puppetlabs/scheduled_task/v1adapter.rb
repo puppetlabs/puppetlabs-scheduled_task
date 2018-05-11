@@ -19,10 +19,7 @@ class V1Adapter
     raise TypeError unless task_name.is_a?(String)
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
-    @task = self.class.exists?(task_name) ?
-      TaskScheduler2.task(@full_task_path) :
-      nil
-
+    @task = TaskScheduler2.task(@full_task_path)
     @definition = @task.nil? ?
       TaskScheduler2.new_task_definition :
       TaskScheduler2.task_definition(@task)

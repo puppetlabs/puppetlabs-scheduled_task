@@ -115,12 +115,18 @@ module TaskScheduler2
 
   def self.task(task_path)
     raise TypeError unless task_path.is_a?(String)
+    begin
+      task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
+      return task_folder.GetTask(task_name_from_task_path(task_path))
+    rescue WIN32OLERuntimeError => e
+      # ERROR_FILE_NOT_FOUND 2L from winerror.h becomes this in COM
+      unless e.message =~ /80070002/m
+        raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
+      end
+    end
 
-    task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
-
-    task_object = task_folder.GetTask(task_name_from_task_path(task_path))
-
-    task_object
+    nil
   end
 
   def self.new_task_definition
