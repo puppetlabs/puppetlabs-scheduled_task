@@ -269,11 +269,10 @@ module TaskScheduler2
 
   # Private methods
   def self.task_service
-    if @service_object.nil?
-      @service_object = WIN32OLE.new('Schedule.Service')
-      @service_object.connect()
-    end
-    @service_object
+    service = WIN32OLE.new('Schedule.Service')
+    service.connect()
+
+    service
   end
   private_class_method :task_service
 end
