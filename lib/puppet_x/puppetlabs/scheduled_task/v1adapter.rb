@@ -11,18 +11,15 @@ module ScheduledTask
 
 class V1Adapter
   public
-  # Returns a new TaskScheduler object. If a task_name is passed as an argument
-  # an existing task will be returned if one exists, otherwise a new task is
-  # created by that name (but is not yet saved to the system).
+  # Returns a new TaskScheduler object.
+  # An existing task named task_name will be returned if one exists,
+  # otherwise a new task is created by that name (but not yet saved to the system).
   #
-  def initialize(task_name = nil)
-    raise TypeError unless task_name.nil? || task_name.is_a?(String)
+  def initialize(task_name)
+    raise TypeError unless task_name.is_a?(String)
 
-    if task_name
-      @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
-    end
-
-    @task = task_name && self.class.exists?(task_name) ?
+    @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
+    @task = self.class.exists?(task_name) ?
       TaskScheduler2.task(@full_task_path) :
       nil
 

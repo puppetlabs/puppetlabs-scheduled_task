@@ -137,7 +137,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
   describe 'when retrieving' do
     before :each do
       @mock_task = stub
-      @mock_task.responds_like(concrete_klass.new)
+      @mock_task.responds_like_instance_of(concrete_klass)
       described_class.any_instance.stubs(:task).returns(@mock_task)
 
       concrete_klass.stubs(:new).returns(@mock_task)
@@ -639,7 +639,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
   describe '#exists?' do
     before :each do
       @mock_task = stub
-      @mock_task.responds_like(concrete_klass.new)
+      @mock_task.responds_like_instance_of(concrete_klass)
       described_class.any_instance.stubs(:task).returns(@mock_task)
 
       concrete_klass.stubs(:new).returns(@mock_task)
@@ -1533,7 +1533,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     before :each do
       @mock_task = stub
-      @mock_task.responds_like(concrete_klass.new)
+      @mock_task.responds_like_instance_of(concrete_klass)
       concrete_klass.stubs(:new).returns(@mock_task)
 
       @command = 'C:\Windows\System32\notepad.exe'
@@ -1602,7 +1602,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     before :each do
         @mock_task = stub
-        @mock_task.responds_like(concrete_klass.new)
+        @mock_task.responds_like_instance_of(concrete_klass)
         # prevents a lookup / task enumeration on non-Windows systems
         concrete_klass.stubs(:exists?).returns(true)
         concrete_klass.stubs(:new).returns(@mock_task)
@@ -1659,7 +1659,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       before :each do
         @mock_task = stub
-        @mock_task.responds_like(concrete_klass.new)
+        @mock_task.responds_like_instance_of(concrete_klass)
         concrete_klass.stubs(:new).returns(@mock_task)
       end
 
@@ -1711,7 +1711,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     describe '#user=', :if => Puppet.features.microsoft_windows? do
       before :each do
         @mock_task = stub
-        @mock_task.responds_like(concrete_klass.new)
+        @mock_task.responds_like_instance_of(concrete_klass)
         concrete_klass.stubs(:new).returns(@mock_task)
       end
 
@@ -1776,7 +1776,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @working_dir   = 'C:\Windows\Some\Directory'
 
       @mock_task = stub
-      @mock_task.responds_like(concrete_klass.new)
+      @mock_task.responds_like_instance_of(concrete_klass)
       @mock_task.stubs(:application_name=)
       @mock_task.stubs(:parameters=)
       @mock_task.stubs(:working_directory=)
@@ -1841,7 +1841,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     describe 'should reset any internal state prior' do
       before :each do
         @new_mock_task = stub
-        @new_mock_task.responds_like(concrete_klass.new)
+        @new_mock_task.responds_like_instance_of(concrete_klass)
         @new_mock_task.stubs(:application_name=)
         @new_mock_task.stubs(:parameters=)
         @new_mock_task.stubs(:working_directory=)
