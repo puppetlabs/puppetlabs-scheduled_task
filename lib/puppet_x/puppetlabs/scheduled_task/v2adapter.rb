@@ -31,9 +31,10 @@ class V2Adapter
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: [
-        TaskScheduler2::TASK_COMPATIBILITY_V6,
-        TaskScheduler2::TASK_COMPATIBILITY_V4,
-        TaskScheduler2::TASK_COMPATIBILITY_V3,
+        TaskScheduler2::TASK_COMPATIBILITY_V2_4,
+        TaskScheduler2::TASK_COMPATIBILITY_V2_3,
+        TaskScheduler2::TASK_COMPATIBILITY_V2_2,
+        TaskScheduler2::TASK_COMPATIBILITY_V2_1,
         TaskScheduler2::TASK_COMPATIBILITY_V2,
         TaskScheduler2::TASK_COMPATIBILITY_AT,
         TaskScheduler2::TASK_COMPATIBILITY_V1
