@@ -1,5 +1,5 @@
 require 'puppet/parameter'
-require_relative '../../../puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
+require_relative '../../../puppet_x/puppetlabs/scheduled_task/v2adapter'
 
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
@@ -13,31 +13,21 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   has_feature :compatibility
 
   def self.instances
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.tasks.collect do |job_file|
-      job_title = File.basename(job_file, '.job')
+    PuppetX::PuppetLabs::ScheduledTask::V2Adapter.tasks.collect do |task_name|
       new(
         :provider => :taskscheduler_api2,
-        :name     => job_title
+        :name     => task_name
       )
     end
   end
 
   def exists?
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.exists? resource[:name]
+    PuppetX::PuppetLabs::ScheduledTask::V2Adapter.exists? resource[:name]
   end
 
   def task
-    return @task if @task
-
-    @task ||= PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new
-    @task.activate(resource[:name] + '.job') if exists?
-
-    @task
-  end
-
-  def clear_task
-    @task       = nil
-    @triggers   = nil
+    @task ||=
+      PuppetX::PuppetLabs::ScheduledTask::V2Adapter.new(resource[:name])
   end
 
   def enabled
@@ -175,11 +165,8 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def create
-    clear_task
-    @task = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new(
-      resource[:name],
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once')
-    )
+    @triggers   = nil
+    @task = PuppetX::PuppetLabs::ScheduledTask::V2Adapter.new(resource[:name])
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility].each do |prop|
@@ -188,7 +175,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def destroy
-    PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new.delete(resource[:name] + '.job')
+    PuppetX::PuppetLabs::ScheduledTask::V2Adapter.delete(resource[:name])
   end
 
   def flush

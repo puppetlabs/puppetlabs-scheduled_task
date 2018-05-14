@@ -2,7 +2,7 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2_task'
+require 'puppet_x/puppetlabs/scheduled_task/v2adapter'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
@@ -78,34 +78,55 @@ end
 
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
-describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet.features.microsoft_windows? do
-  let(:subject) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task.new() }
+describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features.microsoft_windows? do
+  subject = PuppetX::PuppetLabs::ScheduledTask::V2Adapter
 
-  triggers.each do |trigger|
-    context "should be able to create a #{trigger['trigger_type']} trigger" do
-      before(:each) do
-        @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
+  context "should be able to create trigger" do
+    before(:all) do
+      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-        task = subject.class.new(@task_name, trigger)
-        task.application_name = 'cmd.exe'
-        task.parameters = '/c exit 0'
+      task = subject.new(@task_name)
+      task.application_name = 'cmd.exe'
+      task.parameters = '/c exit 0'
+      task.save
+    end
+
+    after(:all) do
+      subject.delete(@task_name) if subject.exists?(@task_name)
+    end
+
+    it "and return the same application_name and properties as those originally set" do
+      expect(subject).to be_exists(@task_name)
+
+      task = subject.new(@task_name)
+      # verify initial task configuration
+      expect(task.parameters).to eq('/c exit 0')
+      expect(task.application_name).to eq('cmd.exe')
+    end
+
+    triggers.each do |trigger|
+      after(:each) do
+        task = subject.new(@task_name)
+        1.upto(task.trigger_count).each { |i| task.delete_trigger(0) }
         task.save
       end
 
-      after(:each) do
-        subject.delete(@task_name) if subject.exists?(@task_name)
-      end
+      it "#{trigger['trigger_type']} and return the same properties as those set" do
+        # verifying task exists guarantees that .new below loads existing task
+        expect(subject).to be_exists(@task_name)
 
-      it 'and should return the same properties as those set' do
-        expect(subject.exists?(@task_name)).to be true
+        # append the trigger of given type
+        task = subject.new(@task_name)
+        task.append_trigger(trigger)
+        task.save
 
-        task = subject.activate(@task_name)
+        # reload a new task object by name
+        task = subject.new(@task_name)
 
-        expect(subject.parameters).to eq('/c exit 0')
-        expect(subject.application_name).to eq('cmd.exe')
-        expect(subject.trigger_count).to eq(1)
-        expect(subject.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
-        expect(subject.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
+        # trigger specific validation
+        expect(task.trigger_count).to eq(1)
+        expect(task.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
+        expect(task.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
       end
     end
   end
@@ -113,7 +134,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
   context "When managing a task" do
     before(:each) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-      task = subject.class.new(@task_name, triggers[0])
+      task = subject.new(@task_name)
+      task.append_trigger(triggers[0])
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.save
@@ -136,10 +158,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
         'start_day'               => 12,
       })
 
-      task = subject.activate(@task_name)
-      expect(subject.delete_trigger(0)).to be(1)
-      subject.append_trigger(new_trigger)
-      subject.save
+      task = subject.new(@task_name)
+      expect(task.delete_trigger(0)).to be(1)
+      task.append_trigger(new_trigger)
+      task.save
       ps_cmd = '([string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Triggers.StartBoundary) -split \'T\')[0]'
       expect('2112-12-12').to be_same_as_powershell_command(ps_cmd)
     end
@@ -147,33 +169,33 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2Task", :if => Puppet
     it 'should be able to update a command' do
       new_application_name = 'notepad.exe'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Execute)'
-      task = subject.activate(@task_name)
+      task = subject.new(@task_name)
 
       expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
-      subject.application_name = new_application_name
-      subject.save
+      task.application_name = new_application_name
+      task.save
       expect(new_application_name).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'should be able to update command parameters' do
       new_parameters = '/nonsense /utter /nonsense'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Arguments)'
-      task = subject.activate(@task_name)
+      task = subject.new(@task_name)
 
       expect('/c exit 0').to be_same_as_powershell_command(ps_cmd)
-      subject.parameters = new_parameters
-      subject.save
+      task.parameters = new_parameters
+      task.save
       expect(new_parameters).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'should be able to update the working directory' do
       new_working_directory = 'C:\Somewhere'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].WorkingDirectory)'
-      task = subject.activate(@task_name)
+      task = subject.new(@task_name)
 
       expect('').to be_same_as_powershell_command(ps_cmd)
-      subject.working_directory = new_working_directory
-      subject.save
+      task.working_directory = new_working_directory
+      task.save
       expect(new_working_directory).to be_same_as_powershell_command(ps_cmd)
     end
   end

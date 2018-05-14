@@ -25,13 +25,14 @@ module TaskScheduler2
   # Undocumented values
   # Win7/2008 R2                       = 3
   # Win8/Server 2012 R2 or Server 2016 = 4
-  # Windows 10                         = 6
+  # Windows 10                         = 5 / 6
   TASK_COMPATIBILITY_AT = 0
   TASK_COMPATIBILITY_V1 = 1
   TASK_COMPATIBILITY_V2 = 2
-  TASK_COMPATIBILITY_V3 = 3
-  TASK_COMPATIBILITY_V4 = 4
-  TASK_COMPATIBILITY_V6 = 6
+  TASK_COMPATIBILITY_V2_1 = 3
+  TASK_COMPATIBILITY_V2_2 = 4
+  TASK_COMPATIBILITY_V2_3 = 5
+  TASK_COMPATIBILITY_V2_4 = 6
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
   TASK_VALIDATE_ONLY                 = 0x1
@@ -115,12 +116,18 @@ module TaskScheduler2
 
   def self.task(task_path)
     raise TypeError unless task_path.is_a?(String)
+    begin
+      task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
+      return task_folder.GetTask(task_name_from_task_path(task_path))
+    rescue WIN32OLERuntimeError => e
+      # ERROR_FILE_NOT_FOUND 2L from winerror.h becomes this in COM
+      unless e.message =~ /80070002/m
+        raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
+      end
+    end
 
-    task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
-
-    task_object = task_folder.GetTask(task_name_from_task_path(task_path))
-
-    task_object
+    nil
   end
 
   def self.new_task_definition
@@ -263,11 +270,10 @@ module TaskScheduler2
 
   # Private methods
   def self.task_service
-    if @service_object.nil?
-      @service_object = WIN32OLE.new('Schedule.Service')
-      @service_object.connect()
-    end
-    @service_object
+    service = WIN32OLE.new('Schedule.Service')
+    service.connect()
+
+    service
   end
   private_class_method :task_service
 end

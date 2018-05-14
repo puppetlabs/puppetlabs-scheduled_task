@@ -93,13 +93,14 @@ Puppet::Type.newtype(:scheduled_task) do
       2003 computer, 2 for compatibility with tasks on a Windows 2008 computer,
       3 for compatibility with new features for tasks introduced in Windows 7
       and 2008R2, 4 for compatibility with new features for tasks introduced in
-      Windows 8, Server 2012R2 and Server 2016, or 6 for compatibility with new
-      features for tasks introduced in Windows 10"
+      Windows 8, Server 2012R2 and Server 2016, or 5 / 6 for compatibility with
+      new features for tasks introduced in Windows 10"
 
     newvalue(1)
     newvalue(2)
     newvalue(3)
     newvalue(4)
+    newvalue(5)
     newvalue(6)
     defaultto(1)
 
