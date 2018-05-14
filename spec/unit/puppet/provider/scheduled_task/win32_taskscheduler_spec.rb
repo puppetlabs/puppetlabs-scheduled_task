@@ -151,7 +151,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single daily trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
             'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
             'start_year'   => 2011,
             'start_month'  => 9,
@@ -160,7 +160,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'start_minute' => 20,
             'flags'        => 0,
             'type'         => { 'days_interval' => 2 },
-          })
+          }))
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -175,7 +175,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single daily with repeat trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
             'trigger_type'     => :TASK_TIME_TRIGGER_DAILY,
             'start_year'       => 2011,
             'start_month'      => 9,
@@ -186,7 +186,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'minutes_duration' => 180,
             'flags'            => 0,
             'type'             => { 'days_interval' => 2 },
-          })
+          }))
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -205,7 +205,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
                                    V1::Day::TASK_WEDNESDAY |
                                    V1::Day::TASK_FRIDAY |
                                    V1::Day::TASK_SUNDAY
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
             'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
             'start_year'   => 2011,
             'start_month'  => 9,
@@ -217,7 +217,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
               'weeks_interval' => 2,
               'days_of_week'   => scheduled_days_of_week
             }
-          })
+          }))
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -240,7 +240,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
                              V1::Month::TASK_DECEMBER
           #                1   3        5        15        'last'
           scheduled_days = 1 | 1 << 2 | 1 << 4 | 1 << 14 | 1 << 31
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
             'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
             'start_year'   => 2011,
             'start_month'  => 9,
@@ -252,7 +252,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
               'months' => scheduled_months,
               'days'   => scheduled_days
             }
-          })
+          }))
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -277,7 +277,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
                                    V1::Day::TASK_WEDNESDAY |
                                    V1::Day::TASK_FRIDAY |
                                    V1::Day::TASK_SUNDAY
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
             'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
             'start_year'   => 2011,
             'start_month'  => 9,
@@ -290,7 +290,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
               'weeks'        => V1::Occurrence::TASK_FIRST_WEEK,
               'days_of_week' => scheduled_days_of_week
             }
-          })
+          }))
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -307,7 +307,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single one-time trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
             'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
             'start_year'   => 2011,
             'start_month'  => 9,
@@ -315,7 +315,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'start_hour'   => 13,
             'start_minute' => 20,
             'flags'        => 0,
-          })
+          }))
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -331,7 +331,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'should handle multiple triggers' do
         @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
@@ -339,8 +339,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 14,
           'start_minute' => 21,
           'flags'        => 0,
-        })
-        @mock_task.expects(:trigger).with(1).returns({
+        }))
+        @mock_task.expects(:trigger).with(1).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2012,
           'start_month'  => 11,
@@ -348,8 +348,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 15,
           'start_minute' => 22,
           'flags'        => 0,
-        })
-        @mock_task.expects(:trigger).with(2).returns({
+        }))
+        @mock_task.expects(:trigger).with(2).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
           'start_month'  => 12,
@@ -357,7 +357,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 16,
           'start_minute' => 23,
           'flags'        => 0,
-        })
+        }))
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -392,7 +392,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'should handle multiple triggers with repeat triggers' do
         @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
           'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
           'start_year'       => 2011,
           'start_month'      => 10,
@@ -402,8 +402,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'minutes_interval' => 15,
           'minutes_duration' => 60,
           'flags'            => 0,
-        })
-        @mock_task.expects(:trigger).with(1).returns({
+        }))
+        @mock_task.expects(:trigger).with(1).returns(V1.to_manifest_hash({
           'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
           'start_year'       => 2012,
           'start_month'      => 11,
@@ -413,8 +413,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'minutes_interval' => 30,
           'minutes_duration' => 120,
           'flags'            => 0,
-        })
-        @mock_task.expects(:trigger).with(2).returns({
+        }))
+        @mock_task.expects(:trigger).with(2).returns(V1.to_manifest_hash({
           'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
           'start_year'       => 2013,
           'start_month'      => 12,
@@ -424,7 +424,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'minutes_interval' => 60,
           'minutes_duration' => 240,
           'flags'            => 0,
-        })
+        }))
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -459,7 +459,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'should skip triggers Win32::TaskScheduler cannot handle' do
         @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
@@ -467,10 +467,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 14,
           'start_minute' => 21,
           'flags'        => 0,
-        })
-          @mock_task.expects(:trigger).with(1).returns(nil)
+        }))
+        @mock_task.expects(:trigger).with(1).returns(nil)
 
-        @mock_task.expects(:trigger).with(2).returns({
+        @mock_task.expects(:trigger).with(2).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
           'start_month'  => 12,
@@ -478,7 +478,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 16,
           'start_minute' => 23,
           'flags'        => 0,
-        })
+        }))
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -504,7 +504,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'should skip trigger types Puppet does not handle' do
         @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
@@ -512,10 +512,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 14,
           'start_minute' => 21,
           'flags'        => 0,
-        })
+        }))
         @mock_task.expects(:trigger).with(1).returns(nil)
 
-        @mock_task.expects(:trigger).with(2).returns({
+        @mock_task.expects(:trigger).with(2).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2013,
           'start_month'  => 12,
@@ -523,7 +523,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_hour'   => 16,
           'start_minute' => 23,
           'flags'        => 0,
-        })
+        }))
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -549,7 +549,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'should not expose random_minutes_interval' do
         @mock_task.expects(:trigger_count).returns(1)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:trigger).with(0).returns(V1.to_manifest_hash({
           'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
           'start_year'   => 2011,
           'start_month'  => 10,
@@ -558,7 +558,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'start_minute' => 21,
           'flags'        => 0,
           'random_minutes_interval' => 0,
-        })
+        }))
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -621,16 +621,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should not consider triggers for determining if the task is enabled' do
         @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
         @mock_task.stubs(:trigger_count).returns(1)
-        @mock_task.stubs(:trigger).with(0).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2011,
-          'start_month'  => 10,
-          'start_day'    => 13,
-          'start_hour'   => 14,
-          'start_minute' => 21,
-          'flags'        => V1::Flag::TASK_TRIGGER_FLAG_DISABLED,
-        })
-
+        default_once = V1.to_manifest_hash(V1.default_trigger_for('once')).merge(
+          { 'flags'        => V1::Flag::TASK_TRIGGER_FLAG_DISABLED, }
+        )
+        @mock_task.stubs(:trigger).with(0).returns(default_once)
         expect(resource.provider.enabled).to eq(:true)
       end
     end
@@ -1701,8 +1695,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
-        @mock_task.expects(:append_trigger).with(PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@trigger[1]))
-        @mock_task.expects(:append_trigger).with(PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@trigger[2]))
+        @mock_task.expects(:append_trigger).with(@trigger[1])
+        @mock_task.expects(:append_trigger).with(@trigger[2])
 
         resource.provider.trigger = @trigger
       end
@@ -1870,20 +1864,20 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'by clearing the cached list of triggers for the task' do
         @mock_task.stubs(:trigger_count).returns(1)
-        default_once = V1.default_trigger_for('once')
+        default_once = V1.to_manifest_hash(V1.default_trigger_for('once'))
         @mock_task.stubs(:trigger).with(0).returns(default_once)
 
         @new_mock_task.stubs(:trigger_count).returns(1)
-        default_daily = V1.default_trigger_for('daily')
+        default_daily = V1.to_manifest_hash(V1.default_trigger_for('daily'))
         @new_mock_task.stubs(:trigger).with(0).returns(default_daily)
 
-        converted_once = V1.to_manifest_hash(default_once).merge({'index' => 0})
+        converted_once = default_once.merge({'index' => 0})
         expect(resource.provider.trigger).to eq([converted_once])
         expect(resource.provider.trigger).to eq([converted_once])
 
         resource.provider.create
 
-        converted_daily = V1.to_manifest_hash(default_daily).merge({'index' => 0})
+        converted_daily = default_daily.merge({'index' => 0})
         expect(resource.provider.trigger).to eq([converted_daily])
       end
     end

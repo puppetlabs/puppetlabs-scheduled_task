@@ -37,6 +37,7 @@ def triggers
     'start_day'               => now.day,
     'start_hour'              => now.hour,
     'start_minute'            => now.min,
+    'flags'                   => 0,
   }
 
   [
@@ -117,7 +118,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features
 
         # append the trigger of given type
         task = subject.new(@task_name)
-        task.append_trigger(trigger)
+        manifest_hash = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(trigger)
+        task.append_trigger(manifest_hash)
         task.save
 
         # reload a new task object by name
@@ -125,8 +127,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features
 
         # trigger specific validation
         expect(task.trigger_count).to eq(1)
-        expect(task.trigger(0)['trigger_type']).to eq(trigger['trigger_type'])
-        expect(task.trigger(0)['type']).to eq(trigger['type']) if trigger['type']
+        expect(task.trigger(0)).to eq(manifest_hash)
       end
     end
   end
@@ -135,7 +136,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features
     before(:each) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
       task = subject.new(@task_name)
-      task.append_trigger(triggers[0])
+      manifest_hash = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(triggers[0])
+      task.append_trigger(manifest_hash)
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.save
@@ -160,7 +162,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features
 
       task = subject.new(@task_name)
       expect(task.delete_trigger(0)).to be(1)
-      task.append_trigger(new_trigger)
+      manifest_hash = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(new_trigger)
+      task.append_trigger(manifest_hash)
       task.save
       ps_cmd = '([string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Triggers.StartBoundary) -split \'T\')[0]'
       expect('2112-12-12').to be_same_as_powershell_command(ps_cmd)

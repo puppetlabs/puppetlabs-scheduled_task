@@ -656,6 +656,11 @@ module Trigger
       V1_TYPE_MAP[v1type]
     end
 
+    def self.to_manifest_hash(iTrigger)
+      v1trigger = V1.from_iTrigger(iTrigger)
+      V1.to_manifest_hash(v1trigger)
+    end
+
     def self.append_v1trigger(definition, v1trigger)
       v1trigger = Trigger::V1.canonicalize_and_validate(v1trigger)
 
@@ -697,6 +702,11 @@ module Trigger
       )
 
       v1trigger
+    end
+
+    def self.append_trigger(definition, manifest_hash)
+      v1trigger = V1.from_manifest_hash(manifest_hash)
+      append_v1trigger(definition, v1trigger)
     end
   end
 end

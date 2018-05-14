@@ -39,7 +39,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       expect(v2task.parameters).to eq(subjectv1.parameters)
       expect(v2task.application_name).to eq(subjectv1.application_name)
       expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
-      expect(v2task.trigger(0)).to eq(subjectv1.trigger(0))
+      v1manifest_hash = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(subjectv1.trigger(0))
+      expect(v2task.trigger(0)).to eq(v1manifest_hash)
     end
   end
 
@@ -75,7 +76,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       expect(subjectv1.parameters).to eq(arguments_after)
       expect(subjectv1.application_name).to eq(v2task.application_name)
       expect(subjectv1.trigger_count).to eq(v2task.trigger_count)
-      expect(subjectv1.trigger(0)).to eq(v2task.trigger(0))
+      v1manifest_hash = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(subjectv1.trigger(0))
+      expect(v1manifest_hash).to eq(v2task.trigger(0))
     end
   end
 end

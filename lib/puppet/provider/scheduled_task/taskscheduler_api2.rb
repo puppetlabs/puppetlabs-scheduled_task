@@ -58,11 +58,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def trigger
     @triggers ||= task.trigger_count.times.map do |i|
-      v1trigger = task.trigger(i)
+      manifest_hash = task.trigger(i)
       # nil trigger definitions are unsupported ITrigger types
-      next if v1trigger.nil?
-      index = { 'index' => i }
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger).merge(index)
+      next if manifest_hash.nil?
+      manifest_hash.merge({ 'index' => i })
     end.compact
   end
 
@@ -147,8 +146,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
 
     needed_triggers.each do |trigger_hash|
-      v1trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
-      task.append_trigger(v1trigger)
+      task.append_trigger(trigger_hash)
     end
   end
 
