@@ -1,7 +1,4 @@
-require 'puppet/util'
-
 Puppet::Type.newtype(:scheduled_task) do
-  include Puppet::Util
 
   @doc = "Installs and manages Windows Scheduled Tasks.  All attributes
     except `name`, `command`, and `trigger` are optional; see the description
