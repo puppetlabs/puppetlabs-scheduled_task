@@ -289,7 +289,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
         {
           :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
           :DaysOfWeek => 0b1111111,
-          :WeeksOfMonth => 0b11111,
+          :WeeksOfMonth => 0b11111, # V2 uses bitmask, but V1 only allows single value
           :MonthsOfYear => 0b111111111111,
           :RunOnLastWeekOfMonth => true, # ignored
           :RandomDelay  => 'P2DT5S', # ignored
@@ -297,7 +297,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
         :expected =>
         {
           'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
-          'type' => { 'weeks' => 0b11111, 'days_of_week' => 0b1111111, 'months' => 0b111111111111 },
+          'type' => { 'weeks' => 1, 'days_of_week' => 0b1111111, 'months' => 0b111111111111 },
         }
       },
     ].each do |trigger_details|
@@ -678,6 +678,54 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
   [ 'foo', -1, 0b111111111111 + 1 ].each do |value|
     it "should raise an ArgumentError with value: #{value}" do
       expect { subject.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
+    end
+  end
+end
+
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
+  EXPECTED_WEEKS_OF_MONTH_CONVERSIONS =
+  [
+    { :weeks => 'first', :bitmask => 0b1 },
+    { :weeks => [], :bitmask => 0 },
+    { :weeks => ['first'], :bitmask => 0b1 },
+    { :weeks => ['fourth', 'last'], :bitmask => 0b11000 },
+    {
+      :weeks => ['first', 'second', 'third', 'fourth', 'last'],
+      :bitmask => 0b11111
+    },
+  ].freeze
+
+  describe '#names_to_bitmask' do
+    EXPECTED_WEEKS_OF_MONTH_CONVERSIONS.each do |conversion|
+      it "should create expected bitmask #{'%08b' % conversion[:bitmask]} from weeks #{conversion[:weeks]}" do
+        expect(subject.class.names_to_bitmask(conversion[:weeks])).to eq(conversion[:bitmask])
+      end
+    end
+
+    [ nil, 1, {}, 'foo', ['bar'] ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.names_to_bitmask(value) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+  describe '#bitmask_to_names' do
+    EXPECTED_WEEKS_OF_MONTH_CONVERSIONS.each do |conversion|
+      it "should create expected weeks #{conversion[:weeks]} from bitmask #{'%08b' % conversion[:bitmask]}" do
+        expect(subject.class.bitmask_to_names(conversion[:bitmask])).to eq([conversion[:weeks]].flatten)
+      end
+    end
+
+    [ nil, {}, ['bar'] ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.bitmask_to_names(value) }.to raise_error(TypeError)
+      end
+    end
+
+    [ -1, 'foo', 0b11111 + 1 ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
+      end
     end
   end
 end

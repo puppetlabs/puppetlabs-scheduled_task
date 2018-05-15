@@ -381,8 +381,11 @@ module Trigger
             'months' => Trigger.string_to_int(iTrigger.MonthsOfYear)
           }
         when V2::Type::TASK_TRIGGER_MONTHLYDOW
+          weeks_of_month = Trigger.string_to_int(iTrigger.WeeksOfMonth)
+          occurrences = V2::WeeksOfMonth.bitmask_to_names(weeks_of_month)
           v1trigger['type'] = {
-            'weeks'        => Trigger.string_to_int(iTrigger.WeeksOfMonth),
+            # HACK: choose only the first week selected when converting - this LOSES information
+            'weeks'        => Occurrence.name_to_constant(occurrences.first) || 0,
             'days_of_week' => Trigger.string_to_int(iTrigger.DaysOfWeek),
             'months'       => Trigger.string_to_int(iTrigger.MonthsOfYear)
           }
@@ -627,6 +630,44 @@ module Trigger
   end
 
   class V2
+  class WeeksOfMonth
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380733(v=vs.85).aspx
+    FIRST   = 0x01
+    SECOND  = 0x02
+    THIRD   = 0x04
+    FOURTH  = 0x08
+    LAST    = 0x10
+
+    WEEK_OF_MONTH_CONST_MAP = {
+      'first'  => FIRST,
+      'second' => SECOND,
+      'third'  => THIRD,
+      'fourth' => FOURTH,
+      'last'   => LAST,
+    }.freeze
+
+    def self.names_to_bitmask(week_names)
+      week_names = [week_names].flatten
+      invalid_weeks = week_names - WEEK_OF_MONTH_CONST_MAP.keys
+      raise ArgumentError.new("week_names value #{invalid_weeks.join(', ')} is invalid. Expected first, second, third, fourth or last.") unless invalid_weeks.empty?
+
+      week_names.inject(0) { |bitmask, day| bitmask |= WEEK_OF_MONTH_CONST_MAP[day] }
+    end
+
+    def self.bitmask_to_names(bitmask)
+      bitmask = Integer(bitmask)
+      if (bitmask < 0 || bitmask > 0b11111)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b11111.to_s(10)}")
+      end
+
+      WEEK_OF_MONTH_CONST_MAP.values.each_with_object([]) do |week, names|
+        names << WEEK_OF_MONTH_CONST_MAP.key(week) if bitmask & week != 0
+      end
+    end
+  end
+  end
+
+  class V2
     class Type
       # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383915%28v=vs.85%29.aspx
       TASK_TRIGGER_EVENT                 = 0
@@ -687,7 +728,9 @@ module Trigger
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
           iTrigger.DaysOfWeek = trigger_settings['days_of_week']
           iTrigger.Monthsofyear = trigger_settings['months']
-          iTrigger.Weeksofmonth = trigger_settings['weeks']
+          # HACK: convert V1 week value to names, then back to V2 bitmask
+          week_name = Trigger::V1::Occurrence.constant_to_name(trigger_settings['weeks'])
+          iTrigger.Weeksofmonth = WeeksOfMonth.names_to_bitmask(week_name)
       end
 
       # Values for all Trigger Types
