@@ -729,3 +729,173 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
     end
   end
 end
+
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
+  describe '#to_manifest_hash' do
+    DEFAULT_V2_ITRIGGER_PROPERTIES = {
+      :Id                 => '',
+      :Repetition         => { :Interval => '', :Duration => '', :StopAtDurationEnd => false },
+      :ExecutionTimeLimit => '',
+      :StartBoundary      => '',
+      :EndBoundary        => '',
+      :Enabled            => true,
+    }.freeze
+
+    [
+      { :Type => V2::Type::TASK_TRIGGER_TIME,
+        :RandomDelay  => '',
+       },
+      { :Type => V2::Type::TASK_TRIGGER_DAILY,
+        :DaysInterval => 1,
+        :RandomDelay  => '',
+      },
+      { :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+        :DaysOfWeek => 0,
+        :WeeksInterval => 1,
+        :RandomDelay  => '',
+      },
+      { :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+        :DaysOfMonth => 0,
+        :MonthsOfYear => 4095,
+        :RunOnLastDayOfMonth => false,
+        :RandomDelay  => '',
+      },
+      { :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+        :DaysOfWeek => 1,
+        :WeeksOfMonth => 1,
+        :MonthsOfYear => 1,
+        :RunOnLastWeekOfMonth => false,
+        :RandomDelay  => '',
+      },
+    ].each do |trigger_details|
+      it "should convert a default #{V2::V1_TYPE_MAP.key(trigger_details[:Type])}" do
+        pending('iTrigger default empty string dates cannot be converted')
+        iTrigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
+        iTrigger = stub(iTrigger)
+        expect(subject.class.to_manifest_hash(iTrigger)).to_not be_nil
+      end
+    end
+
+    [
+      { :ole_type => 'IBootTrigger', :Type => V2::Type::TASK_TRIGGER_BOOT, },
+      { :ole_type => 'IIdleTrigger', :Type => V2::Type::TASK_TRIGGER_IDLE, },
+      { :ole_type => 'IRegistrationTrigger', :Type => V2::Type::TASK_TRIGGER_REGISTRATION, },
+      { :ole_type => 'ILogonTrigger', :Type => V2::Type::TASK_TRIGGER_LOGON, },
+      { :ole_type => 'ISessionStateChangeTrigger', :Type => V2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
+      { :ole_type => 'IEventTrigger', :Type => V2::Type::TASK_TRIGGER_EVENT, },
+    ].each do |trigger_details|
+      it "should fail to convert an #{trigger_details[:ole_type]} instance" do
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+        expect { subject.class.to_manifest_hash(iTrigger) }.to raise_error(ArgumentError)
+      end
+    end
+
+    FILLED_V2_ITRIGGER_PROPERTIES = {
+      :Id                 => '1',
+      :Repetition         => { :Interval => 'PT20M', :Duration => 'PT20M', :StopAtDurationEnd => false },
+      :ExecutionTimeLimit => 'P1M4DT2H5M',
+      # StartBoundary is usually specified in local time without TZ
+      :StartBoundary      => '2005-10-11T13:21:17' + Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone,
+      :EndBoundary        => '2005-10-11T13:21:17Z',
+      :Enabled            => true,
+    }.freeze
+
+    # manifest specifies dates / times as local time
+    CONVERTED_V2_MANIFEST_HASH = {
+      'start_date' => '2005-10-11',
+      'start_time' => '13:21',
+      'enabled'    => true,
+      'minutes_interval' => 20, # PT20M
+      'minutes_duration' => 20, # PT20M
+    }.freeze
+
+    [
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_TIME,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule' => 'once',
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_DAILY,
+          :DaysInterval => 2,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule' => 'daily',
+          'every'    => '2',
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+          :DaysOfWeek => 0b1111111,
+          :WeeksInterval => 2,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule'    => 'weekly',
+          'every'       => '2',
+          'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+          :DaysOfMonth => 0b11111111111111111111111111111111,
+          :MonthsOfYear => 1,
+          :RunOnLastDayOfMonth => true, # ignored
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule' => 'monthly',
+          'months'   => [1],
+          'on'       => (1..31).to_a + ['last'],
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+          :DaysOfWeek => 0b1111111,
+          # HACK: choose only the last week selected for test conversion, as this LOSES information
+          :WeeksOfMonth => 0b10000,
+          :MonthsOfYear => 0b111111111111,
+          :RunOnLastWeekOfMonth => true, # ignored
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule'         => 'monthly',
+          'months'           => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          'which_occurrence' => 'last',
+          'day_of_week'      => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+        }
+      },
+    ].each do |trigger_details|
+      it "should convert a full ITrigger type #{V2::V1_TYPE_MAP.key(trigger_details[:iTrigger][:Type])} to the equivalent V1 hash" do
+        iTrigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
+        iTrigger = stub(iTrigger)
+        converted = CONVERTED_V2_MANIFEST_HASH.merge(trigger_details[:expected])
+        expect(subject.class.to_manifest_hash(iTrigger)).to eq(converted)
+      end
+    end
+  end
+end
