@@ -11,14 +11,7 @@ install_module_dependencies_on(hosts)
 test_name "Installing Puppet Modules" do
   proj_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
   hosts.each do |host|
-    if host['platform'] =~ /windows/
-      on host, "mkdir -p #{host['distmoduledir']}/scheduled_task"
-      target = (on host, "echo #{host['distmoduledir']}/scheduled_task").raw_output.chomp
-
-      %w(lib metadata.json).each do |file|
-        scp_to host, "#{proj_root}/#{file}", target
-      end
-    end
+    install_dev_puppet_module_on(host, source: proj_root, module_name: 'scheduled_task')
   end
 end
 
