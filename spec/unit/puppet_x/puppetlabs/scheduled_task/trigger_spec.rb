@@ -769,7 +769,6 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
       },
     ].each do |trigger_details|
       it "should convert a default #{V2::V1_TYPE_MAP.key(trigger_details[:Type])}" do
-        pending('iTrigger default empty string dates cannot be converted')
         iTrigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
         iTrigger[:Repetition] = stub(iTrigger[:Repetition])
