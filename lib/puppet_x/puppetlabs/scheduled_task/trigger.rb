@@ -731,23 +731,22 @@ module Trigger
           manifest_hash.merge!({
             'schedule'    => 'weekly',
             'every'       => iTrigger.WeeksInterval.to_s,
-            'day_of_week' => V1::Day.bitmask_to_names(Trigger.string_to_int(iTrigger.DaysOfWeek)),
+            'day_of_week' => V1::Day.bitmask_to_names(iTrigger.DaysOfWeek),
           })
         when Type::TASK_TRIGGER_MONTHLY
           manifest_hash.merge!({
             'schedule' => 'monthly',
-            'months'   => V1::Month.bitmask_to_indexes(Trigger.string_to_int(iTrigger.MonthsOfYear)),
-            'on'       => V1::Days.bitmask_to_indexes(Trigger.string_to_int(iTrigger.DaysOfMonth)),
+            'months'   => V1::Month.bitmask_to_indexes(iTrigger.MonthsOfYear),
+            'on'       => V1::Days.bitmask_to_indexes(iTrigger.DaysOfMonth),
           })
         when Type::TASK_TRIGGER_MONTHLYDOW
-          weeks_of_month = Trigger.string_to_int(iTrigger.WeeksOfMonth)
-          occurrences = V2::WeeksOfMonth.bitmask_to_names(weeks_of_month)
+          occurrences = V2::WeeksOfMonth.bitmask_to_names(iTrigger.WeeksOfMonth)
           manifest_hash.merge!({
             'schedule' => 'monthly',
-            'months'           => V1::Month.bitmask_to_indexes(Trigger.string_to_int(iTrigger.MonthsOfYear)),
+            'months'           => V1::Month.bitmask_to_indexes(iTrigger.MonthsOfYear),
             # HACK: choose only the first week selected when converting - this LOSES information
             'which_occurrence' => occurrences.first || '',
-            'day_of_week'      => V1::Day.bitmask_to_names(Trigger.string_to_int(iTrigger.DaysOfWeek)),
+            'day_of_week'      => V1::Day.bitmask_to_names(iTrigger.DaysOfWeek),
           })
       end
 
