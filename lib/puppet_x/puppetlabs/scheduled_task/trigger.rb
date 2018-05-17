@@ -692,6 +692,15 @@ module Trigger
       :TASK_TIME_TRIGGER_ONCE => Type::TASK_TRIGGER_TIME,
     }.freeze
 
+    TYPE_MANIFEST_MAP = {
+      Type::TASK_TRIGGER_DAILY => 'daily',
+      Type::TASK_TRIGGER_WEEKLY => 'weekly',
+      # NOTE: monthly uses context to determine MONTHLY or MONTHLYDOW
+      Type::TASK_TRIGGER_MONTHLY => 'monthly',
+      Type::TASK_TRIGGER_MONTHLYDOW => 'monthly',
+      Type::TASK_TRIGGER_TIME => 'once',
+    }.freeze
+
     def self.type_from_v1type(v1type)
       raise ArgumentError.new(_("Unknown V1 trigger Type %{type}") % { type: v1type }) unless V1_TYPE_MAP.keys.include?(v1type)
       V1_TYPE_MAP[v1type]
@@ -800,103 +809,62 @@ module Trigger
 
     def self.append_trigger(definition, manifest_hash)
       manifest_hash = Trigger::V1.canonicalize_and_validate_manifest(manifest_hash)
-
-      trigger = Trigger::V1.default_trigger_for(manifest_hash['schedule'])
-
-      case manifest_hash['schedule']
-      when 'daily'
-        trigger['type']['days_interval'] = Integer(manifest_hash['every'] || 1)
-      when 'weekly'
-        trigger['type']['weeks_interval'] = Integer(manifest_hash['every'] || 1)
-
-        days_of_week = manifest_hash['day_of_week'] || Trigger::V1::Day.names
-        trigger['type']['days_of_week'] = Trigger::V1::Day.names_to_bitmask(days_of_week)
-      when 'monthly'
-        trigger['type']['months'] = Trigger::V1::Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
-
-        if manifest_hash.key?('on')
-          trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
-          trigger['type']['days'] = Trigger::V1::Days.indexes_to_bitmask(manifest_hash['on'])
-        elsif  manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
-          trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
-          trigger['type']['weeks']        = Trigger::V1::Occurrence.name_to_constant(manifest_hash['which_occurrence'])
-          trigger['type']['days_of_week'] = Trigger::V1::Day.names_to_bitmask(manifest_hash['day_of_week'])
-        end
+      # create appropriate ITrigger based on 'schedule'
+      trigger_type = TYPE_MANIFEST_MAP.key(manifest_hash['schedule'])
+      # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
+      if manifest_hash['schedule'] == 'monthly' &&
+        (manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week'))
+        trigger_type = Type::TASK_TRIGGER_MONTHLYDOW
       end
+      iTrigger = definition.Triggers.Create(trigger_type)
 
-      manifest_hash['enabled'] == false ?
-        trigger['flags'] |= Trigger::V1::Flag::TASK_TRIGGER_FLAG_DISABLED :
-        trigger['flags'] &= ~Trigger::V1::Flag::TASK_TRIGGER_FLAG_DISABLED
-
+      # Values for all Trigger Types
       if manifest_hash['minutes_interval']
-        trigger['minutes_interval'] = Integer(manifest_hash['minutes_interval'])
-
-        if trigger['minutes_interval'] > 0 && !manifest_hash.key?('minutes_duration')
-          trigger['minutes_duration'] = 1440 # one day in minutes
+        minutes_interval = Integer(manifest_hash['minutes_interval'])
+        if minutes_interval > 0
+          iTrigger.Repetition.Interval = "PT#{minutes_interval}M"
+          # one day in minutes
+          iTrigger.Repetition.Duration = "PT1440M" unless manifest_hash.key?('minutes_duration')
         end
       end
 
       if manifest_hash['minutes_duration']
-        trigger['minutes_duration'] = Integer(manifest_hash['minutes_duration'])
+        minutes_duration = Integer(manifest_hash['minutes_duration'])
+        iTrigger.Repetition.Duration = "PT#{minutes_duration}M" unless minutes_duration.zero?
       end
 
-      # manifests specify datetime in the local timezone, same as V1 trigger
+      # manifests specify datetime in the local timezone, ITrigger accepts ISO8601
+      # when start_date is null or missing, Time.parse returns today
       datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
       # Time.parse always assumes local time
-      local_manifest_date = Time.parse(datetime_string)
+      iTrigger.StartBoundary = Time.parse(datetime_string).iso8601
 
-      # today has already been filled in to default trigger structure, only override if necessary
-      if manifest_hash['start_date']
-        trigger['start_year']   = local_manifest_date.year
-        trigger['start_month']  = local_manifest_date.month
-        trigger['start_day']    = local_manifest_date.day
-      end
-      trigger['start_hour']   = local_manifest_date.hour
-      trigger['start_minute'] = local_manifest_date.min
-
-      # convert from v1trigger to ITrigger
-      v1trigger = Trigger::V1.canonicalize_and_validate(trigger)
-
-      trigger_type = type_from_v1type(v1trigger['trigger_type'])
-      iTrigger = definition.Triggers.Create(trigger_type)
-      trigger_settings = v1trigger['type']
-
-      case trigger_type
+      # ITrigger specific settings
+      case iTrigger.Type
         when Type::TASK_TRIGGER_DAILY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
-          iTrigger.DaysInterval = trigger_settings['days_interval']
+          iTrigger.DaysInterval = Integer(manifest_hash['every'] || 1)
 
         when Type::TASK_TRIGGER_WEEKLY
+          days_of_week = manifest_hash['day_of_week'] || Trigger::V1::Day.names
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
-          iTrigger.DaysOfWeek = trigger_settings['days_of_week']
-          iTrigger.WeeksInterval = trigger_settings['weeks_interval']
+          iTrigger.DaysOfWeek = Trigger::V1::Day.names_to_bitmask(days_of_week)
+          iTrigger.WeeksInterval = Integer(manifest_hash['every'] || 1)
 
         when Type::TASK_TRIGGER_MONTHLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
-          iTrigger.DaysOfMonth = trigger_settings['days']
-          iTrigger.Monthsofyear = trigger_settings['months']
+          iTrigger.DaysOfMonth = Trigger::V1::Days.indexes_to_bitmask(manifest_hash['on'])
+          iTrigger.MonthsOfYear = Trigger::V1::Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
 
         when Type::TASK_TRIGGER_MONTHLYDOW
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
-          iTrigger.DaysOfWeek = trigger_settings['days_of_week']
-          iTrigger.Monthsofyear = trigger_settings['months']
+          iTrigger.DaysOfWeek = Trigger::V1::Day.names_to_bitmask(manifest_hash['day_of_week'])
+          iTrigger.MonthsOfYear = Trigger::V1::Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
           # HACK: convert V1 week value to names, then back to V2 bitmask
-          week_name = Trigger::V1::Occurrence.constant_to_name(trigger_settings['weeks'])
-          iTrigger.Weeksofmonth = WeeksOfMonth.names_to_bitmask(week_name)
+          iTrigger.WeeksOfMonth = WeeksOfMonth.names_to_bitmask(manifest_hash['which_occurrence'])
       end
 
-      # Values for all Trigger Types
-      iTrigger.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
-      iTrigger.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
-      iTrigger.StartBoundary = Trigger.date_components_to_local_iso8601_datetime(
-        v1trigger['start_year'],
-        v1trigger['start_month'],
-        v1trigger['start_day'],
-        v1trigger['start_hour'],
-        v1trigger['start_minute']
-      )
-
-      v1trigger
+      nil
     end
   end
 end
