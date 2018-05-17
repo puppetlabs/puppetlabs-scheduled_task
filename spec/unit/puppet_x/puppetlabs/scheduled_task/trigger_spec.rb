@@ -488,7 +488,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
         :RandomDelay  => '',
       },
     ].each do |trigger_details|
-      it "should convert a default #{V2::V1_TYPE_MAP.key(trigger_details[:Type])}" do
+      it "should convert a default #{V2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
         iTrigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
         iTrigger[:Repetition] = stub(iTrigger[:Repetition])
@@ -607,7 +607,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
         }
       },
     ].each do |trigger_details|
-      it "should convert a full ITrigger type #{V2::V1_TYPE_MAP.key(trigger_details[:iTrigger][:Type])} to the equivalent V1 hash" do
+      it "should convert a full ITrigger type #{V2::TYPE_MANIFEST_MAP[trigger_details[:iTrigger][:Type]]} to the equivalent V1 hash" do
         iTrigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
         iTrigger[:Repetition] = stub(iTrigger[:Repetition])
