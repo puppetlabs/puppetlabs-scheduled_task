@@ -706,6 +706,16 @@ module Trigger
       V1_TYPE_MAP[v1type]
     end
 
+    def self.type_from_manifest_hash(manifest_hash)
+      # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
+      if manifest_hash['schedule'] == 'monthly' &&
+        (manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week'))
+        return Type::TASK_TRIGGER_MONTHLYDOW
+      end
+
+      TYPE_MANIFEST_MAP.key(manifest_hash['schedule'])
+    end
+
     def self.to_manifest_hash(iTrigger)
       if V1_TYPE_MAP.key(iTrigger.Type).nil?
         raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
@@ -810,13 +820,7 @@ module Trigger
     def self.append_trigger(definition, manifest_hash)
       manifest_hash = Trigger::V1.canonicalize_and_validate_manifest(manifest_hash)
       # create appropriate ITrigger based on 'schedule'
-      trigger_type = TYPE_MANIFEST_MAP.key(manifest_hash['schedule'])
-      # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
-      if manifest_hash['schedule'] == 'monthly' &&
-        (manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week'))
-        trigger_type = Type::TASK_TRIGGER_MONTHLYDOW
-      end
-      iTrigger = definition.Triggers.Create(trigger_type)
+      iTrigger = definition.Triggers.Create(type_from_manifest_hash(manifest_hash))
 
       # Values for all Trigger Types
       if manifest_hash['minutes_interval']
