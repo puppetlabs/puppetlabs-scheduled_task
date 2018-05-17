@@ -55,15 +55,6 @@ module Trigger
     end
   end
 
-  def string_to_int(value)
-    return 0 if value.nil?
-    return value if value.is_a?(Numeric)
-    raise ArgumentError.new('value must be a String') unless value.is_a?(String)
-
-    value.to_i
-  end
-  module_function :string_to_int
-
   def iso8601_datetime_to_local(value)
     return nil if value.nil?
     raise ArgumentError.new('value must be a String') unless value.is_a?(String)
@@ -279,69 +270,6 @@ module Trigger
 
     ValidManifestScheduleKeys = ScheduleNameDefaultsMap.keys.freeze
 
-    # iTrigger is a COM ITrigger instance
-    def self.from_iTrigger(iTrigger)
-      if Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type).nil?
-        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
-      end
-
-      trigger_flags = 0
-      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.EndBoundary.empty?
-      # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
-      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
-
-      # StartBoundary and EndBoundary may be empty strings per V2 API
-      start_boundary = Trigger.iso8601_datetime_to_local(iTrigger.StartBoundary)
-      end_boundary = Trigger.iso8601_datetime_to_local(iTrigger.EndBoundary)
-
-      v1trigger = {
-        'trigger_type'            => Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type),
-        'start_year'              => start_boundary ? start_boundary.year : 0,
-        'start_month'             => start_boundary ? start_boundary.month : 0,
-        'start_day'               => start_boundary ? start_boundary.day : 0,
-        'end_year'                => end_boundary ? end_boundary.year : 0,
-        'end_month'               => end_boundary ? end_boundary.month : 0,
-        'end_day'                 => end_boundary ? end_boundary.day : 0,
-        'start_hour'              => start_boundary ? start_boundary.hour : 0,
-        'start_minute'            => start_boundary ? start_boundary.min : 0,
-        'minutes_duration'        => Duration.to_minutes(iTrigger.Repetition.Duration),
-        'minutes_interval'        => Duration.to_minutes(iTrigger.Repetition.Interval),
-        'flags'                   => trigger_flags,
-        # the V1 COM API always produces a value of 0 here and this is kept for
-        # compatibility in tests but should *never* be used as it's not settable
-        'random_minutes_interval' => 0,
-      }
-
-      case iTrigger.Type
-        when V2::Type::TASK_TRIGGER_TIME
-          v1trigger['type'] = { 'once' => nil }
-        when V2::Type::TASK_TRIGGER_DAILY
-          v1trigger['type'] = {
-            'days_interval' => Trigger.string_to_int(iTrigger.DaysInterval)
-          }
-        when V2::Type::TASK_TRIGGER_WEEKLY
-          v1trigger['type'] = {
-            'weeks_interval' => Trigger.string_to_int(iTrigger.WeeksInterval),
-            'days_of_week'   => Trigger.string_to_int(iTrigger.DaysOfWeek)
-          }
-        when V2::Type::TASK_TRIGGER_MONTHLY
-          v1trigger['type'] = {
-            'days'   => Trigger.string_to_int(iTrigger.DaysOfMonth),
-            'months' => Trigger.string_to_int(iTrigger.MonthsOfYear)
-          }
-        when V2::Type::TASK_TRIGGER_MONTHLYDOW
-          weeks_of_month = Trigger.string_to_int(iTrigger.WeeksOfMonth)
-          occurrences = V2::WeeksOfMonth.bitmask_to_names(weeks_of_month)
-          v1trigger['type'] = {
-            # HACK: choose only the first week selected when converting - this LOSES information
-            'weeks'        => Occurrence.name_to_constant(occurrences.first) || 0,
-            'days_of_week' => Trigger.string_to_int(iTrigger.DaysOfWeek),
-            'months'       => Trigger.string_to_int(iTrigger.MonthsOfYear)
-          }
-      end
-
-      v1trigger
-    end
 
     def self.default_trigger_settings_for(type = 'once')
       case type
