@@ -168,7 +168,7 @@ class V2Adapter
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
     trigger_object = TaskScheduler2.trigger(@definition, index + 1)
-    trigger_object.nil? || Trigger::V2::V1_TYPE_MAP.key(trigger_object.Type).nil? ?
+    trigger_object.nil? || Trigger::V2::TYPE_MANIFEST_MAP[trigger_object.Type].nil? ?
       nil :
       Trigger::V2.to_manifest_hash(trigger_object)
   end

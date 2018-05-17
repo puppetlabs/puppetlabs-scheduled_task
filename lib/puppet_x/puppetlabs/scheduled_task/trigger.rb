@@ -589,7 +589,7 @@ module Trigger
     end
 
     def self.to_manifest_hash(iTrigger)
-      if V1_TYPE_MAP.key(iTrigger.Type).nil?
+      if TYPE_MANIFEST_MAP[iTrigger.Type].nil?
         raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
       end
 
