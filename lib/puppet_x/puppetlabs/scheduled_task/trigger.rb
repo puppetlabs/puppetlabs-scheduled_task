@@ -578,11 +578,6 @@ module Trigger
       Type::TASK_TRIGGER_TIME => 'once',
     }.freeze
 
-    def self.type_from_v1type(v1type)
-      raise ArgumentError.new(_("Unknown V1 trigger Type %{type}") % { type: v1type }) unless V1_TYPE_MAP.keys.include?(v1type)
-      V1_TYPE_MAP[v1type]
-    end
-
     def self.type_from_manifest_hash(manifest_hash)
       # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
       if manifest_hash['schedule'] == 'monthly' &&
