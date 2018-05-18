@@ -65,6 +65,46 @@ module Trigger
   end
   module_function :iso8601_datetime_to_local
 
+  class Manifest
+    def self.default_trigger_settings_for(schedule = 'once')
+      case schedule
+      when 'once'
+        {
+          'schedule' => 'once',
+        }
+      when 'daily'
+        {
+          'schedule' => 'daily',
+          'every'    => '1' ,
+        }
+      when 'weekly'
+        {
+          'schedule'     => 'weekly',
+          'days_of_week' => V1::Day.names,
+          'every'        => '1',
+        }
+      when 'monthly'
+        {
+          'schedule' => 'monthly',
+          'months'   => (1..12).to_a,
+          'days'     => 0
+        }
+      end
+    end
+
+    def self.default_trigger_for(schedule = 'once')
+      now = Time.now
+      type_hash =
+      {
+        'enabled'             => true,
+        'minutes_interval'    => 0,
+        'minutes_duration'    => 0,
+        'start_date'          => now.strftime('%Y-%-m-%-d'),
+        'start_time'          => now.strftime('%H:%M'),
+      }.merge(default_trigger_settings_for(schedule))
+    end
+  end
+
   class V1
   class Day
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384014(v=vs.85).aspx
