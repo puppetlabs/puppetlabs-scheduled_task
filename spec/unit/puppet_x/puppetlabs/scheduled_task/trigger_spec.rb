@@ -32,6 +32,97 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
+  describe "#canonicalize_and_validate_manifest" do
+    [
+      {
+        # only set required fields
+        :input =>
+        {
+          'Enabled'             => nil,
+          'ScHeDuLe'            => 'once',
+          'START_date'          => '2018-2-3',
+          'start_Time'          => '1:12',
+          'EVERY'               => nil,
+          'mONTHS'              => nil,
+          'On'                  => nil,
+          'Which_Occurrence'    => nil,
+          'DAY_OF_week'         => nil,
+          'MINutes_intERVAL'    => nil,
+          'minutes_duration'    => nil,
+        },
+        # all keys are lower
+        :expected =>
+        {
+          'enabled'             => nil,
+          'schedule'            => 'once',
+          'start_date'          => '2018-2-3',
+          'start_time'          => '01:12',
+          'every'               => nil,
+          'months'              => nil,
+          'on'                  => nil,
+          'which_occurrence'    => nil,
+          'day_of_week'         => nil,
+          'minutes_interval'    => nil,
+          'minutes_duration'    => nil,
+        }
+      },
+    ].each do |value|
+      it "should return downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
+        expect(subject.class.canonicalize_and_validate_manifest(value[:input])).to eq(value[:expected])
+      end
+    end
+
+    [
+      { :foo => nil, 'type' => {} },
+      { :type => nil },
+      { [] => nil },
+      { 'type' => [] },
+      { 'type' => 1 },
+    ].each do |value|
+      it "should fail with ArgumentError given a hash with invalid keys #{value}" do
+        expect { subject.class.canonicalize_and_validate_manifest(value) }.to raise_error(ArgumentError)
+      end
+    end
+
+    MINIMAL_MANIFEST_HASH =
+    {
+      'schedule'            => 'once',
+      'start_date'          => '2018-2-3',
+      'start_time'          => '01:12',
+    }
+
+    it 'should canonicalize `start_date` to %Y-%-m-%-d' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => '2011-01-02' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => '2011-1-2' })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `start_time` to %H:%M' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '2:03 pm' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '14:03' })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should accept `minutes_interval` / `minutes_duration` strings and convert to numerics' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({
+        'minutes_duration'    => '15',
+        'minutes_interval'    => '10',
+      })
+
+      expected = MINIMAL_MANIFEST_HASH.merge({
+        'minutes_duration'    => 15,
+        'minutes_interval'    => 10,
+      })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+  end
+
   describe '#to_manifest_hash' do
     [
       'once',

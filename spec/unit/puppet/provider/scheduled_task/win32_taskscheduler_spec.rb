@@ -694,7 +694,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     it 'should not consider any extra current triggers as in sync' do
       current = [
-        {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'},
+        {'start_date' => '2011-9-12', 'start_time' => '15:15', 'schedule' => 'once'},
         {'start_date' => '2012-10-13', 'start_time' => '16:16', 'schedule' => 'once'}
       ]
       desired = {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'}
@@ -703,7 +703,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it 'should not consider any extra desired triggers as in sync' do
-      current = {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'}
+      current = {'start_date' => '2011-9-12', 'start_time' => '15:15', 'schedule' => 'once'}
       desired = [
         {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'},
         {'start_date' => '2012-10-13', 'start_time' => '16:16', 'schedule' => 'once'}
@@ -714,7 +714,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     it 'should consider triggers to be in sync if the sets of current and desired triggers are equal' do
       current = [
-        {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'},
+        {'start_date' => '2011-9-12', 'start_time' => '15:15', 'schedule' => 'once'},
         {'start_date' => '2012-10-13', 'start_time' => '16:16', 'schedule' => 'once'}
       ]
       desired = [
@@ -730,7 +730,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     let(:provider) { described_class.new(:name => 'foobar', :command => 'C:\Windows\System32\notepad.exe') }
 
     it "should not mutate triggers" do
-      current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+      current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
       current.freeze
 
       desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
@@ -740,14 +740,14 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it "ignores 'index' in current trigger" do
-      current = {'index' => 0, 'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+      current = {'index' => 0, 'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
       desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
 
       expect(provider).to be_triggers_same(current, desired)
     end
 
     it "ignores 'enabled' in current triggger" do
-      current = {'enabled' => true, 'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+      current = {'enabled' => true, 'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
       desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
 
       expect(provider).to be_triggers_same(current, desired)
@@ -761,8 +761,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it 'should not consider triggers with different schedules to be the same' do
-      current = {'schedule' => 'once'}
-      desired = {'schedule' => 'weekly'}
+      current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
+      desired = {'schedule' => 'once',  'start_date' => '2011-09-12', 'start_time' => '15:30'}
 
       expect(provider).not_to be_triggers_same(current, desired)
     end
@@ -778,7 +778,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'start_date' do
       it "considers triggers to be equal when start_date is not specified in the 'desired' trigger" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_time' => '15:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
@@ -787,49 +787,49 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing daily triggers' do
       it "should consider 'desired' triggers not specifying 'every' to have the same value as the 'current' trigger" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2012-09-12', 'start_time' => '15:30', 'every' => 3}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:31', 'every' => 3}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-9-12',  'start_time' => '15:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '5:30',  'every' => 3}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '05:30', 'every' => 3}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '05:30',  'every' => 3}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '5:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'every' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 1}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30', 'every' => 1}
+        trigger = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30', 'every' => 1}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -837,35 +837,35 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing one-time triggers' do
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
         desired = {'schedule' => 'daily', 'start_date' => '2012-09-12', 'start_time' => '15:30'}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:31'}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-9-12',  'start_time' => '15:30'}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12',  'start_time' => '15:30'}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30'}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30'}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30'}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30'}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30'}
+        trigger = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30'}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -873,56 +873,56 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing monthly date-based triggers' do
       it "should consider 'desired' triggers not specifying 'months' to have the same value as the 'current' trigger" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [3], 'on' => [1,'last']}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [3], 'on' => [1,'last']}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'on' => [1, 'last']}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-10-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '22:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
-        desired = {'schedule' => 'monthly', 'start_date' => '2011-9-12',  'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12',  'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '5:30',  'months' => [1, 2], 'on' => [1, 3, 5, 7]}
-        desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '05:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '05:30',  'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '5:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'months' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1],    'on' => [1, 3, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'on' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        trigger = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -932,7 +932,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider 'desired' triggers not specifying 'months' to have the same value as the 'current' trigger" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -952,7 +952,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'start_dates' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -973,7 +973,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'start_times' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -994,7 +994,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'months' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1015,7 +1015,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'which_occurrence' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1036,7 +1036,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'day_of_week' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1057,7 +1057,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should consider triggers that are the same as being the same' do
         trigger = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1070,56 +1070,56 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing weekly triggers' do
       it "should consider 'desired' triggers not specifying 'day_of_week' to have the same value as the 'current' trigger" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-10-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '22:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-9-12',  'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30',  'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30',  'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'every' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 1, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 1, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'day_of_week' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        trigger = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -1660,9 +1660,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should not consider all duplicate current triggers in sync with a single desired trigger' do
         @trigger = {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10'}
         current_triggers = [
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 1},
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 2},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 0},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 1},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 2},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
         @mock_task.expects(:delete_trigger).with(1)
@@ -1674,9 +1674,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should remove triggers not defined in the resource' do
         @trigger = {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10'}
         current_triggers = [
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
-          {'schedule' => 'once', 'start_date' => '2012-09-15', 'start_time' => '15:10', 'index' => 1},
-          {'schedule' => 'once', 'start_date' => '2013-09-15', 'start_time' => '15:10', 'index' => 2},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 0},
+          {'schedule' => 'once', 'start_date' => '2012-9-15', 'start_time' => '15:10', 'index' => 1},
+          {'schedule' => 'once', 'start_date' => '2013-9-15', 'start_time' => '15:10', 'index' => 2},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
         @mock_task.expects(:delete_trigger).with(1)
@@ -1692,7 +1692,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           {'schedule' => 'once', 'start_date' => '2013-09-15', 'start_time' => '15:10'},
         ]
         current_triggers = [
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 0},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
         @mock_task.expects(:append_trigger).with(@trigger[1])

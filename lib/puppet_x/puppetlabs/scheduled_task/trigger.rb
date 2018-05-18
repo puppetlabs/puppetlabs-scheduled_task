@@ -330,6 +330,9 @@ module Trigger
         raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
       end
 
+      # The start_time must be canonicalized to match the format that the rest of the code expects
+      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M')
+
       # specific setting rules for schedule types
       case manifest_hash['schedule']
       when 'monthly'
@@ -376,11 +379,14 @@ module Trigger
           raise ArgumentError.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
         end
       end
+      manifest_hash['minutes_interval'] = interval if interval
+      manifest_hash['minutes_duration'] = duration if duration
 
       if manifest_hash['start_date']
         min_date = Date.new(1753, 1, 1)
         start_date = Date.parse(manifest_hash['start_date'])
         raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
+        manifest_hash['start_date'] = start_date.strftime('%Y-%-m-%-d')
       end
 
       manifest_hash
@@ -651,7 +657,7 @@ module Trigger
 
       # Values for all Trigger Types
       if manifest_hash['minutes_interval']
-        minutes_interval = Integer(manifest_hash['minutes_interval'])
+        minutes_interval = manifest_hash['minutes_interval']
         if minutes_interval > 0
           iTrigger.Repetition.Interval = "PT#{minutes_interval}M"
           # one day in minutes
@@ -660,7 +666,7 @@ module Trigger
       end
 
       if manifest_hash['minutes_duration']
-        minutes_duration = Integer(manifest_hash['minutes_duration'])
+        minutes_duration = manifest_hash['minutes_duration']
         iTrigger.Repetition.Duration = "PT#{minutes_duration}M" unless minutes_duration.zero?
       end
 

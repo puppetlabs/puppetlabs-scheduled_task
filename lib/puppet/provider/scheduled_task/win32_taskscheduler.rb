@@ -182,18 +182,14 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def triggers_same?(current_trigger, desired_trigger)
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
-    current_type = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2.type_from_manifest_hash(current_trigger)
-    desired_type = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2.type_from_manifest_hash(desired_trigger)
-    return false if current_type != desired_type
-
-    desired = desired_trigger.dup
-    desired['start_date']  ||= current_trigger['start_date']  if current_trigger.has_key?('start_date')
-    desired['every']       ||= current_trigger['every']       if current_trigger.has_key?('every')
-    desired['months']      ||= current_trigger['months']      if current_trigger.has_key?('months')
-    desired['on']          ||= current_trigger['on']          if current_trigger.has_key?('on')
-    desired['day_of_week'] ||= current_trigger['day_of_week'] if current_trigger.has_key?('day_of_week')
-
-    PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(current_trigger) == PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(desired)
+    # Canonicalizing the desired hash ensures it is in a matching state with what we convert from on-disk
+    desired = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.canonicalize_and_validate_manifest(desired_trigger)
+    # This method ensures that current_trigger:
+    # - includes all of the key-value pairs from desired
+    # - that those key value pairs are exactly matched
+    # - does not preclude current_trigger from having _more_ keys than the desired trigger.
+    # It will return false if any pair is missing or the values do not match.
+    current_trigger.merge(desired) == current_trigger
   end
 
   def validate_trigger(value)
