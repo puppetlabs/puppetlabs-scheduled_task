@@ -192,9 +192,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def triggers_same?(current_trigger, desired_trigger)
-    return false unless current_trigger['schedule'] == desired_trigger['schedule']
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
-    return false if PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(desired_trigger)['trigger_type'] != PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(current_trigger)['trigger_type']
+    current_type = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2.type_from_manifest_hash(current_trigger)
+    desired_type = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2.type_from_manifest_hash(desired_trigger)
+    return false if current_type != desired_type
 
     desired = desired_trigger.dup
     desired['start_date']  ||= current_trigger['start_date']  if current_trigger.has_key?('start_date')
