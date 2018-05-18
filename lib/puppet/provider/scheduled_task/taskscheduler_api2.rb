@@ -210,7 +210,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
           self.fail "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
         end
       end
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(t)
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.canonicalize_and_validate_manifest(t)
     end
 
     true
