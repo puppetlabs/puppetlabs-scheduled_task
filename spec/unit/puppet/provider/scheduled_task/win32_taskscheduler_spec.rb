@@ -1435,7 +1435,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       ]
 
       expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
-        /#{Regexp.escape("Days_of_week value BadDay is invalid")}/
+        /#{Regexp.escape("Unknown day_of_week values(s): [\"BadDay\"]")}/
       )
     end
   end

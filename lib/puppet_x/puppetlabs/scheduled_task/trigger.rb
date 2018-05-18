@@ -75,13 +75,13 @@ module Trigger
       when 'daily'
         {
           'schedule' => 'daily',
-          'every'    => '1' ,
+          'every'    => 1 ,
         }
       when 'weekly'
         {
           'schedule'     => 'weekly',
           'days_of_week' => V1::Day.names,
-          'every'        => '1',
+          'every'        => 1,
         }
       when 'monthly'
         {
@@ -370,6 +370,8 @@ module Trigger
         raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
       end
 
+      start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); true rescue false; end
+      raise ArgumentError.new("Invalid start_time value: #{manifest_hash['start_time']}") unless start_time_valid
       # The start_time must be canonicalized to match the format that the rest of the code expects
       manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M')
 
@@ -392,6 +394,39 @@ module Trigger
         end
       when 'once'
         raise ArgumentError.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
+      end
+
+      if manifest_hash.key?('every')
+        every = begin Integer(manifest_hash['every']) rescue nil end
+        raise ArgumentError.new("Invalid every value: #{manifest_hash['every']}") if every.nil?
+        manifest_hash['every'] = every
+      end
+
+      # day of week uses valid names (for weekly / monthly schedules)
+      if manifest_hash.key?('day_of_week')
+        manifest_hash['day_of_week'] = [manifest_hash['day_of_week']].flatten
+        invalid_days = manifest_hash['day_of_week'] - Day.names
+        raise ArgumentError.new("Unknown day_of_week values(s): #{invalid_days}") unless invalid_days.empty?
+      end
+
+      if manifest_hash.key?('months')
+        manifest_hash['months'] = [manifest_hash['months']].flatten
+        invalid_months = manifest_hash['months'] - (1..12).to_a
+        raise ArgumentError.new("Unknown months values(s): #{invalid_months}") unless invalid_months.empty?
+      end
+
+      # monthly
+      if manifest_hash.key?('on')
+        manifest_hash['on'] = [manifest_hash['on']].flatten
+        invalid_on = manifest_hash['on'] - ((1..31).to_a + ['last'])
+        raise ArgumentError.new("Unknown on values(s): #{invalid_on}") unless invalid_on.empty?
+      end
+
+      # monthly day of week
+      if manifest_hash.key?('which_occurrence')
+        # NOTE: cannot canonicalize to an array here (yet!) because more code changes required
+        invalid_which_occurrence = [manifest_hash['which_occurrence']].flatten - V2::WeeksOfMonth::WEEK_OF_MONTH_CONST_MAP.keys
+        raise ArgumentError.new("Unknown which_occurrence values(s): #{invalid_which_occurrence}") unless invalid_which_occurrence.empty?
       end
 
       # duration set with / without interval
@@ -423,8 +458,8 @@ module Trigger
       manifest_hash['minutes_duration'] = duration if duration
 
       if manifest_hash['start_date']
-        min_date = Date.new(1753, 1, 1)
-        start_date = Date.parse(manifest_hash['start_date'])
+        min_date = Time.local(1753, 1, 1)
+        start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
         raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
         manifest_hash['start_date'] = start_date.strftime('%Y-%-m-%-d')
       end
@@ -605,12 +640,12 @@ module Trigger
         when Type::TASK_TRIGGER_DAILY
           manifest_hash.merge!({
             'schedule' => 'daily',
-            'every'    => iTrigger.DaysInterval.to_s,
+            'every'    => iTrigger.DaysInterval,
           })
         when Type::TASK_TRIGGER_WEEKLY
           manifest_hash.merge!({
             'schedule'    => 'weekly',
-            'every'       => iTrigger.WeeksInterval.to_s,
+            'every'       => iTrigger.WeeksInterval,
             'day_of_week' => V1::Day.bitmask_to_names(iTrigger.DaysOfWeek),
           })
         when Type::TASK_TRIGGER_MONTHLY

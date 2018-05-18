@@ -42,11 +42,11 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
           'ScHeDuLe'            => 'once',
           'START_date'          => '2018-2-3',
           'start_Time'          => '1:12',
-          'EVERY'               => nil,
-          'mONTHS'              => nil,
-          'On'                  => nil,
-          'Which_Occurrence'    => nil,
-          'DAY_OF_week'         => nil,
+          'EVERY'               => 1,
+          'mONTHS'              => 12,
+          'On'                  => [1, 'last'],
+          'Which_Occurrence'    => 'first',
+          'DAY_OF_week'         => ['mon'],
           'MINutes_intERVAL'    => nil,
           'minutes_duration'    => nil,
         },
@@ -57,11 +57,11 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
           'schedule'            => 'once',
           'start_date'          => '2018-2-3',
           'start_time'          => '01:12',
-          'every'               => nil,
-          'months'              => nil,
-          'on'                  => nil,
-          'which_occurrence'    => nil,
-          'day_of_week'         => nil,
+          'every'               => 1,
+          'months'              => [12],
+          'on'                  => [1, 'last'],
+          'which_occurrence'    => 'first',
+          'day_of_week'         => ['mon'],
           'minutes_interval'    => nil,
           'minutes_duration'    => nil,
         }
@@ -99,6 +99,28 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
       expect(canonical).to eq(expected)
     end
 
+    it 'should default empty `start_date` to today' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => '' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => Time.now.strftime('%Y-%-m-%-d') })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should allow nil `start_date`' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({
+        'schedule'   => 'daily',
+        'start_date' => nil,
+      })
+      expected = MINIMAL_MANIFEST_HASH.merge({
+        'schedule'   => 'daily',
+        'start_date' => nil,
+      })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
     it 'should canonicalize `start_time` to %H:%M' do
       manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '2:03 pm' })
       expected = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '14:03' })
@@ -117,6 +139,38 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
         'minutes_duration'    => 15,
         'minutes_interval'    => 10,
       })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `every` to a numeric' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'every' => '10' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'every' => 10 })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `day_of_week` to an array' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'day_of_week' => 'mon' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'day_of_week' => ['mon'] })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `months` to an array' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'months' => 1 })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'months' => [1] })
+
+      canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `on` to an array' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'on' => 1 })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'on' => [1] })
 
       canonical = subject.class.canonicalize_and_validate_manifest(manifest_hash)
       expect(canonical).to eq(expected)
@@ -528,7 +582,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
         :expected =>
         {
           'schedule' => 'daily',
-          'every'    => '2',
+          'every'    => 2,
         }
       },
       {
@@ -542,7 +596,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
         :expected =>
         {
           'schedule'    => 'weekly',
-          'every'       => '2',
+          'every'       => 2,
           'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
         }
       },

@@ -39,11 +39,11 @@ def manifest_triggers
     }),
     defaults.merge({
       'schedule' => 'daily',
-      'every'    => '1',
+      'every'    => 1,
     }),
     defaults.merge({
       'schedule'    => 'weekly',
-      'every'       => '1',
+      'every'       => 1,
       'day_of_week' => ['mon'],
     }),
     defaults.merge({
