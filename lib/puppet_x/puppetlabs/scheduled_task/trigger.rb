@@ -86,7 +86,7 @@ module Trigger
       when 'monthly'
         {
           'schedule' => 'monthly',
-          'months'   => (1..12).to_a,
+          'months'   => V1::Month.indexes,
           'days'     => 0
         }
       end
@@ -225,6 +225,10 @@ module Trigger
       12 => TASK_DECEMBER,
     }.freeze
 
+    def self.indexes
+      @indexes ||= MONTHNUM_CONST_MAP.keys.freeze
+    end
+
     def self.indexes_to_bitmask(month_indexes)
       month_indexes = [month_indexes].flatten.map { |m| Integer(m) rescue m }
       invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys
@@ -322,7 +326,7 @@ module Trigger
         }
       when 'monthly'
         {
-          'months' => Month.indexes_to_bitmask((1..12).to_a),
+          'months' => Month.indexes_to_bitmask(Month.indexes),
           'days' => 0
         }
       end
@@ -412,7 +416,7 @@ module Trigger
 
       if manifest_hash.key?('months')
         manifest_hash['months'] = [manifest_hash['months']].flatten
-        invalid_months = manifest_hash['months'] - (1..12).to_a
+        invalid_months = manifest_hash['months'] - Month.indexes
         raise ArgumentError.new("Unknown months values(s): #{invalid_months}") unless invalid_months.empty?
       end
 
@@ -483,7 +487,7 @@ module Trigger
         days_of_week = manifest_hash['day_of_week'] || Day.names
         trigger['type']['days_of_week'] = Day.names_to_bitmask(days_of_week)
       when 'monthly'
-        trigger['type']['months'] = Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
+        trigger['type']['months'] = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
 
         if manifest_hash.key?('on')
           trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
@@ -702,20 +706,20 @@ module Trigger
           iTrigger.DaysInterval = Integer(manifest_hash['every'] || 1)
 
         when Type::TASK_TRIGGER_WEEKLY
-          days_of_week = manifest_hash['day_of_week'] || Trigger::V1::Day.names
+          days_of_week = manifest_hash['day_of_week'] || V1::Day.names
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
-          iTrigger.DaysOfWeek = Trigger::V1::Day.names_to_bitmask(days_of_week)
+          iTrigger.DaysOfWeek = V1::Day.names_to_bitmask(days_of_week)
           iTrigger.WeeksInterval = Integer(manifest_hash['every'] || 1)
 
         when Type::TASK_TRIGGER_MONTHLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
-          iTrigger.DaysOfMonth = Trigger::V1::Days.indexes_to_bitmask(manifest_hash['on'])
-          iTrigger.MonthsOfYear = Trigger::V1::Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
+          iTrigger.DaysOfMonth = V1::Days.indexes_to_bitmask(manifest_hash['on'])
+          iTrigger.MonthsOfYear = V1::Month.indexes_to_bitmask(manifest_hash['months'] || V1::Month.indexes)
 
         when Type::TASK_TRIGGER_MONTHLYDOW
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
-          iTrigger.DaysOfWeek = Trigger::V1::Day.names_to_bitmask(manifest_hash['day_of_week'])
-          iTrigger.MonthsOfYear = Trigger::V1::Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
+          iTrigger.DaysOfWeek = V1::Day.names_to_bitmask(manifest_hash['day_of_week'])
+          iTrigger.MonthsOfYear = V1::Month.indexes_to_bitmask(manifest_hash['months'] || V1::Month.indexes)
           # HACK: convert V1 week value to names, then back to V2 bitmask
           iTrigger.WeeksOfMonth = WeeksOfMonth.names_to_bitmask(manifest_hash['which_occurrence'])
       end
