@@ -194,7 +194,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   def triggers_same?(current_trigger, desired_trigger)
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
     # Canonicalizing the desired hash ensures it is in a matching state with what we convert from on-disk
-    desired = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.canonicalize_and_validate_manifest(desired_trigger)
+    desired = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(desired_trigger)
     # This method ensures that current_trigger:
     # - includes all of the key-value pairs from desired
     # - that those key value pairs are exactly matched
@@ -210,7 +210,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
           self.fail "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
         end
       end
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.canonicalize_and_validate_manifest(t)
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(t)
     end
 
     true

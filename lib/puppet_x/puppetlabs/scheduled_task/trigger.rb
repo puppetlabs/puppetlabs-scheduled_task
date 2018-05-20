@@ -66,6 +66,28 @@ module Trigger
   module_function :iso8601_datetime_to_local
 
   class Manifest
+    ValidKeys = [
+       'index',
+       'enabled',
+       'schedule',
+       'start_date',
+       'start_time',
+       'every',
+       'months',
+       'on',
+       'which_occurrence',
+       'day_of_week',
+       'minutes_interval',
+       'minutes_duration'
+     ].freeze
+
+     ValidScheduleKeys = [
+      'once',
+      'daily',
+      'weekly',
+      'monthly'
+     ].freeze
+
     def self.default_trigger_settings_for(schedule = 'once')
       case schedule
       when 'once'
@@ -102,6 +124,136 @@ module Trigger
         'start_date'          => now.strftime('%Y-%-m-%-d'),
         'start_time'          => now.strftime('%H:%M'),
       }.merge(default_trigger_settings_for(schedule))
+    end
+
+    # canonicalize given manifest hash
+    # throws errors if hash structure is invalid
+    # does not throw errors when invalid types are specified
+    # @returns original object with downcased keys
+    def self.canonicalize_and_validate(manifest_hash)
+      raise TypeError unless manifest_hash.is_a?(Hash)
+      manifest_hash = downcase_keys(manifest_hash)
+
+      # check for valid key usage
+      invalid_keys = manifest_hash.keys - ValidKeys
+      raise ArgumentError.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}") unless invalid_keys.empty?
+
+      if !ValidScheduleKeys.include?(manifest_hash['schedule'])
+        raise ArgumentError.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
+      end
+
+      # required fields
+      %w{start_time}.each do |field|
+        next if manifest_hash.key?(field)
+        raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
+      end
+
+      # start_time_valid = manifest_hash['start_time'] =~ /^(?:\d|[01]\d|2[0-3]):[0-5]\d$/
+      start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); true rescue false; end
+      raise ArgumentError.new("Invalid start_time value: #{manifest_hash['start_time']}") unless start_time_valid
+      # The start_time must be canonicalized to match the format that the rest of the code expects
+      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M')
+
+      # specific setting rules for schedule types
+      case manifest_hash['schedule']
+      when 'monthly'
+        if manifest_hash.key?('on')
+          if manifest_hash.key?('day_of_week') || manifest_hash.key?('which_occurrence')
+            raise ArgumentError.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
+          end
+        elsif manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
+          raise ArgumentError.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
+
+          %w{day_of_week which_occurrence}.each do |field|
+            next if manifest_hash.key?(field)
+            raise ArgumentError.new("#{field} must be specified when creating a monthly day-of-week based trigger")
+          end
+        else
+          raise ArgumentError.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
+        end
+      when 'once'
+        raise ArgumentError.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
+      end
+
+      if manifest_hash.key?('every')
+        every = begin Integer(manifest_hash['every']) rescue nil end
+        raise ArgumentError.new("Invalid every value: #{manifest_hash['every']}") if every.nil?
+        manifest_hash['every'] = every
+      end
+
+      # day of week uses valid names (for weekly / monthly schedules)
+      if manifest_hash.key?('day_of_week')
+        manifest_hash['day_of_week'] = [manifest_hash['day_of_week']].flatten
+        invalid_days = manifest_hash['day_of_week'] - V1::Day.names
+        raise ArgumentError.new("Unknown day_of_week values(s): #{invalid_days}") unless invalid_days.empty?
+      end
+
+      if manifest_hash.key?('months')
+        manifest_hash['months'] = [manifest_hash['months']].flatten
+        invalid_months = manifest_hash['months'] - V1::Month.indexes
+        raise ArgumentError.new("Unknown months values(s): #{invalid_months}") unless invalid_months.empty?
+      end
+
+      # monthly
+      if manifest_hash.key?('on')
+        manifest_hash['on'] = [manifest_hash['on']].flatten
+        invalid_on = manifest_hash['on'] - ((1..31).to_a + ['last'])
+        raise ArgumentError.new("Unknown on values(s): #{invalid_on}") unless invalid_on.empty?
+      end
+
+      # monthly day of week
+      if manifest_hash.key?('which_occurrence')
+        # NOTE: cannot canonicalize to an array here (yet!) because more code changes required
+        invalid_which_occurrence = [manifest_hash['which_occurrence']].flatten - V2::WeeksOfMonth::WEEK_OF_MONTH_CONST_MAP.keys
+        raise ArgumentError.new("Unknown which_occurrence values(s): #{invalid_which_occurrence}") unless invalid_which_occurrence.empty?
+      end
+
+      # duration set with / without interval
+      if manifest_hash['minutes_duration']
+        duration = Integer(manifest_hash['minutes_duration'])
+        # defaults to -1 when unspecified
+        interval = Integer(manifest_hash['minutes_interval'] || -1)
+        if duration != 0 && duration <= interval
+          raise ArgumentError.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0')
+        end
+      end
+
+      # interval set with / without duration
+      if manifest_hash['minutes_interval']
+        interval = Integer(manifest_hash['minutes_interval'])
+        # interval < 0
+        if interval < 0
+          raise ArgumentError.new('minutes_interval must be an integer greater or equal to 0')
+        end
+
+        # defaults to a day when unspecified
+        duration = Integer(manifest_hash['minutes_duration'] || 1440)
+
+        if interval > 0 && interval >= duration
+          raise ArgumentError.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
+        end
+      end
+      manifest_hash['minutes_interval'] = interval if interval
+      manifest_hash['minutes_duration'] = duration if duration
+
+      if manifest_hash['start_date']
+        min_date = Time.local(1753, 1, 1)
+        start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
+        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
+        manifest_hash['start_date'] = start_date.strftime('%Y-%-m-%-d')
+      end
+
+      manifest_hash
+    end
+
+    private
+
+    # converts all keys to lowercase
+    def self.downcase_keys(hash)
+      rekeyed = hash.map do |k, v|
+        [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
+      end
+      Hash[ rekeyed ]
     end
   end
 
@@ -289,21 +441,6 @@ module Trigger
   # TASK_TRIGGER structure approximated as Ruby hash
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1
-   ValidManifestKeys = [
-      'index',
-      'enabled',
-      'schedule',
-      'start_date',
-      'start_time',
-      'every',
-      'months',
-      'on',
-      'which_occurrence',
-      'day_of_week',
-      'minutes_interval',
-      'minutes_duration'
-    ].freeze
-
     ScheduleNameDefaultsMap = {
       'daily' => :TASK_TIME_TRIGGER_DAILY,
       'weekly' => :TASK_TIME_TRIGGER_WEEKLY,
@@ -311,8 +448,6 @@ module Trigger
       'monthly' => :TASK_TIME_TRIGGER_MONTHLYDATE,
       'once' => :TASK_TIME_TRIGGER_ONCE,
     }.freeze
-
-    ValidManifestScheduleKeys = ScheduleNameDefaultsMap.keys.freeze
 
 
     def self.default_trigger_settings_for(type = 'once')
@@ -352,129 +487,9 @@ module Trigger
       }.merge( type_hash.nil? ? {} : { 'type' => type_hash })
     end
 
-    # canonicalize given trigger hash
-    # throws errors if hash structure is invalid
-    # does not throw errors when invalid types are specified
-    # @returns original object with downcased keys
-    def self.canonicalize_and_validate_manifest(manifest_hash)
-      raise TypeError unless manifest_hash.is_a?(Hash)
-      manifest_hash = downcase_keys(manifest_hash)
-
-      # check for valid key usage
-      invalid_keys = manifest_hash.keys - ValidManifestKeys
-      raise ArgumentError.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}") unless invalid_keys.empty?
-
-      if !ValidManifestScheduleKeys.include?(manifest_hash['schedule'])
-        raise ArgumentError.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
-      end
-
-      # required fields
-      %w{start_time}.each do |field|
-        next if manifest_hash.key?(field)
-        raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
-      end
-
-      # start_time_valid = manifest_hash['start_time'] =~ /^(?:\d|[01]\d|2[0-3]):[0-5]\d$/
-      start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); true rescue false; end
-      raise ArgumentError.new("Invalid start_time value: #{manifest_hash['start_time']}") unless start_time_valid
-      # The start_time must be canonicalized to match the format that the rest of the code expects
-      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M')
-
-      # specific setting rules for schedule types
-      case manifest_hash['schedule']
-      when 'monthly'
-        if manifest_hash.key?('on')
-          if manifest_hash.key?('day_of_week') || manifest_hash.key?('which_occurrence')
-            raise ArgumentError.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
-          end
-        elsif manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
-          raise ArgumentError.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
-
-          %w{day_of_week which_occurrence}.each do |field|
-            next if manifest_hash.key?(field)
-            raise ArgumentError.new("#{field} must be specified when creating a monthly day-of-week based trigger")
-          end
-        else
-          raise ArgumentError.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
-        end
-      when 'once'
-        raise ArgumentError.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
-      end
-
-      if manifest_hash.key?('every')
-        every = begin Integer(manifest_hash['every']) rescue nil end
-        raise ArgumentError.new("Invalid every value: #{manifest_hash['every']}") if every.nil?
-        manifest_hash['every'] = every
-      end
-
-      # day of week uses valid names (for weekly / monthly schedules)
-      if manifest_hash.key?('day_of_week')
-        manifest_hash['day_of_week'] = [manifest_hash['day_of_week']].flatten
-        invalid_days = manifest_hash['day_of_week'] - Day.names
-        raise ArgumentError.new("Unknown day_of_week values(s): #{invalid_days}") unless invalid_days.empty?
-      end
-
-      if manifest_hash.key?('months')
-        manifest_hash['months'] = [manifest_hash['months']].flatten
-        invalid_months = manifest_hash['months'] - Month.indexes
-        raise ArgumentError.new("Unknown months values(s): #{invalid_months}") unless invalid_months.empty?
-      end
-
-      # monthly
-      if manifest_hash.key?('on')
-        manifest_hash['on'] = [manifest_hash['on']].flatten
-        invalid_on = manifest_hash['on'] - ((1..31).to_a + ['last'])
-        raise ArgumentError.new("Unknown on values(s): #{invalid_on}") unless invalid_on.empty?
-      end
-
-      # monthly day of week
-      if manifest_hash.key?('which_occurrence')
-        # NOTE: cannot canonicalize to an array here (yet!) because more code changes required
-        invalid_which_occurrence = [manifest_hash['which_occurrence']].flatten - V2::WeeksOfMonth::WEEK_OF_MONTH_CONST_MAP.keys
-        raise ArgumentError.new("Unknown which_occurrence values(s): #{invalid_which_occurrence}") unless invalid_which_occurrence.empty?
-      end
-
-      # duration set with / without interval
-      if manifest_hash['minutes_duration']
-        duration = Integer(manifest_hash['minutes_duration'])
-        # defaults to -1 when unspecified
-        interval = Integer(manifest_hash['minutes_interval'] || -1)
-        if duration != 0 && duration <= interval
-          raise ArgumentError.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0')
-        end
-      end
-
-      # interval set with / without duration
-      if manifest_hash['minutes_interval']
-        interval = Integer(manifest_hash['minutes_interval'])
-        # interval < 0
-        if interval < 0
-          raise ArgumentError.new('minutes_interval must be an integer greater or equal to 0')
-        end
-
-        # defaults to a day when unspecified
-        duration = Integer(manifest_hash['minutes_duration'] || 1440)
-
-        if interval > 0 && interval >= duration
-          raise ArgumentError.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
-        end
-      end
-      manifest_hash['minutes_interval'] = interval if interval
-      manifest_hash['minutes_duration'] = duration if duration
-
-      if manifest_hash['start_date']
-        min_date = Time.local(1753, 1, 1)
-        start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
-        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
-        manifest_hash['start_date'] = start_date.strftime('%Y-%-m-%-d')
-      end
-
-      manifest_hash
-    end
-
     # manifest_hash is a hash created from a manifest
     def self.from_manifest_hash(manifest_hash)
-      manifest_hash = canonicalize_and_validate_manifest(manifest_hash)
+      manifest_hash = Manifest.canonicalize_and_validate(manifest_hash)
 
       trigger = default_trigger_for(manifest_hash['schedule'])
 
@@ -531,17 +546,6 @@ module Trigger
 
       trigger
     end
-
-    private
-
-    # converts all keys to lowercase
-    def self.downcase_keys(hash)
-      rekeyed = hash.map do |k, v|
-        [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
-      end
-      Hash[ rekeyed ]
-    end
-
   end
 
   class V2
@@ -674,7 +678,7 @@ module Trigger
     end
 
     def self.append_trigger(definition, manifest_hash)
-      manifest_hash = Trigger::V1.canonicalize_and_validate_manifest(manifest_hash)
+      manifest_hash = Trigger::Manifest.canonicalize_and_validate(manifest_hash)
       # create appropriate ITrigger based on 'schedule'
       iTrigger = definition.Triggers.Create(type_from_manifest_hash(manifest_hash))
 
