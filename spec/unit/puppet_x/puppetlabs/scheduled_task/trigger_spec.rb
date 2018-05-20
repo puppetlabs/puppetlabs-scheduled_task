@@ -2,6 +2,7 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
+V1 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1
 V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
@@ -174,6 +175,389 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
 
       canonical = subject.class.canonicalize_and_validate(manifest_hash)
       expect(canonical).to eq(expected)
+    end
+
+    shared_examples_for "a trigger that handles start_date and start_time" do
+      let(:trigger) do
+        subject.class.canonicalize_and_validate(trigger_hash)
+      end
+
+      describe 'the given start_date' do
+        before :each do
+          trigger_hash['start_time'] = '00:00'
+        end
+
+        it 'should be able to be specified in ISO 8601 calendar date format' do
+          trigger_hash['start_date'] = '2011-12-31'
+          expect(trigger['start_date']).to eq('2011-12-31')
+        end
+
+        it 'should fail if before 1753-01-01' do
+          trigger_hash['start_date'] = '1752-12-31'
+
+          expect { trigger['start_date'] }.to raise_error(
+            'start_date must be on or after 1753-01-01'
+          )
+        end
+
+        it 'should succeed if on 1753-01-01' do
+          trigger_hash['start_date'] = '1753-01-01'
+          expect(trigger['start_date']).to eq('1753-1-1')
+        end
+
+        it 'should succeed if after 1753-01-01' do
+          trigger_hash['start_date'] = '1753-01-02'
+          expect(trigger['start_date']).to eq('1753-1-2')
+        end
+      end
+
+      describe 'the given start_time' do
+        before :each do
+          trigger_hash['start_date'] = '2011-12-31'
+        end
+
+        it 'should be able to be specified as a 24-hour "hh:mm"' do
+          trigger_hash['start_time'] = '17:13'
+          expect(trigger['start_time']).to eq('17:13')
+        end
+
+        it 'should be able to be specified as a 12-hour "hh:mm am"' do
+          trigger_hash['start_time'] = '3:13 am'
+          expect(trigger['start_time']).to eq('03:13')
+        end
+
+        it 'should be able to be specified as a 12-hour "hh:mm pm"' do
+          trigger_hash['start_time'] = '3:13 pm'
+          expect(trigger['start_time']).to eq('15:13')
+        end
+      end
+    end
+
+    describe 'supplies missing defaults' do
+      before :each do
+        @puppet_trigger = {
+          'start_date' => '2011-1-1',
+          'start_time' => '01:10'
+        }
+      end
+      let(:trigger) do
+        subject.class.canonicalize_and_validate(@puppet_trigger)
+      end
+
+      context "working with repeat every x triggers" do
+        before :each do
+          @puppet_trigger['schedule'] = 'once'
+        end
+
+        it 'should succeed if minutes_interval is equal to 0' do
+          @puppet_trigger['minutes_interval'] = '0'
+
+          expect(trigger['minutes_interval']).to eq(0)
+        end
+
+        it 'should default minutes_duration to a full day when minutes_interval is greater than 0 without setting minutes_duration' do
+          @puppet_trigger['minutes_interval'] = '1'
+
+          expect(trigger['minutes_duration']).to eq(1440)
+        end
+
+        it 'should succeed if minutes_interval is greater than 0 and minutes_duration is also set' do
+          @puppet_trigger['minutes_interval'] = '1'
+          @puppet_trigger['minutes_duration'] = '2'
+
+          expect(trigger['minutes_interval']).to eq(1)
+        end
+
+        it 'should fail if minutes_interval is less than 0' do
+          @puppet_trigger['minutes_interval'] = '-1'
+
+          expect { trigger }.to raise_error(
+            'minutes_interval must be an integer greater or equal to 0'
+          )
+        end
+
+        it 'should fail if minutes_interval is not an integer' do
+          @puppet_trigger['minutes_interval'] = 'abc'
+          expect { trigger }.to raise_error(ArgumentError)
+        end
+
+        it 'should succeed if minutes_duration is equal to 0' do
+          @puppet_trigger['minutes_duration'] = '0'
+          expect(trigger['minutes_duration']).to eq(0)
+        end
+
+        it 'should succeed if minutes_duration is greater than 0' do
+          @puppet_trigger['minutes_duration'] = '1'
+          expect(trigger['minutes_duration']).to eq(1)
+        end
+
+        it 'should fail if minutes_duration is less than 0' do
+          @puppet_trigger['minutes_duration'] = '-1'
+
+          expect { trigger }.to raise_error(
+            'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
+          )
+        end
+
+        it 'should fail if minutes_duration is not an integer' do
+          @puppet_trigger['minutes_duration'] = 'abc'
+          expect { trigger }.to raise_error(ArgumentError)
+        end
+
+        it 'should succeed if minutes_duration is equal to a full day' do
+          @puppet_trigger['minutes_duration'] = '1440'
+          expect(trigger['minutes_duration']).to eq(1440)
+        end
+
+        it 'should succeed if minutes_duration is equal to three days' do
+          @puppet_trigger['minutes_duration'] = '4320'
+          expect(trigger['minutes_duration']).to eq(4320)
+        end
+
+        it 'should succeed if minutes_duration is greater than minutes_duration' do
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '11'
+
+          expect(trigger['minutes_interval']).to eq(10)
+          expect(trigger['minutes_duration']).to eq(11)
+        end
+
+        it 'should fail if minutes_duration is equal to minutes_interval' do
+          # On Windows 2003, the duration must be greater than the interval
+          # on other platforms the values can be equal.
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '10'
+
+          expect { trigger }.to raise_error(
+            'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
+          )
+        end
+
+        it 'should succeed if minutes_duration and minutes_interval are both set to 0' do
+          @puppet_trigger['minutes_interval'] = '0'
+          @puppet_trigger['minutes_duration'] = '0'
+
+          expect(trigger['minutes_interval']).to eq(0)
+          expect(trigger['minutes_duration']).to eq(0)
+        end
+
+        it 'should fail if minutes_duration is less than minutes_interval' do
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '9'
+
+          expect { trigger }.to raise_error(
+            'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
+          )
+        end
+
+        it 'should fail if minutes_duration is less than minutes_interval and set to 0' do
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '0'
+
+          expect { trigger }.to raise_error(
+            'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
+          )
+        end
+      end
+
+      describe 'when given a one-time trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'once'
+        end
+
+        it 'should set the schedule to \'once\'' do
+          expect(trigger['schedule']).to eq('once')
+        end
+
+        it 'should not set a type' do
+          expect(trigger).not_to be_has_key('type')
+        end
+
+        it "should require 'start_date'" do
+          @puppet_trigger.delete('start_date')
+
+          expect { trigger }.to raise_error(
+            /Must specify 'start_date' when defining a one-time trigger/
+          )
+        end
+
+        it "should require 'start_time'" do
+          @puppet_trigger.delete('start_time')
+
+          expect { trigger }.to raise_error(
+            /Must specify 'start_time' when defining a trigger/
+          )
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'once' }}
+        end
+      end
+
+      describe 'when given a daily trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'daily'
+        end
+
+        it "should default 'every' to 1" do
+          pending("canonicalize_and_validate does not set defaults for 'every' or triggers_same? would fail")
+          expect(trigger['every']).to eq(1)
+        end
+
+        it "should use the specified value for 'every'" do
+          @puppet_trigger['every'] = 5
+
+          expect(trigger['every']).to eq(5)
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'daily', 'every' => 1}}
+        end
+      end
+
+      describe 'when given a weekly trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'weekly'
+        end
+
+        it "should default 'every' to 1" do
+          pending("canonicalize_and_validate does not set defaults for 'every' or triggers_same? would fail")
+          expect(trigger['every']).to eq(1)
+        end
+
+        it "should use the specified value for 'every'" do
+          @puppet_trigger['every'] = 4
+
+          expect(trigger['every']).to eq(4)
+        end
+
+        it "should default 'day_of_week' to be every day of the week" do
+          pending("canonicalize_and_validate does not set defaults for 'day_of_week' or triggers_same? would fail")
+          expect(trigger['day_of_week']).to eq(V1::Day.names)
+        end
+
+        it "should use the specified value for 'day_of_week'" do
+          @puppet_trigger['day_of_week'] = ['mon', 'wed', 'fri']
+
+          expect(trigger['day_of_week']).to eq(['mon', 'wed', 'fri'])
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'weekly', 'every' => 1, 'day_of_week' => 'mon'}}
+        end
+      end
+
+      shared_examples_for 'a monthly schedule' do
+        it "should default 'months' to be every month" do
+          pending("canonicalize_and_validate does not set defaults for 'months' or triggers_same? would fail")
+          expect(trigger['months']).to eq(V1::Month.indexes)
+        end
+
+        it "should use the specified value for 'months'" do
+          @puppet_trigger['months'] = [2, 8]
+
+          expect(trigger['months']).to eq([2, 8])
+        end
+      end
+
+      describe 'when given a monthly date-based trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'monthly'
+          @puppet_trigger['on']       = [7, 14]
+        end
+
+        it_behaves_like 'a monthly schedule'
+
+        it "should not allow 'which_occurrence' to be specified" do
+          @puppet_trigger['which_occurrence'] = 'first'
+
+          expect {trigger}.to raise_error(
+            /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
+          )
+        end
+
+        it "should not allow 'day_of_week' to be specified" do
+          @puppet_trigger['day_of_week'] = 'mon'
+
+          expect {trigger}.to raise_error(
+            /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
+          )
+        end
+
+        it "should require 'on'" do
+          @puppet_trigger.delete('on')
+
+          expect {trigger}.to raise_error(
+            /Don't know how to create a 'monthly' schedule with the options: schedule, start_date, start_time/
+          )
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'monthly', 'months' => 1, 'on' => 1}}
+        end
+      end
+
+      describe 'when given a monthly day-of-week-based trigger' do
+        before :each do
+          @puppet_trigger['schedule']         = 'monthly'
+          @puppet_trigger['which_occurrence'] = 'first'
+          @puppet_trigger['day_of_week']      = 'mon'
+        end
+
+        it_behaves_like 'a monthly schedule'
+
+        it "should not allow 'on' to be specified" do
+          @puppet_trigger['on'] = 15
+
+          expect {trigger}.to raise_error(
+            /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
+          )
+        end
+
+        it "should require 'which_occurrence'" do
+          @puppet_trigger.delete('which_occurrence')
+
+          expect {trigger}.to raise_error(
+            /which_occurrence must be specified when creating a monthly day-of-week based trigger/
+          )
+        end
+
+        it "should require 'day_of_week'" do
+          @puppet_trigger.delete('day_of_week')
+
+          expect {trigger}.to raise_error(
+            /day_of_week must be specified when creating a monthly day-of-week based trigger/
+          )
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'monthly', 'months' => 1, 'which_occurrence' => 'first', 'day_of_week' => 'mon'}}
+        end
+      end
     end
   end
 end
