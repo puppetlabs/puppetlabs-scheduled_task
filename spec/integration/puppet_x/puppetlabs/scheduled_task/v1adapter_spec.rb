@@ -24,6 +24,15 @@ def to_manifest_hash(v1trigger)
     raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: v1trigger['trigger_type'] })
   end
 
+  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381950(v=vs.85).aspx
+  week_of_month_names = {
+    'first'  => 1, # TASK_FIRST_WEEKs
+    'second' => 2, # TASK_SECOND_WEEKs
+    'third'  => 3, # TASK_THIRD_WEEKs
+    'fourth' => 4, # TASK_FOURTH_WEEKs
+    'last'   => 5, # TASK_LAST_WEEKs
+  }.freeze
+
   manifest_hash = {}
 
   case v1trigger['trigger_type']
@@ -42,7 +51,7 @@ def to_manifest_hash(v1trigger)
   when :TASK_TIME_TRIGGER_MONTHLYDOW
     manifest_hash['schedule']         = 'monthly'
     manifest_hash['months']           = trigger::V1::Month.bitmask_to_indexes(v1trigger['type']['months'])
-    manifest_hash['which_occurrence'] = trigger::V1::Occurrence.constant_to_name(v1trigger['type']['weeks'])
+    manifest_hash['which_occurrence'] = week_of_month_names.key(v1trigger['type']['weeks'])
     manifest_hash['day_of_week']      = trigger::V1::Day.bitmask_to_names(v1trigger['type']['days_of_week'])
   when :TASK_TIME_TRIGGER_ONCE
     manifest_hash['schedule'] = 'once'

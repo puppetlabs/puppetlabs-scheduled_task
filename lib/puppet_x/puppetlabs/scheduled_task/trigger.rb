@@ -401,33 +401,6 @@ module Trigger
   end
   end
 
-  class V1
-  class Occurrence
-    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381950(v=vs.85).aspx
-    TASK_FIRST_WEEK   = 1
-    TASK_SECOND_WEEK  = 2
-    TASK_THIRD_WEEK   = 3
-    TASK_FOURTH_WEEK  = 4
-    TASK_LAST_WEEK    = 5
-
-    WEEK_OF_MONTH_CONST_MAP = {
-      'first'  => TASK_FIRST_WEEK,
-      'second' => TASK_SECOND_WEEK,
-      'third'  => TASK_THIRD_WEEK,
-      'fourth' => TASK_FOURTH_WEEK,
-      'last'   => TASK_LAST_WEEK,
-    }.freeze
-
-    def self.constant_to_name(constant)
-      WEEK_OF_MONTH_CONST_MAP.key(constant)
-    end
-
-    def self.name_to_constant(name)
-      WEEK_OF_MONTH_CONST_MAP[name]
-    end
-  end
-  end
-
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   class V1
   class Flag
@@ -484,66 +457,6 @@ module Trigger
         'trigger_type'            => ScheduleNameDefaultsMap[type],
       # 'once' has no specific settings, so 'type' should be omitted
       }.merge( type_hash.nil? ? {} : { 'type' => type_hash })
-    end
-
-    # manifest_hash is a hash created from a manifest
-    def self.from_manifest_hash(manifest_hash)
-      manifest_hash = Manifest.canonicalize_and_validate(manifest_hash)
-
-      trigger = default_trigger_for(manifest_hash['schedule'])
-
-      case manifest_hash['schedule']
-      when 'daily'
-        trigger['type']['days_interval'] = Integer(manifest_hash['every'] || 1)
-      when 'weekly'
-        trigger['type']['weeks_interval'] = Integer(manifest_hash['every'] || 1)
-
-        days_of_week = manifest_hash['day_of_week'] || Day.names
-        trigger['type']['days_of_week'] = Day.names_to_bitmask(days_of_week)
-      when 'monthly'
-        trigger['type']['months'] = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
-
-        if manifest_hash.key?('on')
-          trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
-          trigger['type']['days'] = Days.indexes_to_bitmask(manifest_hash['on'])
-        elsif  manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
-          trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
-          trigger['type']['weeks']        = Occurrence.name_to_constant(manifest_hash['which_occurrence'])
-          trigger['type']['days_of_week'] = Day.names_to_bitmask(manifest_hash['day_of_week'])
-        end
-      end
-
-      manifest_hash['enabled'] == false ?
-        trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED :
-        trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
-
-      if manifest_hash['minutes_interval']
-        trigger['minutes_interval'] = Integer(manifest_hash['minutes_interval'])
-
-        if trigger['minutes_interval'] > 0 && !manifest_hash.key?('minutes_duration')
-          trigger['minutes_duration'] = 1440 # one day in minutes
-        end
-      end
-
-      if manifest_hash['minutes_duration']
-        trigger['minutes_duration'] = Integer(manifest_hash['minutes_duration'])
-      end
-
-      # manifests specify datetime in the local timezone, same as V1 trigger
-      datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
-      # Time.parse always assumes local time
-      local_manifest_date = Time.parse(datetime_string)
-
-      # today has already been filled in to default trigger structure, only override if necessary
-      if manifest_hash['start_date']
-        trigger['start_year']   = local_manifest_date.year
-        trigger['start_month']  = local_manifest_date.month
-        trigger['start_day']    = local_manifest_date.day
-      end
-      trigger['start_hour']   = local_manifest_date.hour
-      trigger['start_minute'] = local_manifest_date.min
-
-      trigger
     end
   end
 
