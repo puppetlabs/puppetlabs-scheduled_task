@@ -25,8 +25,6 @@ when :taskscheduler_api2
 end
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
-  V1 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1
-
   before :each do
     Puppet::Type.type(:scheduled_task).stubs(:defaultprovider).returns(described_class)
   end

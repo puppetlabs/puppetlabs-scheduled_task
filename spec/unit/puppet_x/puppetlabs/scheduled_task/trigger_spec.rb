@@ -2,7 +2,6 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
-V1 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1
 V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
@@ -439,7 +438,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
 
         it "should default 'day_of_week' to be every day of the week" do
           pending("canonicalize_and_validate does not set defaults for 'day_of_week' or triggers_same? would fail")
-          expect(trigger['day_of_week']).to eq(V1::Day.names)
+          expect(trigger['day_of_week']).to eq(V2::Day.names)
         end
 
         it "should use the specified value for 'day_of_week'" do
@@ -664,7 +663,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do
   end
 end
 
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Day do
   EXPECTED_DAY_CONVERSIONS =
   [
     { :days => 'sun', :bitmask => 0b1 },
