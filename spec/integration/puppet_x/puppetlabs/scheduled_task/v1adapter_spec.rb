@@ -45,12 +45,12 @@ def to_manifest_hash(v1trigger)
     manifest_hash['day_of_week'] = trigger::V1::Day.bitmask_to_names(v1trigger['type']['days_of_week'])
   when :TASK_TIME_TRIGGER_MONTHLYDATE
     manifest_hash['schedule'] = 'monthly'
-    manifest_hash['months']   = trigger::V1::Month.bitmask_to_indexes(v1trigger['type']['months'])
+    manifest_hash['months']   = trigger::V2::Month.bitmask_to_indexes(v1trigger['type']['months'])
     manifest_hash['on']       = trigger::V1::Days.bitmask_to_indexes(v1trigger['type']['days'])
 
   when :TASK_TIME_TRIGGER_MONTHLYDOW
     manifest_hash['schedule']         = 'monthly'
-    manifest_hash['months']           = trigger::V1::Month.bitmask_to_indexes(v1trigger['type']['months'])
+    manifest_hash['months']           = trigger::V2::Month.bitmask_to_indexes(v1trigger['type']['months'])
     manifest_hash['which_occurrence'] = week_of_month_names.key(v1trigger['type']['weeks'])
     manifest_hash['day_of_week']      = trigger::V1::Day.bitmask_to_names(v1trigger['type']['days_of_week'])
   when :TASK_TIME_TRIGGER_ONCE
