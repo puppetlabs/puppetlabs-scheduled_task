@@ -79,12 +79,29 @@ end
 describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
   let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::V1Adapter }
+  now = Time.now
+  default_once_trigger =
+  {
+    'flags'                   => 0,
+    'end_day'                 => 0,
+    'end_year'                => 0,
+    'minutes_interval'        => 0,
+    'end_month'               => 0,
+    'minutes_duration'        => 0,
+    'start_year'              => now.year,
+    'start_month'             => now.month,
+    'start_day'               => now.day,
+    'start_hour'              => now.hour,
+    'start_minute'            => now.min,
+    'trigger_type'            => :TASK_TIME_TRIGGER_ONCE,
+    # 'once' has no specific settings, so 'type' should be omitted
+  }
 
   context "When created by a V1 API" do
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once'))
+      task = Win32::TaskScheduler.new(@task_name, default_once_trigger)
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.flags = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED
@@ -117,7 +134,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
-      task = Win32::TaskScheduler.new(@task_name, PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.default_trigger_for('once'))
+      task = Win32::TaskScheduler.new(@task_name, default_once_trigger)
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.flags = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED

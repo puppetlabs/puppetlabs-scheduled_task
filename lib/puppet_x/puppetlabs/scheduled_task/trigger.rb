@@ -410,56 +410,6 @@ module Trigger
   end
   end
 
-  # TASK_TRIGGER structure approximated as Ruby hash
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
-  class V1
-    ScheduleNameDefaultsMap = {
-      'daily' => :TASK_TIME_TRIGGER_DAILY,
-      'weekly' => :TASK_TIME_TRIGGER_WEEKLY,
-      # NOTE: monthly uses context to determine MONTHLYDATE or MONTHLYDOW
-      'monthly' => :TASK_TIME_TRIGGER_MONTHLYDATE,
-      'once' => :TASK_TIME_TRIGGER_ONCE,
-    }.freeze
-
-
-    def self.default_trigger_settings_for(type = 'once')
-      case type
-      when 'daily'
-        { 'days_interval' => 1 }
-      when 'weekly'
-        {
-          'days_of_week'   => Day.names_to_bitmask(Day.names),
-          'weeks_interval' => 1
-        }
-      when 'monthly'
-        {
-          'months' => Month.indexes_to_bitmask(Month.indexes),
-          'days' => 0
-        }
-      end
-    end
-
-    def self.default_trigger_for(type = 'once')
-      now = Time.now
-      type_hash = default_trigger_settings_for(type)
-      {
-        'flags'                   => 0,
-        'end_day'                 => 0,
-        'end_year'                => 0,
-        'minutes_interval'        => 0,
-        'end_month'               => 0,
-        'minutes_duration'        => 0,
-        'start_year'              => now.year,
-        'start_month'             => now.month,
-        'start_day'               => now.day,
-        'start_hour'              => now.hour,
-        'start_minute'            => now.min,
-        'trigger_type'            => ScheduleNameDefaultsMap[type],
-      # 'once' has no specific settings, so 'type' should be omitted
-      }.merge( type_hash.nil? ? {} : { 'type' => type_hash })
-    end
-  end
-
   class V2
   class WeeksOfMonth
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380733(v=vs.85).aspx
