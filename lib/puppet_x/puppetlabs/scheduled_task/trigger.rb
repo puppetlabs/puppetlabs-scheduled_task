@@ -306,8 +306,12 @@ module Trigger
   end
   end
 
-  class V1
+  class V2
   class Days
+    # V1 MONTHLYDATE structure
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
+    # V2 IMonthlyTrigger::DaysOfMonth
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380735(v=vs.85).aspx
     def self.indexes_to_bitmask(day_indexes)
       day_indexes = [day_indexes].flatten.map do |m|
         # The special "day" of 'last' is represented by day "number"
@@ -526,7 +530,7 @@ module Trigger
           manifest_hash.merge!({
             'schedule' => 'monthly',
             'months'   => Month.bitmask_to_indexes(iTrigger.MonthsOfYear),
-            'on'       => V1::Days.bitmask_to_indexes(iTrigger.DaysOfMonth),
+            'on'       => Days.bitmask_to_indexes(iTrigger.DaysOfMonth),
           })
         when Type::TASK_TRIGGER_MONTHLYDOW
           occurrences = V2::WeeksOfMonth.bitmask_to_names(iTrigger.WeeksOfMonth)
@@ -582,7 +586,7 @@ module Trigger
 
         when Type::TASK_TRIGGER_MONTHLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
-          iTrigger.DaysOfMonth = V1::Days.indexes_to_bitmask(manifest_hash['on'])
+          iTrigger.DaysOfMonth = Days.indexes_to_bitmask(manifest_hash['on'])
           iTrigger.MonthsOfYear = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
 
         when Type::TASK_TRIGGER_MONTHLYDOW

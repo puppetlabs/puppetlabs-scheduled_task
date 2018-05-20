@@ -46,7 +46,7 @@ def to_manifest_hash(v1trigger)
   when :TASK_TIME_TRIGGER_MONTHLYDATE
     manifest_hash['schedule'] = 'monthly'
     manifest_hash['months']   = trigger::V2::Month.bitmask_to_indexes(v1trigger['type']['months'])
-    manifest_hash['on']       = trigger::V1::Days.bitmask_to_indexes(v1trigger['type']['days'])
+    manifest_hash['on']       = trigger::V2::Days.bitmask_to_indexes(v1trigger['type']['days'])
 
   when :TASK_TIME_TRIGGER_MONTHLYDOW
     manifest_hash['schedule']         = 'monthly'

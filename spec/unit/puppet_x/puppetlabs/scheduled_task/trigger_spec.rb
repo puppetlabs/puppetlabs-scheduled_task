@@ -712,7 +712,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day do
   end
 end
 
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Days do
   EXPECTED_DAYS_CONVERSIONS =
   [
     { :days => 1,                       :bitmask => 0b00000000000000000000000000000001 },
