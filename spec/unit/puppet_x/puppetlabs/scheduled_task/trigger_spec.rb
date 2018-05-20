@@ -462,7 +462,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
       shared_examples_for 'a monthly schedule' do
         it "should default 'months' to be every month" do
           pending("canonicalize_and_validate does not set defaults for 'months' or triggers_same? would fail")
-          expect(trigger['months']).to eq(V1::Month.indexes)
+          expect(trigger['months']).to eq(V2::Month.indexes)
         end
 
         it "should use the specified value for 'months'" do
@@ -769,7 +769,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days do
     end
   end
 end
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Month do
   EXPECTED_MONTH_CONVERSIONS =
   [
     { :months => 1,            :bitmask => 0b000000000001 },
