@@ -55,15 +55,6 @@ module Trigger
     end
   end
 
-  def string_to_int(value)
-    return 0 if value.nil?
-    return value if value.is_a?(Numeric)
-    raise ArgumentError.new('value must be a String') unless value.is_a?(String)
-
-    value.to_i
-  end
-  module_function :string_to_int
-
   def iso8601_datetime_to_local(value)
     return nil if value.nil?
     raise ArgumentError.new('value must be a String') unless value.is_a?(String)
@@ -74,14 +65,203 @@ module Trigger
   end
   module_function :iso8601_datetime_to_local
 
-  def date_components_to_local_iso8601_datetime(year, month, day, hour, minute)
-    Time.local(year, month, day, hour, minute, 0).iso8601
-  end
-  module_function :date_components_to_local_iso8601_datetime
+  class Manifest
+    ValidKeys = [
+       'index',
+       'enabled',
+       'schedule',
+       'start_date',
+       'start_time',
+       'every',
+       'months',
+       'on',
+       'which_occurrence',
+       'day_of_week',
+       'minutes_interval',
+       'minutes_duration'
+     ].freeze
 
-  class V1
+     ValidScheduleKeys = [
+      'once',
+      'daily',
+      'weekly',
+      'monthly'
+     ].freeze
+
+    def self.default_trigger_settings_for(schedule = 'once')
+      case schedule
+      when 'once'
+        {
+          'schedule' => 'once',
+        }
+      when 'daily'
+        {
+          'schedule' => 'daily',
+          'every'    => 1 ,
+        }
+      when 'weekly'
+        {
+          'schedule'     => 'weekly',
+          'days_of_week' => V2::Day.names,
+          'every'        => 1,
+        }
+      when 'monthly'
+        {
+          'schedule' => 'monthly',
+          'months'   => V2::Month.indexes,
+          'days'     => 0
+        }
+      end
+    end
+
+    def self.default_trigger_for(schedule = 'once')
+      now = Time.now
+      type_hash =
+      {
+        'enabled'             => true,
+        'minutes_interval'    => 0,
+        'minutes_duration'    => 0,
+        'start_date'          => now.strftime('%Y-%-m-%-d'),
+        'start_time'          => now.strftime('%H:%M'),
+      }.merge(default_trigger_settings_for(schedule))
+    end
+
+    # canonicalize given manifest hash
+    # throws errors if hash structure is invalid
+    # does not throw errors when invalid types are specified
+    # @returns original object with downcased keys
+    def self.canonicalize_and_validate(manifest_hash)
+      raise TypeError unless manifest_hash.is_a?(Hash)
+      manifest_hash = downcase_keys(manifest_hash)
+
+      # check for valid key usage
+      invalid_keys = manifest_hash.keys - ValidKeys
+      raise ArgumentError.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}") unless invalid_keys.empty?
+
+      if !ValidScheduleKeys.include?(manifest_hash['schedule'])
+        raise ArgumentError.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
+      end
+
+      # required fields
+      %w{start_time}.each do |field|
+        next if manifest_hash.key?(field)
+        raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
+      end
+
+      start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); true rescue false; end
+      raise ArgumentError.new("Invalid start_time value: #{manifest_hash['start_time']}") unless start_time_valid
+      # The start_time must be canonicalized to match the format that the rest of the code expects
+      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M')
+
+      # specific setting rules for schedule types
+      case manifest_hash['schedule']
+      when 'monthly'
+        if manifest_hash.key?('on')
+          if manifest_hash.key?('day_of_week') || manifest_hash.key?('which_occurrence')
+            raise ArgumentError.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
+          end
+        elsif manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
+          raise ArgumentError.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
+
+          %w{day_of_week which_occurrence}.each do |field|
+            next if manifest_hash.key?(field)
+            raise ArgumentError.new("#{field} must be specified when creating a monthly day-of-week based trigger")
+          end
+        else
+          raise ArgumentError.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
+        end
+      when 'once'
+        raise ArgumentError.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
+      end
+
+      if manifest_hash.key?('every')
+        every = begin Integer(manifest_hash['every']) rescue nil end
+        raise ArgumentError.new("Invalid every value: #{manifest_hash['every']}") if every.nil?
+        manifest_hash['every'] = every
+      end
+
+      # day of week uses valid names (for weekly / monthly schedules)
+      if manifest_hash.key?('day_of_week')
+        manifest_hash['day_of_week'] = [manifest_hash['day_of_week']].flatten
+        invalid_days = manifest_hash['day_of_week'] - V2::Day.names
+        raise ArgumentError.new("Unknown day_of_week values(s): #{invalid_days}") unless invalid_days.empty?
+      end
+
+      if manifest_hash.key?('months')
+        manifest_hash['months'] = [manifest_hash['months']].flatten
+        invalid_months = manifest_hash['months'] - V2::Month.indexes
+        raise ArgumentError.new("Unknown months values(s): #{invalid_months}") unless invalid_months.empty?
+      end
+
+      # monthly
+      if manifest_hash.key?('on')
+        manifest_hash['on'] = [manifest_hash['on']].flatten
+        invalid_on = manifest_hash['on'] - ((1..31).to_a + ['last'])
+        raise ArgumentError.new("Unknown on values(s): #{invalid_on}") unless invalid_on.empty?
+      end
+
+      # monthly day of week
+      if manifest_hash.key?('which_occurrence')
+        # NOTE: cannot canonicalize to an array here (yet!) because more code changes required
+        invalid_which_occurrence = [manifest_hash['which_occurrence']].flatten - V2::WeeksOfMonth::WEEK_OF_MONTH_CONST_MAP.keys
+        raise ArgumentError.new("Unknown which_occurrence values(s): #{invalid_which_occurrence}") unless invalid_which_occurrence.empty?
+      end
+
+      # duration set with / without interval
+      if manifest_hash['minutes_duration']
+        duration = Integer(manifest_hash['minutes_duration'])
+        # defaults to -1 when unspecified
+        interval = Integer(manifest_hash['minutes_interval'] || -1)
+        if duration != 0 && duration <= interval
+          raise ArgumentError.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0')
+        end
+      end
+
+      # interval set with / without duration
+      if manifest_hash['minutes_interval']
+        interval = Integer(manifest_hash['minutes_interval'])
+        # interval < 0
+        if interval < 0
+          raise ArgumentError.new('minutes_interval must be an integer greater or equal to 0')
+        end
+
+        # defaults to a day when unspecified
+        duration = Integer(manifest_hash['minutes_duration'] || 1440)
+
+        if interval > 0 && interval >= duration
+          raise ArgumentError.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
+        end
+      end
+      manifest_hash['minutes_interval'] = interval if interval
+      manifest_hash['minutes_duration'] = duration if duration
+
+      if manifest_hash['start_date']
+        min_date = Time.local(1753, 1, 1)
+        start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
+        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
+        manifest_hash['start_date'] = start_date.strftime('%Y-%-m-%-d')
+      end
+
+      manifest_hash
+    end
+
+    private
+
+    # converts all keys to lowercase
+    def self.downcase_keys(hash)
+      rekeyed = hash.map do |k, v|
+        [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
+      end
+      Hash[ rekeyed ]
+    end
+  end
+
+  class V2
   class Day
+    # V1 WEEKLY structure
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384014(v=vs.85).aspx
+    # V2 IWeeklyTrigger::DaysOfWeek / IMonthlyDOWTrigger::DaysOfWeek
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381905(v=vs.85).aspx
     TASK_SUNDAY       = 0x1
     TASK_MONDAY       = 0x2
     TASK_TUESDAY      = 0x4
@@ -129,8 +309,12 @@ module Trigger
   end
   end
 
-  class V1
+  class V2
   class Days
+    # V1 MONTHLYDATE structure
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
+    # V2 IMonthlyTrigger::DaysOfMonth
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380735(v=vs.85).aspx
     def self.indexes_to_bitmask(day_indexes)
       day_indexes = [day_indexes].flatten.map do |m|
         # The special "day" of 'last' is represented by day "number"
@@ -168,9 +352,12 @@ module Trigger
   end
   end
 
-  class V1
+  class V2
   class Month
+    # V1 MONTHLYDATE structure
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
+    # V2 IMonthlyTrigger::MonthsOfYear / IMonthlyDOWTrigger::MonthsOfYear
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380736(v=vs.85).aspx
     TASK_JANUARY      = 0x1
     TASK_FEBRUARY     = 0x2
     TASK_MARCH        = 0x4
@@ -199,6 +386,10 @@ module Trigger
       12 => TASK_DECEMBER,
     }.freeze
 
+    def self.indexes
+      @indexes ||= MONTHNUM_CONST_MAP.keys.freeze
+    end
+
     def self.indexes_to_bitmask(month_indexes)
       month_indexes = [month_indexes].flatten.map { |m| Integer(m) rescue m }
       invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys
@@ -220,410 +411,42 @@ module Trigger
   end
   end
 
-  class V1
-  class Occurrence
-    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381950(v=vs.85).aspx
-    TASK_FIRST_WEEK   = 1
-    TASK_SECOND_WEEK  = 2
-    TASK_THIRD_WEEK   = 3
-    TASK_FOURTH_WEEK  = 4
-    TASK_LAST_WEEK    = 5
+  class V2
+  class WeeksOfMonth
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380733(v=vs.85).aspx
+    FIRST   = 0x01
+    SECOND  = 0x02
+    THIRD   = 0x04
+    FOURTH  = 0x08
+    LAST    = 0x10
 
     WEEK_OF_MONTH_CONST_MAP = {
-      'first'  => TASK_FIRST_WEEK,
-      'second' => TASK_SECOND_WEEK,
-      'third'  => TASK_THIRD_WEEK,
-      'fourth' => TASK_FOURTH_WEEK,
-      'last'   => TASK_LAST_WEEK,
+      'first'  => FIRST,
+      'second' => SECOND,
+      'third'  => THIRD,
+      'fourth' => FOURTH,
+      'last'   => LAST,
     }.freeze
 
-    def self.constant_to_name(constant)
-      WEEK_OF_MONTH_CONST_MAP.key(constant)
+    def self.names_to_bitmask(week_names)
+      week_names = [week_names].flatten
+      invalid_weeks = week_names - WEEK_OF_MONTH_CONST_MAP.keys
+      raise ArgumentError.new("week_names value #{invalid_weeks.join(', ')} is invalid. Expected first, second, third, fourth or last.") unless invalid_weeks.empty?
+
+      week_names.inject(0) { |bitmask, day| bitmask |= WEEK_OF_MONTH_CONST_MAP[day] }
     end
 
-    def self.name_to_constant(name)
-      WEEK_OF_MONTH_CONST_MAP[name]
+    def self.bitmask_to_names(bitmask)
+      bitmask = Integer(bitmask)
+      if (bitmask < 0 || bitmask > 0b11111)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b11111.to_s(10)}")
+      end
+
+      WEEK_OF_MONTH_CONST_MAP.values.each_with_object([]) do |week, names|
+        names << WEEK_OF_MONTH_CONST_MAP.key(week) if bitmask & week != 0
+      end
     end
   end
-  end
-
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
-  class V1
-  class Flag
-    TASK_TRIGGER_FLAG_HAS_END_DATE         = 0x1
-    TASK_TRIGGER_FLAG_KILL_AT_DURATION_END = 0x2
-    TASK_TRIGGER_FLAG_DISABLED             = 0x4
-  end
-  end
-
-  # TASK_TRIGGER structure approximated as Ruby hash
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
-  class V1
-    # Used for validating a trigger hash from Puppet
-    ValidKeys = [
-      'end_day',
-      'end_month',
-      'end_year',
-      'flags',
-      'minutes_duration',
-      'minutes_interval',
-      'start_day',
-      'start_hour',
-      'start_minute',
-      'start_month',
-      'start_year',
-      'trigger_type',
-      'type'
-    ]
-
-    ValidTypeKeys = [
-        'days_interval',
-        'weeks_interval',
-        'days_of_week',
-        'months',
-        'days',
-        'weeks'
-    ]
-
-   ValidManifestKeys = [
-      'index',
-      'enabled',
-      'schedule',
-      'start_date',
-      'start_time',
-      'every',
-      'months',
-      'on',
-      'which_occurrence',
-      'day_of_week',
-      'minutes_interval',
-      'minutes_duration'
-    ].freeze
-
-    ScheduleNameDefaultsMap = {
-      'daily' => :TASK_TIME_TRIGGER_DAILY,
-      'weekly' => :TASK_TIME_TRIGGER_WEEKLY,
-      # NOTE: monthly uses context to determine MONTHLYDATE or MONTHLYDOW
-      'monthly' => :TASK_TIME_TRIGGER_MONTHLYDATE,
-      'once' => :TASK_TIME_TRIGGER_ONCE,
-    }.freeze
-
-    ValidManifestScheduleKeys = ScheduleNameDefaultsMap.keys.freeze
-
-    # canonicalize given trigger hash
-    # throws errors if hash structure is invalid
-    # @returns original object with downcased keys
-    def self.canonicalize_and_validate(hash)
-      raise TypeError unless hash.is_a?(Hash)
-      hash = downcase_keys(hash)
-
-      invalid_keys = hash.keys - ValidKeys
-      raise ArgumentError.new("Invalid trigger keys #{invalid_keys}") unless invalid_keys.empty?
-
-      if hash.keys.include?('type')
-        type_hash = hash['type']
-        raise ArgumentError.new("'type' must be a hash") unless type_hash.is_a?(Hash)
-        invalid_keys = type_hash.keys - ValidTypeKeys
-        raise ArgumentError.new("Invalid trigger type keys #{invalid_keys}") unless invalid_keys.empty?
-      end
-
-      hash
-    end
-
-    # iTrigger is a COM ITrigger instance
-    def self.from_iTrigger(iTrigger)
-      if Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type).nil?
-        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
-      end
-
-      trigger_flags = 0
-      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.EndBoundary.empty?
-      # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
-      trigger_flags = trigger_flags | Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
-
-      # StartBoundary and EndBoundary may be empty strings per V2 API
-      start_boundary = Trigger.iso8601_datetime_to_local(iTrigger.StartBoundary)
-      end_boundary = Trigger.iso8601_datetime_to_local(iTrigger.EndBoundary)
-
-      v1trigger = {
-        'trigger_type'            => Trigger::V2::V1_TYPE_MAP.key(iTrigger.Type),
-        'start_year'              => start_boundary ? start_boundary.year : 0,
-        'start_month'             => start_boundary ? start_boundary.month : 0,
-        'start_day'               => start_boundary ? start_boundary.day : 0,
-        'end_year'                => end_boundary ? end_boundary.year : 0,
-        'end_month'               => end_boundary ? end_boundary.month : 0,
-        'end_day'                 => end_boundary ? end_boundary.day : 0,
-        'start_hour'              => start_boundary ? start_boundary.hour : 0,
-        'start_minute'            => start_boundary ? start_boundary.min : 0,
-        'minutes_duration'        => Duration.to_minutes(iTrigger.Repetition.Duration),
-        'minutes_interval'        => Duration.to_minutes(iTrigger.Repetition.Interval),
-        'flags'                   => trigger_flags,
-        # the V1 COM API always produces a value of 0 here and this is kept for
-        # compatibility in tests but should *never* be used as it's not settable
-        'random_minutes_interval' => 0,
-      }
-
-      case iTrigger.Type
-        when V2::Type::TASK_TRIGGER_TIME
-          v1trigger['type'] = { 'once' => nil }
-        when V2::Type::TASK_TRIGGER_DAILY
-          v1trigger['type'] = {
-            'days_interval' => Trigger.string_to_int(iTrigger.DaysInterval)
-          }
-        when V2::Type::TASK_TRIGGER_WEEKLY
-          v1trigger['type'] = {
-            'weeks_interval' => Trigger.string_to_int(iTrigger.WeeksInterval),
-            'days_of_week'   => Trigger.string_to_int(iTrigger.DaysOfWeek)
-          }
-        when V2::Type::TASK_TRIGGER_MONTHLY
-          v1trigger['type'] = {
-            'days'   => Trigger.string_to_int(iTrigger.DaysOfMonth),
-            'months' => Trigger.string_to_int(iTrigger.MonthsOfYear)
-          }
-        when V2::Type::TASK_TRIGGER_MONTHLYDOW
-          v1trigger['type'] = {
-            'weeks'        => Trigger.string_to_int(iTrigger.WeeksOfMonth),
-            'days_of_week' => Trigger.string_to_int(iTrigger.DaysOfWeek),
-            'months'       => Trigger.string_to_int(iTrigger.MonthsOfYear)
-          }
-      end
-
-      v1trigger
-    end
-
-    def self.default_trigger_settings_for(type = 'once')
-      case type
-      when 'daily'
-        { 'days_interval' => 1 }
-      when 'weekly'
-        {
-          'days_of_week'   => Day.names_to_bitmask(Day.names),
-          'weeks_interval' => 1
-        }
-      when 'monthly'
-        {
-          'months' => Month.indexes_to_bitmask((1..12).to_a),
-          'days' => 0
-        }
-      end
-    end
-
-    def self.default_trigger_for(type = 'once')
-      now = Time.now
-      type_hash = default_trigger_settings_for(type)
-      {
-        'flags'                   => 0,
-        'end_day'                 => 0,
-        'end_year'                => 0,
-        'minutes_interval'        => 0,
-        'end_month'               => 0,
-        'minutes_duration'        => 0,
-        'start_year'              => now.year,
-        'start_month'             => now.month,
-        'start_day'               => now.day,
-        'start_hour'              => now.hour,
-        'start_minute'            => now.min,
-        'trigger_type'            => ScheduleNameDefaultsMap[type],
-      # 'once' has no specific settings, so 'type' should be omitted
-      }.merge( type_hash.nil? ? {} : { 'type' => type_hash })
-    end
-
-    # canonicalize given trigger hash
-    # throws errors if hash structure is invalid
-    # does not throw errors when invalid types are specified
-    # @returns original object with downcased keys
-    def self.canonicalize_and_validate_manifest(manifest_hash)
-      raise TypeError unless manifest_hash.is_a?(Hash)
-      manifest_hash = downcase_keys(manifest_hash)
-
-      # check for valid key usage
-      invalid_keys = manifest_hash.keys - ValidManifestKeys
-      raise ArgumentError.new("Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}") unless invalid_keys.empty?
-
-      if !ValidManifestScheduleKeys.include?(manifest_hash['schedule'])
-        raise ArgumentError.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
-      end
-
-      # required fields
-      %w{start_time}.each do |field|
-        next if manifest_hash.key?(field)
-        raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
-      end
-
-      # specific setting rules for schedule types
-      case manifest_hash['schedule']
-      when 'monthly'
-        if manifest_hash.key?('on')
-          if manifest_hash.key?('day_of_week') || manifest_hash.key?('which_occurrence')
-            raise ArgumentError.new("Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger")
-          end
-        elsif manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
-          raise ArgumentError.new('which_occurrence cannot be specified as an array') if manifest_hash['which_occurrence'].is_a?(Array)
-
-          %w{day_of_week which_occurrence}.each do |field|
-            next if manifest_hash.key?(field)
-            raise ArgumentError.new("#{field} must be specified when creating a monthly day-of-week based trigger")
-          end
-        else
-          raise ArgumentError.new("Don't know how to create a 'monthly' schedule with the options: #{manifest_hash.keys.sort.join(', ')}")
-        end
-      when 'once'
-        raise ArgumentError.new("Must specify 'start_date' when defining a one-time trigger") unless manifest_hash['start_date']
-      end
-
-      # duration set with / without interval
-      if manifest_hash['minutes_duration']
-        duration = Integer(manifest_hash['minutes_duration'])
-        # defaults to -1 when unspecified
-        interval = Integer(manifest_hash['minutes_interval'] || -1)
-        if duration != 0 && duration <= interval
-          raise ArgumentError.new('minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0')
-        end
-      end
-
-      # interval set with / without duration
-      if manifest_hash['minutes_interval']
-        interval = Integer(manifest_hash['minutes_interval'])
-        # interval < 0
-        if interval < 0
-          raise ArgumentError.new('minutes_interval must be an integer greater or equal to 0')
-        end
-
-        # defaults to a day when unspecified
-        duration = Integer(manifest_hash['minutes_duration'] || 1440)
-
-        if interval > 0 && interval >= duration
-          raise ArgumentError.new('minutes_interval cannot be set without minutes_duration also being set to a number greater than 0')
-        end
-      end
-
-      if manifest_hash['start_date']
-        min_date = Date.new(1753, 1, 1)
-        start_date = Date.parse(manifest_hash['start_date'])
-        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
-      end
-
-      manifest_hash
-    end
-
-    # manifest_hash is a hash created from a manifest
-    def self.from_manifest_hash(manifest_hash)
-      manifest_hash = canonicalize_and_validate_manifest(manifest_hash)
-
-      trigger = default_trigger_for(manifest_hash['schedule'])
-
-      case manifest_hash['schedule']
-      when 'daily'
-        trigger['type']['days_interval'] = Integer(manifest_hash['every'] || 1)
-      when 'weekly'
-        trigger['type']['weeks_interval'] = Integer(manifest_hash['every'] || 1)
-
-        days_of_week = manifest_hash['day_of_week'] || Day.names
-        trigger['type']['days_of_week'] = Day.names_to_bitmask(days_of_week)
-      when 'monthly'
-        trigger['type']['months'] = Month.indexes_to_bitmask(manifest_hash['months'] || (1..12).to_a)
-
-        if manifest_hash.key?('on')
-          trigger['trigger_type'] = :TASK_TIME_TRIGGER_MONTHLYDATE
-          trigger['type']['days'] = Days.indexes_to_bitmask(manifest_hash['on'])
-        elsif  manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week')
-          trigger['trigger_type']         = :TASK_TIME_TRIGGER_MONTHLYDOW
-          trigger['type']['weeks']        = Occurrence.name_to_constant(manifest_hash['which_occurrence'])
-          trigger['type']['days_of_week'] = Day.names_to_bitmask(manifest_hash['day_of_week'])
-        end
-      end
-
-      manifest_hash['enabled'] == false ?
-        trigger['flags'] |= Flag::TASK_TRIGGER_FLAG_DISABLED :
-        trigger['flags'] &= ~Flag::TASK_TRIGGER_FLAG_DISABLED
-
-      if manifest_hash['minutes_interval']
-        trigger['minutes_interval'] = Integer(manifest_hash['minutes_interval'])
-
-        if trigger['minutes_interval'] > 0 && !manifest_hash.key?('minutes_duration')
-          trigger['minutes_duration'] = 1440 # one day in minutes
-        end
-      end
-
-      if manifest_hash['minutes_duration']
-        trigger['minutes_duration'] = Integer(manifest_hash['minutes_duration'])
-      end
-
-      # manifests specify datetime in the local timezone, same as V1 trigger
-      datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
-      # Time.parse always assumes local time
-      local_manifest_date = Time.parse(datetime_string)
-
-      # today has already been filled in to default trigger structure, only override if necessary
-      if manifest_hash['start_date']
-        trigger['start_year']   = local_manifest_date.year
-        trigger['start_month']  = local_manifest_date.month
-        trigger['start_day']    = local_manifest_date.day
-      end
-      trigger['start_hour']   = local_manifest_date.hour
-      trigger['start_minute'] = local_manifest_date.min
-
-      trigger
-    end
-
-    def self.to_manifest_hash(v1trigger)
-      unless V2::V1_TYPE_MAP.keys.include?(v1trigger['trigger_type'])
-        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: v1trigger['trigger_type'] })
-      end
-
-      manifest_hash = {}
-
-      case v1trigger['trigger_type']
-      when :TASK_TIME_TRIGGER_DAILY
-        manifest_hash['schedule'] = 'daily'
-        manifest_hash['every']    = v1trigger['type']['days_interval'].to_s
-      when :TASK_TIME_TRIGGER_WEEKLY
-        manifest_hash['schedule']    = 'weekly'
-        manifest_hash['every']       = v1trigger['type']['weeks_interval'].to_s
-        manifest_hash['day_of_week'] = Day.bitmask_to_names(v1trigger['type']['days_of_week'])
-      when :TASK_TIME_TRIGGER_MONTHLYDATE
-        manifest_hash['schedule'] = 'monthly'
-        manifest_hash['months']   = Month.bitmask_to_indexes(v1trigger['type']['months'])
-        manifest_hash['on']       = Days.bitmask_to_indexes(v1trigger['type']['days'])
-
-      when :TASK_TIME_TRIGGER_MONTHLYDOW
-        manifest_hash['schedule']         = 'monthly'
-        manifest_hash['months']           = Month.bitmask_to_indexes(v1trigger['type']['months'])
-        manifest_hash['which_occurrence'] = Occurrence.constant_to_name(v1trigger['type']['weeks'])
-        manifest_hash['day_of_week']      = Day.bitmask_to_names(v1trigger['type']['days_of_week'])
-      when :TASK_TIME_TRIGGER_ONCE
-        manifest_hash['schedule'] = 'once'
-      end
-
-      # V1 triggers are local time already, same as manifest
-      local_trigger_date = Time.local(
-        v1trigger['start_year'],
-        v1trigger['start_month'],
-        v1trigger['start_day'],
-        v1trigger['start_hour'],
-        v1trigger['start_minute'],
-        0
-      )
-
-      manifest_hash['start_date'] = local_trigger_date.strftime('%Y-%-m-%-d')
-      manifest_hash['start_time'] = local_trigger_date.strftime('%H:%M')
-      manifest_hash['enabled']    = v1trigger['flags'] & Flag::TASK_TRIGGER_FLAG_DISABLED == 0
-      manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
-      manifest_hash['minutes_duration'] = v1trigger['minutes_duration'] ||= 0
-
-      manifest_hash
-    end
-
-    private
-
-    # converts all keys to lowercase
-    def self.downcase_keys(hash)
-      rekeyed = hash.map do |k, v|
-        [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
-      end
-      Hash[ rekeyed ]
-    end
-
   end
 
   class V2
@@ -642,61 +465,128 @@ module Trigger
       TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
     end
 
-    V1_TYPE_MAP =
-    {
-      :TASK_TIME_TRIGGER_DAILY => Type::TASK_TRIGGER_DAILY,
-      :TASK_TIME_TRIGGER_WEEKLY => Type::TASK_TRIGGER_WEEKLY,
-      :TASK_TIME_TRIGGER_MONTHLYDATE => Type::TASK_TRIGGER_MONTHLY,
-      :TASK_TIME_TRIGGER_MONTHLYDOW => Type::TASK_TRIGGER_MONTHLYDOW,
-      :TASK_TIME_TRIGGER_ONCE => Type::TASK_TRIGGER_TIME,
+    TYPE_MANIFEST_MAP = {
+      Type::TASK_TRIGGER_DAILY => 'daily',
+      Type::TASK_TRIGGER_WEEKLY => 'weekly',
+      # NOTE: monthly uses context to determine MONTHLY or MONTHLYDOW
+      Type::TASK_TRIGGER_MONTHLY => 'monthly',
+      Type::TASK_TRIGGER_MONTHLYDOW => 'monthly',
+      Type::TASK_TRIGGER_TIME => 'once',
     }.freeze
 
-    def self.type_from_v1type(v1type)
-      raise ArgumentError.new(_("Unknown V1 trigger Type %{type}") % { type: v1type }) unless V1_TYPE_MAP.keys.include?(v1type)
-      V1_TYPE_MAP[v1type]
+    def self.type_from_manifest_hash(manifest_hash)
+      # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
+      if manifest_hash['schedule'] == 'monthly' &&
+        (manifest_hash.key?('which_occurrence') || manifest_hash.key?('day_of_week'))
+        return Type::TASK_TRIGGER_MONTHLYDOW
+      end
+
+      TYPE_MANIFEST_MAP.key(manifest_hash['schedule'])
     end
 
-    def self.append_v1trigger(definition, v1trigger)
-      v1trigger = Trigger::V1.canonicalize_and_validate(v1trigger)
+    def self.to_manifest_hash(iTrigger)
+      if TYPE_MANIFEST_MAP[iTrigger.Type].nil?
+        raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
+      end
 
-      trigger_type = type_from_v1type(v1trigger['trigger_type'])
-      iTrigger = definition.Triggers.Create(trigger_type)
-      trigger_settings = v1trigger['type']
+      # StartBoundary and EndBoundary may be empty strings per V2 API
+      start_boundary = Trigger.iso8601_datetime_to_local(iTrigger.StartBoundary)
+      end_boundary = Trigger.iso8601_datetime_to_local(iTrigger.EndBoundary)
 
-      case trigger_type
+      manifest_hash = {
+        'start_date'       => start_boundary ? start_boundary.strftime('%Y-%-m-%-d') : '',
+        'start_time'       => start_boundary ? start_boundary.strftime('%H:%M') : '',
+        'enabled'          => iTrigger.Enabled,
+        'minutes_interval' => Duration.to_minutes(iTrigger.Repetition.Interval) || 0,
+        'minutes_duration' => Duration.to_minutes(iTrigger.Repetition.Duration) || 0,
+      }
+
+      case iTrigger.Type
+        when Type::TASK_TRIGGER_TIME
+          manifest_hash['schedule'] = 'once'
+        when Type::TASK_TRIGGER_DAILY
+          manifest_hash.merge!({
+            'schedule' => 'daily',
+            'every'    => iTrigger.DaysInterval,
+          })
+        when Type::TASK_TRIGGER_WEEKLY
+          manifest_hash.merge!({
+            'schedule'    => 'weekly',
+            'every'       => iTrigger.WeeksInterval,
+            'day_of_week' => Day.bitmask_to_names(iTrigger.DaysOfWeek),
+          })
+        when Type::TASK_TRIGGER_MONTHLY
+          manifest_hash.merge!({
+            'schedule' => 'monthly',
+            'months'   => Month.bitmask_to_indexes(iTrigger.MonthsOfYear),
+            'on'       => Days.bitmask_to_indexes(iTrigger.DaysOfMonth),
+          })
+        when Type::TASK_TRIGGER_MONTHLYDOW
+          occurrences = V2::WeeksOfMonth.bitmask_to_names(iTrigger.WeeksOfMonth)
+          manifest_hash.merge!({
+            'schedule' => 'monthly',
+            'months'           => Month.bitmask_to_indexes(iTrigger.MonthsOfYear),
+            # HACK: choose only the first week selected when converting - this LOSES information
+            'which_occurrence' => occurrences.first || '',
+            'day_of_week'      => Day.bitmask_to_names(iTrigger.DaysOfWeek),
+          })
+      end
+
+      manifest_hash
+    end
+
+    def self.append_trigger(definition, manifest_hash)
+      manifest_hash = Trigger::Manifest.canonicalize_and_validate(manifest_hash)
+      # create appropriate ITrigger based on 'schedule'
+      iTrigger = definition.Triggers.Create(type_from_manifest_hash(manifest_hash))
+
+      # Values for all Trigger Types
+      if manifest_hash['minutes_interval']
+        minutes_interval = manifest_hash['minutes_interval']
+        if minutes_interval > 0
+          iTrigger.Repetition.Interval = "PT#{minutes_interval}M"
+          # one day in minutes
+          iTrigger.Repetition.Duration = "PT1440M" unless manifest_hash.key?('minutes_duration')
+        end
+      end
+
+      if manifest_hash['minutes_duration']
+        minutes_duration = manifest_hash['minutes_duration']
+        iTrigger.Repetition.Duration = "PT#{minutes_duration}M" unless minutes_duration.zero?
+      end
+
+      # manifests specify datetime in the local timezone, ITrigger accepts ISO8601
+      # when start_date is null or missing, Time.parse returns today
+      datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
+      # Time.parse always assumes local time
+      iTrigger.StartBoundary = Time.parse(datetime_string).iso8601
+
+      # ITrigger specific settings
+      case iTrigger.Type
         when Type::TASK_TRIGGER_DAILY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
-          iTrigger.DaysInterval = trigger_settings['days_interval']
+          iTrigger.DaysInterval = Integer(manifest_hash['every'] || 1)
 
         when Type::TASK_TRIGGER_WEEKLY
+          days_of_week = manifest_hash['day_of_week'] || Day.names
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384019(v=vs.85).aspx
-          iTrigger.DaysOfWeek = trigger_settings['days_of_week']
-          iTrigger.WeeksInterval = trigger_settings['weeks_interval']
+          iTrigger.DaysOfWeek = Day.names_to_bitmask(days_of_week)
+          iTrigger.WeeksInterval = Integer(manifest_hash['every'] || 1)
 
         when Type::TASK_TRIGGER_MONTHLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
-          iTrigger.DaysOfMonth = trigger_settings['days']
-          iTrigger.Monthsofyear = trigger_settings['months']
+          iTrigger.DaysOfMonth = Days.indexes_to_bitmask(manifest_hash['on'])
+          iTrigger.MonthsOfYear = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
 
         when Type::TASK_TRIGGER_MONTHLYDOW
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382055(v=vs.85).aspx
-          iTrigger.DaysOfWeek = trigger_settings['days_of_week']
-          iTrigger.Monthsofyear = trigger_settings['months']
-          iTrigger.Weeksofmonth = trigger_settings['weeks']
+          iTrigger.DaysOfWeek = Day.names_to_bitmask(manifest_hash['day_of_week'])
+          iTrigger.MonthsOfYear = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
+          # HACK: convert V1 week value to names, then back to V2 bitmask
+          iTrigger.WeeksOfMonth = WeeksOfMonth.names_to_bitmask(manifest_hash['which_occurrence'])
       end
 
-      # Values for all Trigger Types
-      iTrigger.Repetition.Interval = "PT#{v1trigger['minutes_interval']}M" unless v1trigger['minutes_interval'].nil? || v1trigger['minutes_interval'].zero?
-      iTrigger.Repetition.Duration = "PT#{v1trigger['minutes_duration']}M" unless v1trigger['minutes_duration'].nil? || v1trigger['minutes_duration'].zero?
-      iTrigger.StartBoundary = Trigger.date_components_to_local_iso8601_datetime(
-        v1trigger['start_year'],
-        v1trigger['start_month'],
-        v1trigger['start_day'],
-        v1trigger['start_hour'],
-        v1trigger['start_minute']
-      )
-
-      v1trigger
+      nil
     end
   end
 end

@@ -4,109 +4,6 @@ require 'spec_helper'
 require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
 require 'puppet_x/puppetlabs/scheduled_task/v2adapter'
 
-shared_examples_for "a trigger that handles start_date and start_time" do
-  let(:trigger) do
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
-    end
-
-  before :each do
-    Win32::TaskScheduler.any_instance.stubs(:save)
-    PuppetX::PuppetLabs::ScheduledTask::V1Adapter.any_instance.stubs(:save)
-  end
-
-  describe 'the given start_date' do
-    before :each do
-      trigger_hash['start_time'] = '00:00'
-    end
-
-    def date_component
-      {
-        'start_year'  => trigger['start_year'],
-        'start_month' => trigger['start_month'],
-        'start_day'   => trigger['start_day']
-      }
-    end
-
-    it 'should be able to be specified in ISO 8601 calendar date format' do
-      trigger_hash['start_date'] = '2011-12-31'
-
-      expect(date_component).to eq({
-        'start_year'  => 2011,
-        'start_month' => 12,
-        'start_day'   => 31
-      })
-    end
-
-    it 'should fail if before 1753-01-01' do
-      trigger_hash['start_date'] = '1752-12-31'
-
-      expect { date_component }.to raise_error(
-        'start_date must be on or after 1753-01-01'
-      )
-    end
-
-    it 'should succeed if on 1753-01-01' do
-      trigger_hash['start_date'] = '1753-01-01'
-
-      expect(date_component).to eq({
-        'start_year'  => 1753,
-        'start_month' => 1,
-        'start_day'   => 1
-      })
-    end
-
-    it 'should succeed if after 1753-01-01' do
-      trigger_hash['start_date'] = '1753-01-02'
-
-      expect(date_component).to eq({
-        'start_year'  => 1753,
-        'start_month' => 1,
-        'start_day'   => 2
-      })
-    end
-  end
-
-  describe 'the given start_time' do
-    before :each do
-      trigger_hash['start_date'] = '2011-12-31'
-    end
-
-    def time_component
-      {
-        'start_hour'   => trigger['start_hour'],
-        'start_minute' => trigger['start_minute']
-      }
-    end
-
-    it 'should be able to be specified as a 24-hour "hh:mm"' do
-      trigger_hash['start_time'] = '17:13'
-
-      expect(time_component).to eq({
-        'start_hour'   => 17,
-        'start_minute' => 13
-      })
-    end
-
-    it 'should be able to be specified as a 12-hour "hh:mm am"' do
-      trigger_hash['start_time'] = '3:13 am'
-
-      expect(time_component).to eq({
-        'start_hour'   => 3,
-        'start_minute' => 13
-      })
-    end
-
-    it 'should be able to be specified as a 12-hour "hh:mm pm"' do
-      trigger_hash['start_time'] = '3:13 pm'
-
-      expect(time_component).to eq({
-        'start_hour'   => 15,
-        'start_minute' => 13
-      })
-    end
-  end
-end
-
 describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if => Puppet.features.microsoft_windows? do
   it 'should be the default provider' do
     expect(Puppet::Type.type(:scheduled_task).defaultprovider).to eq(subject.class)
@@ -128,8 +25,6 @@ when :taskscheduler_api2
 end
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
-  V1 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1
-
   before :each do
     Puppet::Type.type(:scheduled_task).stubs(:defaultprovider).returns(described_class)
   end
@@ -152,14 +47,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
         it 'should handle a single daily trigger' do
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
-            'start_year'   => 2011,
-            'start_month'  => 9,
-            'start_day'    => 12,
-            'start_hour'   => 13,
-            'start_minute' => 20,
-            'flags'        => 0,
-            'type'         => { 'days_interval' => 2 },
+            'start_date'       => '2011-9-12',
+            'start_time'       => '13:20',
+            'schedule'         => 'daily',
+            'every'            => '2',
+            'minutes_interval' => 0,
+            'minutes_duration' => 0,
+            'enabled'          => true,
           })
 
           expect(resource.provider.trigger).to eq([{
@@ -176,16 +70,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
         it 'should handle a single daily with repeat trigger' do
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type'     => :TASK_TIME_TRIGGER_DAILY,
-            'start_year'       => 2011,
-            'start_month'      => 9,
-            'start_day'        => 12,
-            'start_hour'       => 13,
-            'start_minute'     => 20,
+            'start_date'       => '2011-9-12',
+            'start_time'       => '13:20',
+            'schedule'         => 'daily',
+            'every'            => '2',
             'minutes_interval' => 60,
             'minutes_duration' => 180,
-            'flags'            => 0,
-            'type'             => { 'days_interval' => 2 },
+            'enabled'          => true,
           })
 
           expect(resource.provider.trigger).to eq([{
@@ -201,22 +92,15 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single weekly trigger' do
-          scheduled_days_of_week = V1::Day::TASK_MONDAY |
-                                   V1::Day::TASK_WEDNESDAY |
-                                   V1::Day::TASK_FRIDAY |
-                                   V1::Day::TASK_SUNDAY
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
-            'start_year'   => 2011,
-            'start_month'  => 9,
-            'start_day'    => 12,
-            'start_hour'   => 13,
-            'start_minute' => 20,
-            'flags'        => 0,
-            'type'         => {
-              'weeks_interval' => 2,
-              'days_of_week'   => scheduled_days_of_week
-            }
+            'start_date'       => '2011-9-12',
+            'start_time'       => '13:20',
+            'schedule'         => 'weekly',
+            'every'            => '2',
+            'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
+            'minutes_interval' => 0,
+            'minutes_duration' => 0,
+            'enabled'          => true,
           })
 
           expect(resource.provider.trigger).to eq([{
@@ -233,25 +117,15 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single monthly date-based trigger' do
-          scheduled_months = V1::Month::TASK_JANUARY |
-                             V1::Month::TASK_FEBRUARY |
-                             V1::Month::TASK_AUGUST |
-                             V1::Month::TASK_SEPTEMBER |
-                             V1::Month::TASK_DECEMBER
-          #                1   3        5        15        'last'
-          scheduled_days = 1 | 1 << 2 | 1 << 4 | 1 << 14 | 1 << 31
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
-            'start_year'   => 2011,
-            'start_month'  => 9,
-            'start_day'    => 12,
-            'start_hour'   => 13,
-            'start_minute' => 20,
-            'flags'        => 0,
-            'type'         => {
-              'months' => scheduled_months,
-              'days'   => scheduled_days
-            }
+            'start_date'       => '2011-9-12',
+            'start_time'       => '13:20',
+            'schedule'         => 'monthly',
+            'months'           => [1, 2, 8, 9, 12],
+            'on'               => [1, 3, 5, 15, 'last'],
+            'minutes_interval' => 0,
+            'minutes_duration' => 0,
+            'enabled'          => true,
           })
 
           expect(resource.provider.trigger).to eq([{
@@ -268,28 +142,14 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single monthly day-of-week-based trigger' do
-          scheduled_months = V1::Month::TASK_JANUARY |
-                             V1::Month::TASK_FEBRUARY |
-                             V1::Month::TASK_AUGUST |
-                             V1::Month::TASK_SEPTEMBER |
-                             V1::Month::TASK_DECEMBER
-          scheduled_days_of_week = V1::Day::TASK_MONDAY |
-                                   V1::Day::TASK_WEDNESDAY |
-                                   V1::Day::TASK_FRIDAY |
-                                   V1::Day::TASK_SUNDAY
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
-            'start_year'   => 2011,
-            'start_month'  => 9,
-            'start_day'    => 12,
-            'start_hour'   => 13,
-            'start_minute' => 20,
-            'flags'        => 0,
-            'type'         => {
-              'months'       => scheduled_months,
-              'weeks'        => V1::Occurrence::TASK_FIRST_WEEK,
-              'days_of_week' => scheduled_days_of_week
-            }
+            'start_date'       => '2011-9-12',
+            'start_time'       => '13:20',
+            'schedule'         => 'monthly',
+            'months'           => [1, 2, 8, 9, 12],
+            'which_occurrence' => 'first',
+            'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
+            'enabled'          => true,
           })
 
           expect(resource.provider.trigger).to eq([{
@@ -299,8 +159,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'months'           => [1, 2, 8, 9, 12],
             'which_occurrence' => 'first',
             'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
-            'minutes_interval' => 0,
-            'minutes_duration' => 0,
             'enabled'          => true,
             'index'            => 0,
           }])
@@ -308,13 +166,13 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
         it 'should handle a single one-time trigger' do
           @mock_task.expects(:trigger).with(0).returns({
-            'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-            'start_year'   => 2011,
-            'start_month'  => 9,
-            'start_day'    => 12,
-            'start_hour'   => 13,
-            'start_minute' => 20,
-            'flags'        => 0,
+            'start_date'       => '2011-9-12',
+            'start_time'       => '13:20',
+            'schedule'         => 'once',
+            'minutes_interval' => 0,
+            'minutes_duration' => 0,
+            'enabled'          => true,
+            'index'            => 0,
           })
 
           expect(resource.provider.trigger).to eq([{
@@ -332,31 +190,29 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should handle multiple triggers' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2011,
-          'start_month'  => 10,
-          'start_day'    => 13,
-          'start_hour'   => 14,
-          'start_minute' => 21,
-          'flags'        => 0,
+          'start_date'       => '2011-10-13',
+          'start_time'       => '14:21',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
         })
         @mock_task.expects(:trigger).with(1).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2012,
-          'start_month'  => 11,
-          'start_day'    => 14,
-          'start_hour'   => 15,
-          'start_minute' => 22,
-          'flags'        => 0,
+          'start_date'       => '2012-11-14',
+          'start_time'       => '15:22',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
+          'index'            => 1,
         })
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2013,
-          'start_month'  => 12,
-          'start_day'    => 15,
-          'start_hour'   => 16,
-          'start_minute' => 23,
-          'flags'        => 0,
+          'start_date'       => '2013-12-15',
+          'start_time'       => '16:23',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
         })
 
         expect(resource.provider.trigger).to match_array([
@@ -393,37 +249,28 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should handle multiple triggers with repeat triggers' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'       => 2011,
-          'start_month'      => 10,
-          'start_day'        => 13,
-          'start_hour'       => 14,
-          'start_minute'     => 21,
+          'start_date'       => '2011-10-13',
+          'start_time'       => '14:21',
+          'schedule'         => 'once',
           'minutes_interval' => 15,
           'minutes_duration' => 60,
-          'flags'            => 0,
+          'enabled'          => true,
         })
         @mock_task.expects(:trigger).with(1).returns({
-          'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'       => 2012,
-          'start_month'      => 11,
-          'start_day'        => 14,
-          'start_hour'       => 15,
-          'start_minute'     => 22,
+          'start_date'       => '2012-11-14',
+          'start_time'       => '15:22',
+          'schedule'         => 'once',
           'minutes_interval' => 30,
           'minutes_duration' => 120,
-          'flags'            => 0,
+          'enabled'          => true,
         })
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type'     => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'       => 2013,
-          'start_month'      => 12,
-          'start_day'        => 15,
-          'start_hour'       => 16,
-          'start_minute'     => 23,
+          'start_date'       => '2013-12-15',
+          'start_time'       => '16:23',
+          'schedule'         => 'once',
           'minutes_interval' => 60,
           'minutes_duration' => 240,
-          'flags'            => 0,
+          'enabled'          => true,
         })
 
         expect(resource.provider.trigger).to match_array([
@@ -460,24 +307,22 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should skip triggers Win32::TaskScheduler cannot handle' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2011,
-          'start_month'  => 10,
-          'start_day'    => 13,
-          'start_hour'   => 14,
-          'start_minute' => 21,
-          'flags'        => 0,
+          'start_date'       => '2011-10-13',
+          'start_time'       => '14:21',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
         })
-          @mock_task.expects(:trigger).with(1).returns(nil)
+        @mock_task.expects(:trigger).with(1).returns(nil)
 
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2013,
-          'start_month'  => 12,
-          'start_day'    => 15,
-          'start_hour'   => 16,
-          'start_minute' => 23,
-          'flags'        => 0,
+          'start_date'       => '2013-12-15',
+          'start_time'       => '16:23',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
         })
 
         expect(resource.provider.trigger).to match_array([
@@ -505,24 +350,22 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should skip trigger types Puppet does not handle' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2011,
-          'start_month'  => 10,
-          'start_day'    => 13,
-          'start_hour'   => 14,
-          'start_minute' => 21,
-          'flags'        => 0,
+          'start_date'       => '2011-10-13',
+          'start_time'       => '14:21',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
         })
         @mock_task.expects(:trigger).with(1).returns(nil)
 
         @mock_task.expects(:trigger).with(2).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2013,
-          'start_month'  => 12,
-          'start_day'    => 15,
-          'start_hour'   => 16,
-          'start_minute' => 23,
-          'flags'        => 0,
+          'start_date'       => '2013-12-15',
+          'start_time'       => '16:23',
+          'schedule'         => 'once',
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'enabled'          => true,
         })
 
         expect(resource.provider.trigger).to match_array([
@@ -544,32 +387,6 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'enabled'          => true,
             'index'            => 2,
           }
-        ])
-      end
-
-      it 'should not expose random_minutes_interval' do
-        @mock_task.expects(:trigger_count).returns(1)
-        @mock_task.expects(:trigger).with(0).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2011,
-          'start_month'  => 10,
-          'start_day'    => 13,
-          'start_hour'   => 14,
-          'start_minute' => 21,
-          'flags'        => 0,
-          'random_minutes_interval' => 0,
-        })
-
-        expect(resource.provider.trigger).to match_array([
-          {
-            'start_date'       => '2011-10-13',
-            'start_time'       => '14:21',
-            'schedule'         => 'once',
-            'minutes_interval' => 0,
-            'minutes_duration' => 0,
-            'enabled'          => true,
-            'index'            => 0,
-          },
         ])
       end
     end
@@ -621,16 +438,12 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should not consider triggers for determining if the task is enabled' do
         @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
         @mock_task.stubs(:trigger_count).returns(1)
-        @mock_task.stubs(:trigger).with(0).returns({
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'start_year'   => 2011,
-          'start_month'  => 10,
-          'start_day'    => 13,
-          'start_hour'   => 14,
-          'start_minute' => 21,
-          'flags'        => V1::Flag::TASK_TRIGGER_FLAG_DISABLED,
-        })
+        manifest = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest
+        default_once = manifest.default_trigger_for('once').merge(
+          { 'enabled' => false, }
+        )
 
+        @mock_task.stubs(:trigger).with(0).returns(default_once)
         expect(resource.provider.enabled).to eq(:true)
       end
     end
@@ -700,7 +513,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     it 'should not consider any extra current triggers as in sync' do
       current = [
-        {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'},
+        {'start_date' => '2011-9-12', 'start_time' => '15:15', 'schedule' => 'once'},
         {'start_date' => '2012-10-13', 'start_time' => '16:16', 'schedule' => 'once'}
       ]
       desired = {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'}
@@ -709,7 +522,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it 'should not consider any extra desired triggers as in sync' do
-      current = {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'}
+      current = {'start_date' => '2011-9-12', 'start_time' => '15:15', 'schedule' => 'once'}
       desired = [
         {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'},
         {'start_date' => '2012-10-13', 'start_time' => '16:16', 'schedule' => 'once'}
@@ -720,7 +533,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     it 'should consider triggers to be in sync if the sets of current and desired triggers are equal' do
       current = [
-        {'start_date' => '2011-09-12', 'start_time' => '15:15', 'schedule' => 'once'},
+        {'start_date' => '2011-9-12', 'start_time' => '15:15', 'schedule' => 'once'},
         {'start_date' => '2012-10-13', 'start_time' => '16:16', 'schedule' => 'once'}
       ]
       desired = [
@@ -736,7 +549,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     let(:provider) { described_class.new(:name => 'foobar', :command => 'C:\Windows\System32\notepad.exe') }
 
     it "should not mutate triggers" do
-      current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+      current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
       current.freeze
 
       desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
@@ -746,14 +559,14 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it "ignores 'index' in current trigger" do
-      current = {'index' => 0, 'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+      current = {'index' => 0, 'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
       desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
 
       expect(provider).to be_triggers_same(current, desired)
     end
 
     it "ignores 'enabled' in current triggger" do
-      current = {'enabled' => true, 'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+      current = {'enabled' => true, 'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
       desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
 
       expect(provider).to be_triggers_same(current, desired)
@@ -767,8 +580,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     it 'should not consider triggers with different schedules to be the same' do
-      current = {'schedule' => 'once'}
-      desired = {'schedule' => 'weekly'}
+      current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
+      desired = {'schedule' => 'once',  'start_date' => '2011-09-12', 'start_time' => '15:30'}
 
       expect(provider).not_to be_triggers_same(current, desired)
     end
@@ -784,7 +597,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'start_date' do
       it "considers triggers to be equal when start_date is not specified in the 'desired' trigger" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_time' => '15:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
@@ -793,49 +606,49 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing daily triggers' do
       it "should consider 'desired' triggers not specifying 'every' to have the same value as the 'current' trigger" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2012-09-12', 'start_time' => '15:30', 'every' => 3}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:31', 'every' => 3}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-9-12',  'start_time' => '15:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '5:30',  'every' => 3}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '05:30', 'every' => 3}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '05:30',  'every' => 3}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '5:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'every' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 1}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30', 'every' => 1}
+        trigger = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30', 'every' => 1}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -843,35 +656,35 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing one-time triggers' do
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
         desired = {'schedule' => 'daily', 'start_date' => '2012-09-12', 'start_time' => '15:30'}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
+        current = {'schedule' => 'daily', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
         desired = {'schedule' => 'daily', 'start_date' => '2011-09-12', 'start_time' => '15:31'}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30'}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-9-12',  'start_time' => '15:30'}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30'}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12',  'start_time' => '15:30'}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30'}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30'}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30'}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30'}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30'}
+        trigger = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30'}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -879,56 +692,56 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing monthly date-based triggers' do
       it "should consider 'desired' triggers not specifying 'months' to have the same value as the 'current' trigger" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [3], 'on' => [1,'last']}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [3], 'on' => [1,'last']}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'on' => [1, 'last']}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-10-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '22:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
-        desired = {'schedule' => 'monthly', 'start_date' => '2011-9-12',  'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12',  'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '5:30',  'months' => [1, 2], 'on' => [1, 3, 5, 7]}
-        desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '05:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '05:30',  'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '5:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'months' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1],    'on' => [1, 3, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'on' as different triggers" do
-        current = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        current = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
         desired = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 5, 7]}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'monthly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
+        trigger = {'schedule' => 'monthly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'months' => [1, 2], 'on' => [1, 3, 5, 7]}
 
         expect(provider).to be_triggers_same(trigger, trigger)
       end
@@ -938,7 +751,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider 'desired' triggers not specifying 'months' to have the same value as the 'current' trigger" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -958,7 +771,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'start_dates' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -979,7 +792,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'start_times' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1000,7 +813,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'months' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1021,7 +834,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'which_occurrence' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1042,7 +855,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it "should consider different 'day_of_week' as different triggers" do
         current = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1063,7 +876,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should consider triggers that are the same as being the same' do
         trigger = {
           'schedule'         => 'monthly',
-          'start_date'       => '2011-09-12',
+          'start_date'       => '2011-9-12',
           'start_time'       => '15:30',
           'months'           => [3],
           'which_occurrence' => 'first',
@@ -1076,414 +889,58 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'comparing weekly triggers' do
       it "should consider 'desired' triggers not specifying 'day_of_week' to have the same value as the 'current' trigger" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_dates' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-10-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'start_times' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '22:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in date formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-9-12',  'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it 'should not consider differences in time formatting to be different triggers' do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30',  'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
-        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '01:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '01:30',  'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '1:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).to be_triggers_same(current, desired)
       end
 
       it "should consider different 'every' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 1, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 1, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it "should consider different 'day_of_week' as different triggers" do
-        current = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        current = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
         desired = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['fri']}
 
         expect(provider).not_to be_triggers_same(current, desired)
       end
 
       it 'should consider triggers that are the same as being the same' do
-        trigger = {'schedule' => 'weekly', 'start_date' => '2011-09-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
+        trigger = {'schedule' => 'weekly', 'start_date' => '2011-9-12', 'start_time' => '15:30', 'every' => 3, 'day_of_week' => ['mon', 'wed', 'fri']}
 
         expect(provider).to be_triggers_same(trigger, trigger)
-      end
-    end
-  end
-
-  describe '#from_manifest_hash' do
-    before :each do
-      @puppet_trigger = {
-        'start_date' => '2011-1-1',
-        'start_time' => '01:10'
-      }
-    end
-    let(:provider) { described_class.new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
-    let(:trigger) do
-        PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@puppet_trigger)
-      end
-
-    context "working with repeat every x triggers" do
-      before :each do
-        @puppet_trigger['schedule'] = 'once'
-      end
-
-      it 'should succeed if minutes_interval is equal to 0' do
-        @puppet_trigger['minutes_interval'] = '0'
-
-        expect(trigger['minutes_interval']).to eq(0)
-      end
-
-      it 'should default minutes_duration to a full day when minutes_interval is greater than 0 without setting minutes_duration' do
-        @puppet_trigger['minutes_interval'] = '1'
-
-        expect(trigger['minutes_duration']).to eq(1440)
-      end
-
-      it 'should succeed if minutes_interval is greater than 0 and minutes_duration is also set' do
-        @puppet_trigger['minutes_interval'] = '1'
-        @puppet_trigger['minutes_duration'] = '2'
-
-        expect(trigger['minutes_interval']).to eq(1)
-      end
-
-      it 'should fail if minutes_interval is less than 0' do
-        @puppet_trigger['minutes_interval'] = '-1'
-
-        expect { trigger }.to raise_error(
-          'minutes_interval must be an integer greater or equal to 0'
-        )
-      end
-
-      it 'should fail if minutes_interval is not an integer' do
-        @puppet_trigger['minutes_interval'] = 'abc'
-        expect { trigger }.to raise_error(ArgumentError)
-      end
-
-      it 'should succeed if minutes_duration is equal to 0' do
-        @puppet_trigger['minutes_duration'] = '0'
-        expect(trigger['minutes_duration']).to eq(0)
-      end
-
-      it 'should succeed if minutes_duration is greater than 0' do
-        @puppet_trigger['minutes_duration'] = '1'
-        expect(trigger['minutes_duration']).to eq(1)
-      end
-
-      it 'should fail if minutes_duration is less than 0' do
-        @puppet_trigger['minutes_duration'] = '-1'
-
-        expect { trigger }.to raise_error(
-          'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
-        )
-      end
-
-      it 'should fail if minutes_duration is not an integer' do
-        @puppet_trigger['minutes_duration'] = 'abc'
-        expect { trigger }.to raise_error(ArgumentError)
-      end
-
-      it 'should succeed if minutes_duration is equal to a full day' do
-        @puppet_trigger['minutes_duration'] = '1440'
-        expect(trigger['minutes_duration']).to eq(1440)
-      end
-
-      it 'should succeed if minutes_duration is equal to three days' do
-        @puppet_trigger['minutes_duration'] = '4320'
-        expect(trigger['minutes_duration']).to eq(4320)
-      end
-
-      it 'should succeed if minutes_duration is greater than minutes_duration' do
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '11'
-
-        expect(trigger['minutes_interval']).to eq(10)
-        expect(trigger['minutes_duration']).to eq(11)
-      end
-
-      it 'should fail if minutes_duration is equal to minutes_interval' do
-        # On Windows 2003, the duration must be greater than the interval
-        # on other platforms the values can be equal.
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '10'
-
-        expect { trigger }.to raise_error(
-          'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
-        )
-      end
-
-      it 'should succeed if minutes_duration and minutes_interval are both set to 0' do
-        @puppet_trigger['minutes_interval'] = '0'
-        @puppet_trigger['minutes_duration'] = '0'
-
-        expect(trigger['minutes_interval']).to eq(0)
-        expect(trigger['minutes_duration']).to eq(0)
-      end
-
-      it 'should fail if minutes_duration is less than minutes_interval' do
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '9'
-
-        expect { trigger }.to raise_error(
-          'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
-        )
-      end
-
-      it 'should fail if minutes_duration is less than minutes_interval and set to 0' do
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '0'
-
-        expect { trigger }.to raise_error(
-          'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
-        )
-      end
-    end
-
-    describe 'when given a one-time trigger' do
-      before :each do
-        @puppet_trigger['schedule'] = 'once'
-      end
-
-      it 'should set the trigger_type to :TASK_TIME_TRIGGER_ONCE' do
-        expect(trigger['trigger_type']).to eq(:TASK_TIME_TRIGGER_ONCE)
-      end
-
-      it 'should not set a type' do
-        expect(trigger).not_to be_has_key('type')
-      end
-
-      it "should require 'start_date'" do
-        @puppet_trigger.delete('start_date')
-
-        expect { trigger }.to raise_error(
-          /Must specify 'start_date' when defining a one-time trigger/
-        )
-      end
-
-      it "should require 'start_time'" do
-        @puppet_trigger.delete('start_time')
-
-        expect { trigger }.to raise_error(
-          /Must specify 'start_time' when defining a trigger/
-        )
-      end
-
-      it_behaves_like "a trigger that handles start_date and start_time" do
-        let(:trigger_hash) {{'schedule' => 'once' }}
-      end
-    end
-
-    describe 'when given a daily trigger' do
-      before :each do
-        @puppet_trigger['schedule'] = 'daily'
-      end
-
-      it "should default 'every' to 1" do
-        expect(trigger['type']['days_interval']).to eq(1)
-      end
-
-      it "should use the specified value for 'every'" do
-        @puppet_trigger['every'] = 5
-
-        expect(trigger['type']['days_interval']).to eq(5)
-      end
-
-      it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
-        today = Time.now
-
-        expect(trigger['start_year']).to eq(today.year)
-        expect(trigger['start_month']).to eq(today.month)
-        expect(trigger['start_day']).to eq(today.day)
-      end
-
-      it_behaves_like "a trigger that handles start_date and start_time" do
-        let(:trigger_hash) {{'schedule' => 'daily', 'every' => 1}}
-      end
-    end
-
-    describe 'when given a weekly trigger' do
-      before :each do
-        @puppet_trigger['schedule'] = 'weekly'
-      end
-
-      it "should default 'every' to 1" do
-        expect(trigger['type']['weeks_interval']).to eq(1)
-      end
-
-      it "should use the specified value for 'every'" do
-        @puppet_trigger['every'] = 4
-
-        expect(trigger['type']['weeks_interval']).to eq(4)
-      end
-
-      it "should default 'day_of_week' to be every day of the week" do
-        expect(trigger['type']['days_of_week']).to eq(V1::Day::TASK_MONDAY    |
-                                                  V1::Day::TASK_TUESDAY   |
-                                                  V1::Day::TASK_WEDNESDAY |
-                                                  V1::Day::TASK_THURSDAY  |
-                                                  V1::Day::TASK_FRIDAY    |
-                                                  V1::Day::TASK_SATURDAY  |
-                                                  V1::Day::TASK_SUNDAY)
-      end
-
-      it "should use the specified value for 'day_of_week'" do
-        @puppet_trigger['day_of_week'] = ['mon', 'wed', 'fri']
-
-        expect(trigger['type']['days_of_week']).to eq(V1::Day::TASK_MONDAY    |
-                                                  V1::Day::TASK_WEDNESDAY |
-                                                  V1::Day::TASK_FRIDAY)
-      end
-
-      it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
-        today = Time.now
-
-        expect(trigger['start_year']).to eq(today.year)
-        expect(trigger['start_month']).to eq(today.month)
-        expect(trigger['start_day']).to eq(today.day)
-      end
-
-      it_behaves_like "a trigger that handles start_date and start_time" do
-        let(:trigger_hash) {{'schedule' => 'weekly', 'every' => 1, 'day_of_week' => 'mon'}}
-      end
-    end
-
-    shared_examples_for 'a monthly schedule' do
-      it "should default 'months' to be every month" do
-        expect(trigger['type']['months']).to eq(V1::Month::TASK_JANUARY   |
-                                            V1::Month::TASK_FEBRUARY  |
-                                            V1::Month::TASK_MARCH     |
-                                            V1::Month::TASK_APRIL     |
-                                            V1::Month::TASK_MAY       |
-                                            V1::Month::TASK_JUNE      |
-                                            V1::Month::TASK_JULY      |
-                                            V1::Month::TASK_AUGUST    |
-                                            V1::Month::TASK_SEPTEMBER |
-                                            V1::Month::TASK_OCTOBER   |
-                                            V1::Month::TASK_NOVEMBER  |
-                                            V1::Month::TASK_DECEMBER)
-      end
-
-      it "should use the specified value for 'months'" do
-        @puppet_trigger['months'] = [2, 8]
-
-        expect(trigger['type']['months']).to eq(V1::Month::TASK_FEBRUARY  |
-                                            V1::Month::TASK_AUGUST)
-      end
-    end
-
-    describe 'when given a monthly date-based trigger' do
-      before :each do
-        @puppet_trigger['schedule'] = 'monthly'
-        @puppet_trigger['on']       = [7, 14]
-      end
-
-      it_behaves_like 'a monthly schedule'
-
-      it "should not allow 'which_occurrence' to be specified" do
-        @puppet_trigger['which_occurrence'] = 'first'
-
-        expect {trigger}.to raise_error(
-          /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
-        )
-      end
-
-      it "should not allow 'day_of_week' to be specified" do
-        @puppet_trigger['day_of_week'] = 'mon'
-
-        expect {trigger}.to raise_error(
-          /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
-        )
-      end
-
-      it "should require 'on'" do
-        @puppet_trigger.delete('on')
-
-        expect {trigger}.to raise_error(
-          /Don't know how to create a 'monthly' schedule with the options: schedule, start_date, start_time/
-        )
-      end
-
-      it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
-        today = Time.now
-
-        expect(trigger['start_year']).to eq(today.year)
-        expect(trigger['start_month']).to eq(today.month)
-        expect(trigger['start_day']).to eq(today.day)
-      end
-
-      it_behaves_like "a trigger that handles start_date and start_time" do
-        let(:trigger_hash) {{'schedule' => 'monthly', 'months' => 1, 'on' => 1}}
-      end
-    end
-
-    describe 'when given a monthly day-of-week-based trigger' do
-      before :each do
-        @puppet_trigger['schedule']         = 'monthly'
-        @puppet_trigger['which_occurrence'] = 'first'
-        @puppet_trigger['day_of_week']      = 'mon'
-      end
-
-      it_behaves_like 'a monthly schedule'
-
-      it "should not allow 'on' to be specified" do
-        @puppet_trigger['on'] = 15
-
-        expect {trigger}.to raise_error(
-          /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
-        )
-      end
-
-      it "should require 'which_occurrence'" do
-        @puppet_trigger.delete('which_occurrence')
-
-        expect {trigger}.to raise_error(
-          /which_occurrence must be specified when creating a monthly day-of-week based trigger/
-        )
-      end
-
-      it "should require 'day_of_week'" do
-        @puppet_trigger.delete('day_of_week')
-
-        expect {trigger}.to raise_error(
-          /day_of_week must be specified when creating a monthly day-of-week based trigger/
-        )
-      end
-
-      it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
-        today = Time.now
-
-        expect(trigger['start_year']).to eq(today.year)
-        expect(trigger['start_month']).to eq(today.month)
-        expect(trigger['start_day']).to eq(today.day)
-      end
-
-      it_behaves_like "a trigger that handles start_date and start_time" do
-        let(:trigger_hash) {{'schedule' => 'monthly', 'months' => 1, 'which_occurrence' => 'first', 'day_of_week' => 'mon'}}
       end
     end
   end
@@ -1517,7 +974,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       ]
 
       expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
-        /#{Regexp.escape("Days_of_week value BadDay is invalid")}/
+        /#{Regexp.escape("Unknown day_of_week values(s): [\"BadDay\"]")}/
       )
     end
   end
@@ -1666,9 +1123,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should not consider all duplicate current triggers in sync with a single desired trigger' do
         @trigger = {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10'}
         current_triggers = [
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 1},
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 2},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 0},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 1},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 2},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
         @mock_task.expects(:delete_trigger).with(1)
@@ -1680,9 +1137,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       it 'should remove triggers not defined in the resource' do
         @trigger = {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10'}
         current_triggers = [
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
-          {'schedule' => 'once', 'start_date' => '2012-09-15', 'start_time' => '15:10', 'index' => 1},
-          {'schedule' => 'once', 'start_date' => '2013-09-15', 'start_time' => '15:10', 'index' => 2},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 0},
+          {'schedule' => 'once', 'start_date' => '2012-9-15', 'start_time' => '15:10', 'index' => 1},
+          {'schedule' => 'once', 'start_date' => '2013-9-15', 'start_time' => '15:10', 'index' => 2},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
         @mock_task.expects(:delete_trigger).with(1)
@@ -1698,11 +1155,11 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           {'schedule' => 'once', 'start_date' => '2013-09-15', 'start_time' => '15:10'},
         ]
         current_triggers = [
-          {'schedule' => 'once', 'start_date' => '2011-09-15', 'start_time' => '15:10', 'index' => 0},
+          {'schedule' => 'once', 'start_date' => '2011-9-15', 'start_time' => '15:10', 'index' => 0},
         ]
         resource.provider.stubs(:trigger).returns(current_triggers)
-        @mock_task.expects(:append_trigger).with(PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@trigger[1]))
-        @mock_task.expects(:append_trigger).with(PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(@trigger[2]))
+        @mock_task.expects(:append_trigger).with(@trigger[1])
+        @mock_task.expects(:append_trigger).with(@trigger[2])
 
         resource.provider.trigger = @trigger
       end
@@ -1870,20 +1327,22 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
       it 'by clearing the cached list of triggers for the task' do
         @mock_task.stubs(:trigger_count).returns(1)
-        default_once = V1.default_trigger_for('once')
+
+        manifest = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest
+        default_once = manifest.default_trigger_for('once')
         @mock_task.stubs(:trigger).with(0).returns(default_once)
 
         @new_mock_task.stubs(:trigger_count).returns(1)
-        default_daily = V1.default_trigger_for('daily')
+        default_daily = manifest.default_trigger_for('daily')
         @new_mock_task.stubs(:trigger).with(0).returns(default_daily)
 
-        converted_once = V1.to_manifest_hash(default_once).merge({'index' => 0})
+        converted_once = default_once.merge({'index' => 0})
         expect(resource.provider.trigger).to eq([converted_once])
         expect(resource.provider.trigger).to eq([converted_once])
 
         resource.provider.create
 
-        converted_daily = V1.to_manifest_hash(default_daily).merge({'index' => 0})
+        converted_daily = default_daily.merge({'index' => 0})
         expect(resource.provider.trigger).to eq([converted_daily])
       end
     end

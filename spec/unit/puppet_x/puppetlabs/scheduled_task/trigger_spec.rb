@@ -2,31 +2,9 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
+V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
+
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
-  describe "#string_to_int" do
-    [nil, ''].each do |value|
-      it "should return 0 given value '#{value}' (#{value.class})" do
-        expect(subject.string_to_int(value)).to be_zero
-      end
-    end
-
-    [
-      { :input => 0, :expected => 0 },
-      { :input => 1.2, :expected => 1.2} ,
-      { :input => 100, :expected => 100 }
-    ].each do |value|
-      it "should coerce numeric input #{value[:input]} to #{value[:expected]}" do
-        expect(subject.string_to_int(value[:input])).to eq(value[:expected])
-      end
-    end
-
-    [:foo, [], {}].each do |value|
-      it "should raise ArgumentError given value '#{value}' (#{value.class})" do
-        expect { subject.string_to_int(value) }.to raise_error(ArgumentError)
-      end
-    end
-  end
-
   describe "#iso8601_datetime_to_local" do
     [nil, ''].each do |value|
       it "should return nil given value '#{value}' (#{value.class})" do
@@ -51,75 +29,42 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       end
     end
   end
-
-  describe "#date_components_to_local_iso8601_datetime" do
-    [
-      # must append DST influenced local timezone to end of expected string
-      { :input => [2018, 3, 20, 8, 57], :expected => "2018-03-20T08:57:00" + Time.local(2018, 3, 20).to_datetime.zone },
-      { :input => [1899, 12, 30, 0, 0], :expected => "1899-12-30T00:00:00" + Time.local(1899, 12, 30).to_datetime.zone },
-    ].each do |value|
-      it "should return local timezone formatted ISO8601 date string #{value[:expected]} for date components #{value[:input]}" do
-        expect(subject.date_components_to_local_iso8601_datetime(*value[:input])).to eq(value[:expected])
-      end
-    end
-  end
 end
 
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
   describe "#canonicalize_and_validate" do
     [
       {
+        # only set required fields
         :input =>
         {
-          'END_day' => nil,
-          'end_Month' => nil,
-          'End_year' => nil,
-          'FLAGS' => nil,
-          'minutes_duration' => nil,
-          'MINutes_intERVAL' => nil,
-          'Start_day' => nil,
-          'START_hour' => nil,
-          'start_Minute' => nil,
-          'start_YEAR' => nil,
-          'Trigger_Type' => nil,
-          'TyPe' =>
-          {
-            'days_Interval' => nil,
-            'Weeks_interval' => nil,
-            'DAYS_of_Week' => nil,
-            'MONTHS' => nil,
-            'daYS' => nil,
-            'weeks' => nil
-          }
+          'Enabled'             => nil,
+          'ScHeDuLe'            => 'once',
+          'START_date'          => '2018-2-3',
+          'start_Time'          => '1:12',
+          'EVERY'               => 1,
+          'mONTHS'              => 12,
+          'On'                  => [1, 'last'],
+          'Which_Occurrence'    => 'first',
+          'DAY_OF_week'         => ['mon'],
+          'MINutes_intERVAL'    => nil,
+          'minutes_duration'    => nil,
         },
         # all keys are lower
         :expected =>
         {
-          'end_day' => nil,
-          'end_month' => nil,
-          'end_year' => nil,
-          'flags' => nil,
-          'minutes_duration' => nil,
-          'minutes_interval' => nil,
-          'start_day' => nil,
-          'start_hour' => nil,
-          'start_minute' => nil,
-          'start_year' => nil,
-          'trigger_type' => nil,
-          'type' =>
-          {
-            'days_interval' => nil,
-            'weeks_interval' => nil,
-            'days_of_week' => nil,
-            'months' => nil,
-            'days' => nil,
-            'weeks' => nil
-          }
+          'enabled'             => nil,
+          'schedule'            => 'once',
+          'start_date'          => '2018-2-3',
+          'start_time'          => '01:12',
+          'every'               => 1,
+          'months'              => [12],
+          'on'                  => [1, 'last'],
+          'which_occurrence'    => 'first',
+          'day_of_week'         => ['mon'],
+          'minutes_interval'    => nil,
+          'minutes_duration'    => nil,
         }
-      },
-      {
-        :input => { 'type' => { 'DAYS_Interval' => nil, } },
-        :expected => { 'type' => { 'days_interval' => nil, } },
       },
     ].each do |value|
       it "should return downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
@@ -138,292 +83,479 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1 do
         expect { subject.class.canonicalize_and_validate(value) }.to raise_error(ArgumentError)
       end
     end
-  end
 
-  describe '#from_iTrigger' do
-    V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
-    DEFAULT_ITRIGGER_PROPERTIES = {
-      :Id                 => '',
-      :Repetition         => { :Interval => '', :Duration => '', :StopAtDurationEnd => false },
-      :ExecutionTimeLimit => '',
-      :StartBoundary      => '',
-      :EndBoundary        => '',
-      :Enabled            => true,
-    }.freeze
-
-    [
-      { :Type => V2::Type::TASK_TRIGGER_TIME,
-        :RandomDelay  => '',
-       },
-      { :Type => V2::Type::TASK_TRIGGER_DAILY,
-        :DaysInterval => 1,
-        :RandomDelay  => '',
-      },
-      { :Type => V2::Type::TASK_TRIGGER_WEEKLY,
-        :DaysOfWeek => 0,
-        :WeeksInterval => 1,
-        :RandomDelay  => '',
-      },
-      { :Type => V2::Type::TASK_TRIGGER_MONTHLY,
-        :DaysOfMonth => 0,
-        :MonthsOfYear => 4095,
-        :RunOnLastDayOfMonth => false,
-        :RandomDelay  => '',
-      },
-      { :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
-        :DaysOfWeek => 1,
-        :WeeksOfMonth => 1,
-        :MonthsOfYear => 1,
-        :RunOnLastWeekOfMonth => false,
-        :RandomDelay  => '',
-      },
-    ].each do |trigger_details|
-      it "should convert a default #{trigger_details[:ole_type]}" do
-        iTrigger = DEFAULT_ITRIGGER_PROPERTIES.merge(trigger_details)
-        # stub is not usable outside of specs (like in DEFAULT_ITRIGGER_PROPERTIES)
-        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
-        iTrigger = stub(iTrigger)
-        expect(subject.class.from_iTrigger(iTrigger)).to_not be_nil
-      end
-    end
-
-    [
-      { :ole_type => 'IBootTrigger', :Type => V2::Type::TASK_TRIGGER_BOOT, },
-      { :ole_type => 'IIdleTrigger', :Type => V2::Type::TASK_TRIGGER_IDLE, },
-      { :ole_type => 'IRegistrationTrigger', :Type => V2::Type::TASK_TRIGGER_REGISTRATION, },
-      { :ole_type => 'ILogonTrigger', :Type => V2::Type::TASK_TRIGGER_LOGON, },
-      { :ole_type => 'ISessionStateChangeTrigger', :Type => V2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
-      { :ole_type => 'IEventTrigger', :Type => V2::Type::TASK_TRIGGER_EVENT, },
-    ].each do |trigger_details|
-      it "should fail to convert an #{trigger_details[:ole_type]} instance" do
-        # stub is not usable outside of specs (like in DEFAULT_ITRIGGER_PROPERTIES)
-        iTrigger = stub(DEFAULT_ITRIGGER_PROPERTIES.merge(trigger_details))
-        expect { subject.class.from_iTrigger(iTrigger) }.to raise_error(ArgumentError)
-      end
-    end
-
-    FILLED_ITRIGGER_PROPERTIES = {
-      :Id                 => '1',
-      :Repetition         => { :Interval => 'PT20M', :Duration => 'P1M4DT2H5M', :StopAtDurationEnd => false },
-      :ExecutionTimeLimit => 'P1M4DT2H5M',
-      # StartBoundary is usually specified in local time without TZ
-      :StartBoundary      => '2005-10-11T13:21:17' + Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone,
-      :EndBoundary        => '2005-10-11T13:21:17Z',
-      :Enabled            => true,
-    }.freeze
-
-    UTC_END = Time.utc(2005, 10, 11, 13, 21, 17, 0)
-
-    CONVERTED_ITRIGGER_V1_HASH = {
-      'start_year' => 2005,
-      'start_month' => 10,
-      'start_day' => 11,
-      'end_year' => UTC_END.year, # 2005,
-      'end_month' => UTC_END.month, # 10,
-      'end_day' => UTC_END.day, # 11,
-      'start_hour' => 13,
-      'start_minute' => 21,
-      'minutes_duration' => 43829 + 5760 + 120 + 5, # P1M4DT2H5M
-      'minutes_interval' => 20, # PT20M
-      'flags' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_HAS_END_DATE,
-      'random_minutes_interval' => 0,
+    MINIMAL_MANIFEST_HASH =
+    {
+      'schedule'            => 'once',
+      'start_date'          => '2018-2-3',
+      'start_time'          => '01:12',
     }
 
-    [
-      {
-        :iTrigger =>
-        {
-          :Type => V2::Type::TASK_TRIGGER_TIME,
-          :RandomDelay  => 'P2DT5S', # ignored
-        },
-        :expected =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'type' => { 'once' => nil },
-        }
-      },
-      {
-        :iTrigger =>
-        {
-          :Type => V2::Type::TASK_TRIGGER_DAILY,
-          :DaysInterval => 2,
-          :RandomDelay  => 'P2DT5S', # ignored
-        },
-        :expected =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
-          'type' => { 'days_interval' => 2 },
-        }
-      },
-      {
-        :iTrigger =>
-        {
-          :Type => V2::Type::TASK_TRIGGER_WEEKLY,
-          :DaysOfWeek => 0b1111111,
-          :WeeksInterval => 2,
-          :RandomDelay  => 'P2DT5S', # ignored
-        },
-        :expected =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
-          'type' => { 'days_of_week' => 0b1111111, 'weeks_interval' => 2 },
-        }
-      },
-      {
-        :iTrigger =>
-        {
-          :Type => V2::Type::TASK_TRIGGER_MONTHLY,
-          :DaysOfMonth => 0b11111111111111111111111111111111,
-          :MonthsOfYear => 1,
-          :RunOnLastDayOfMonth => true, # ignored
-          :RandomDelay  => 'P2DT5S', # ignored
-        },
-        :expected =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
-          'type' => { 'days' => 0b11111111111111111111111111111111, 'months' => 1 },
-        }
-      },
-      {
-        :iTrigger =>
-        {
-          :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
-          :DaysOfWeek => 0b1111111,
-          :WeeksOfMonth => 0b11111,
-          :MonthsOfYear => 0b111111111111,
-          :RunOnLastWeekOfMonth => true, # ignored
-          :RandomDelay  => 'P2DT5S', # ignored
-        },
-        :expected =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
-          'type' => { 'weeks' => 0b11111, 'days_of_week' => 0b1111111, 'months' => 0b111111111111 },
-        }
-      },
-    ].each do |trigger_details|
-      it "should convert a full ITrigger type #{trigger_details[:iTrigger][:Type]} to the equivalent V1 hash" do
-        iTrigger = FILLED_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
-        # stub is not usable outside of specs (like in DEFAULT_ITRIGGER_PROPERTIES)
-        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
-        iTrigger = stub(iTrigger)
-        converted = CONVERTED_ITRIGGER_V1_HASH.merge(trigger_details[:expected])
-        expect(subject.class.from_iTrigger(iTrigger)).to eq(converted)
+    it 'should canonicalize `start_date` to %Y-%-m-%-d' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => '2011-01-02' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => '2011-1-2' })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should default empty `start_date` to today' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => '' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'start_date' => Time.now.strftime('%Y-%-m-%-d') })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should allow nil `start_date`' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({
+        'schedule'   => 'daily',
+        'start_date' => nil,
+      })
+      expected = MINIMAL_MANIFEST_HASH.merge({
+        'schedule'   => 'daily',
+        'start_date' => nil,
+      })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `start_time` to %H:%M' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '2:03 pm' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '14:03' })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should accept `minutes_interval` / `minutes_duration` strings and convert to numerics' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({
+        'minutes_duration'    => '15',
+        'minutes_interval'    => '10',
+      })
+
+      expected = MINIMAL_MANIFEST_HASH.merge({
+        'minutes_duration'    => 15,
+        'minutes_interval'    => 10,
+      })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `every` to a numeric' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'every' => '10' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'every' => 10 })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `day_of_week` to an array' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'day_of_week' => 'mon' })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'day_of_week' => ['mon'] })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `months` to an array' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'months' => 1 })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'months' => [1] })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    it 'should canonicalize `on` to an array' do
+      manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'on' => 1 })
+      expected = MINIMAL_MANIFEST_HASH.merge({ 'on' => [1] })
+
+      canonical = subject.class.canonicalize_and_validate(manifest_hash)
+      expect(canonical).to eq(expected)
+    end
+
+    shared_examples_for "a trigger that handles start_date and start_time" do
+      let(:trigger) do
+        subject.class.canonicalize_and_validate(trigger_hash)
+      end
+
+      describe 'the given start_date' do
+        before :each do
+          trigger_hash['start_time'] = '00:00'
+        end
+
+        it 'should be able to be specified in ISO 8601 calendar date format' do
+          trigger_hash['start_date'] = '2011-12-31'
+          expect(trigger['start_date']).to eq('2011-12-31')
+        end
+
+        it 'should fail if before 1753-01-01' do
+          trigger_hash['start_date'] = '1752-12-31'
+
+          expect { trigger['start_date'] }.to raise_error(
+            'start_date must be on or after 1753-01-01'
+          )
+        end
+
+        it 'should succeed if on 1753-01-01' do
+          trigger_hash['start_date'] = '1753-01-01'
+          expect(trigger['start_date']).to eq('1753-1-1')
+        end
+
+        it 'should succeed if after 1753-01-01' do
+          trigger_hash['start_date'] = '1753-01-02'
+          expect(trigger['start_date']).to eq('1753-1-2')
+        end
+      end
+
+      describe 'the given start_time' do
+        before :each do
+          trigger_hash['start_date'] = '2011-12-31'
+        end
+
+        it 'should be able to be specified as a 24-hour "hh:mm"' do
+          trigger_hash['start_time'] = '17:13'
+          expect(trigger['start_time']).to eq('17:13')
+        end
+
+        it 'should be able to be specified as a 12-hour "hh:mm am"' do
+          trigger_hash['start_time'] = '3:13 am'
+          expect(trigger['start_time']).to eq('03:13')
+        end
+
+        it 'should be able to be specified as a 12-hour "hh:mm pm"' do
+          trigger_hash['start_time'] = '3:13 pm'
+          expect(trigger['start_time']).to eq('15:13')
+        end
       end
     end
-  end
 
-  describe '#to_manifest_hash' do
-    [
-      'once',
-      'daily',
-      'weekly',
-      'monthly',
-    ].each do |type|
-      it "should convert a default #{type}" do
-        v1trigger = subject.class.default_trigger_for(type)
-        expect(subject.class.to_manifest_hash(v1trigger)).to_not be_nil
+    describe 'when converting a manifest hash' do
+      before :each do
+        @puppet_trigger = {
+          'start_date' => '2011-1-1',
+          'start_time' => '01:10'
+        }
       end
-    end
+      let(:trigger) do
+        subject.class.canonicalize_and_validate(@puppet_trigger)
+      end
 
-    it "should fail to convert an unknown trigger type" do
-      v1trigger = { 'trigger_type' => 'foo' }
-      expect { subject.class.to_manifest_hash(v1trigger) }.to raise_error(ArgumentError)
-    end
+      context "working with repeat every x triggers" do
+        before :each do
+          @puppet_trigger['schedule'] = 'once'
+        end
 
-    # V1 Hash uses local dates / times
-    FILLED_V1_HASH = {
-      'start_year' => 2005,
-      'start_month' => 10,
-      'start_day' => 11,
-      'end_year' => 2005,
-      'end_month' => 10,
-      'end_day' => 11,
-      'start_hour' => 13,
-      'start_minute' => 21,
-      'minutes_duration' => 20,
-      'minutes_interval' => 20,
-      'flags' => PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Flag::TASK_TRIGGER_FLAG_HAS_END_DATE,
-      'random_minutes_interval' => 0,
-    }
+        it 'should succeed if minutes_interval is equal to 0' do
+          @puppet_trigger['minutes_interval'] = '0'
 
-    # manifest specifies dates / times as local time
-    CONVERTED_MANIFEST_HASH = {
-      'start_date' => '2005-10-11',
-      'start_time' => '13:21',
-      'enabled'    => true,
-      'minutes_interval' => 20,
-      'minutes_duration' => 20,
-    }.freeze
+          expect(trigger['minutes_interval']).to eq(0)
+        end
 
-    [
-      {
-        :v1trigger =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
-          'type' => { 'once' => nil },
-        },
-        :expected =>
-        {
-          'schedule' => 'once',
-        }
-      },
-      {
-        :v1trigger =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
-          'type' => { 'days_interval' => 2 },
-        },
-        :expected =>
-        {
-          'schedule' => 'daily',
-          'every'    => '2',
-        }
-      },
-      {
-        :v1trigger =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
-          'type' => { 'days_of_week' => 0b1111111, 'weeks_interval' => 2 },
-        },
-        :expected =>
-        {
-          'schedule'    => 'weekly',
-          'every'       => '2',
-          'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-        }
-      },
-      {
-        :v1trigger =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
-          'type' => { 'days' => 0b11111111111111111111111111111111, 'months' => 1 },
-        },
-        :expected =>
-        {
-          'schedule' => 'monthly',
-          'months'   => [1],
-          'on'       => (1..31).to_a + ['last'],
-        }
-      },
-      {
-        :v1trigger =>
-        {
-          'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
-          'type' => { 'weeks' => 5, 'days_of_week' => 0b1111111, 'months' => 0b111111111111 },
-        },
-        :expected =>
-        {
-          'schedule'         => 'monthly',
-          'months'           => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-          'which_occurrence' => 'last',
-          'day_of_week'      => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-        }
-      }
-    ].each do |trigger_details|
-      it "should convert a full V1 #{trigger_details[:v1trigger]['trigger_type']} to the equivalent manifest hash" do
-        v1trigger = FILLED_V1_HASH.merge(trigger_details[:v1trigger])
-        converted = CONVERTED_MANIFEST_HASH.merge(trigger_details[:expected])
-        expect(subject.class.to_manifest_hash(v1trigger)).to eq(converted)
+        it 'should default minutes_duration to a full day when minutes_interval is greater than 0 without setting minutes_duration' do
+          @puppet_trigger['minutes_interval'] = '1'
+
+          expect(trigger['minutes_duration']).to eq(1440)
+        end
+
+        it 'should succeed if minutes_interval is greater than 0 and minutes_duration is also set' do
+          @puppet_trigger['minutes_interval'] = '1'
+          @puppet_trigger['minutes_duration'] = '2'
+
+          expect(trigger['minutes_interval']).to eq(1)
+        end
+
+        it 'should fail if minutes_interval is less than 0' do
+          @puppet_trigger['minutes_interval'] = '-1'
+
+          expect { trigger }.to raise_error(
+            'minutes_interval must be an integer greater or equal to 0'
+          )
+        end
+
+        it 'should fail if minutes_interval is not an integer' do
+          @puppet_trigger['minutes_interval'] = 'abc'
+          expect { trigger }.to raise_error(ArgumentError)
+        end
+
+        it 'should succeed if minutes_duration is equal to 0' do
+          @puppet_trigger['minutes_duration'] = '0'
+          expect(trigger['minutes_duration']).to eq(0)
+        end
+
+        it 'should succeed if minutes_duration is greater than 0' do
+          @puppet_trigger['minutes_duration'] = '1'
+          expect(trigger['minutes_duration']).to eq(1)
+        end
+
+        it 'should fail if minutes_duration is less than 0' do
+          @puppet_trigger['minutes_duration'] = '-1'
+
+          expect { trigger }.to raise_error(
+            'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
+          )
+        end
+
+        it 'should fail if minutes_duration is not an integer' do
+          @puppet_trigger['minutes_duration'] = 'abc'
+          expect { trigger }.to raise_error(ArgumentError)
+        end
+
+        it 'should succeed if minutes_duration is equal to a full day' do
+          @puppet_trigger['minutes_duration'] = '1440'
+          expect(trigger['minutes_duration']).to eq(1440)
+        end
+
+        it 'should succeed if minutes_duration is equal to three days' do
+          @puppet_trigger['minutes_duration'] = '4320'
+          expect(trigger['minutes_duration']).to eq(4320)
+        end
+
+        it 'should succeed if minutes_duration is greater than minutes_duration' do
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '11'
+
+          expect(trigger['minutes_interval']).to eq(10)
+          expect(trigger['minutes_duration']).to eq(11)
+        end
+
+        it 'should fail if minutes_duration is equal to minutes_interval' do
+          # On Windows 2003, the duration must be greater than the interval
+          # on other platforms the values can be equal.
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '10'
+
+          expect { trigger }.to raise_error(
+            'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
+          )
+        end
+
+        it 'should succeed if minutes_duration and minutes_interval are both set to 0' do
+          @puppet_trigger['minutes_interval'] = '0'
+          @puppet_trigger['minutes_duration'] = '0'
+
+          expect(trigger['minutes_interval']).to eq(0)
+          expect(trigger['minutes_duration']).to eq(0)
+        end
+
+        it 'should fail if minutes_duration is less than minutes_interval' do
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '9'
+
+          expect { trigger }.to raise_error(
+            'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
+          )
+        end
+
+        it 'should fail if minutes_duration is less than minutes_interval and set to 0' do
+          @puppet_trigger['minutes_interval'] = '10'
+          @puppet_trigger['minutes_duration'] = '0'
+
+          expect { trigger }.to raise_error(
+            'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
+          )
+        end
+      end
+
+      describe 'when given a one-time trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'once'
+        end
+
+        it 'should set the schedule to \'once\'' do
+          expect(trigger['schedule']).to eq('once')
+        end
+
+        it 'should not set a type' do
+          expect(trigger).not_to be_has_key('type')
+        end
+
+        it "should require 'start_date'" do
+          @puppet_trigger.delete('start_date')
+
+          expect { trigger }.to raise_error(
+            /Must specify 'start_date' when defining a one-time trigger/
+          )
+        end
+
+        it "should require 'start_time'" do
+          @puppet_trigger.delete('start_time')
+
+          expect { trigger }.to raise_error(
+            /Must specify 'start_time' when defining a trigger/
+          )
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'once' }}
+        end
+      end
+
+      describe 'when given a daily trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'daily'
+        end
+
+        it "should default 'every' to 1" do
+          pending("canonicalize_and_validate does not set defaults for 'every' or triggers_same? would fail")
+          expect(trigger['every']).to eq(1)
+        end
+
+        it "should use the specified value for 'every'" do
+          @puppet_trigger['every'] = 5
+
+          expect(trigger['every']).to eq(5)
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'daily', 'every' => 1}}
+        end
+      end
+
+      describe 'when given a weekly trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'weekly'
+        end
+
+        it "should default 'every' to 1" do
+          pending("canonicalize_and_validate does not set defaults for 'every' or triggers_same? would fail")
+          expect(trigger['every']).to eq(1)
+        end
+
+        it "should use the specified value for 'every'" do
+          @puppet_trigger['every'] = 4
+
+          expect(trigger['every']).to eq(4)
+        end
+
+        it "should default 'day_of_week' to be every day of the week" do
+          pending("canonicalize_and_validate does not set defaults for 'day_of_week' or triggers_same? would fail")
+          expect(trigger['day_of_week']).to eq(V2::Day.names)
+        end
+
+        it "should use the specified value for 'day_of_week'" do
+          @puppet_trigger['day_of_week'] = ['mon', 'wed', 'fri']
+
+          expect(trigger['day_of_week']).to eq(['mon', 'wed', 'fri'])
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'weekly', 'every' => 1, 'day_of_week' => 'mon'}}
+        end
+      end
+
+      shared_examples_for 'a monthly schedule' do
+        it "should default 'months' to be every month" do
+          pending("canonicalize_and_validate does not set defaults for 'months' or triggers_same? would fail")
+          expect(trigger['months']).to eq(V2::Month.indexes)
+        end
+
+        it "should use the specified value for 'months'" do
+          @puppet_trigger['months'] = [2, 8]
+
+          expect(trigger['months']).to eq([2, 8])
+        end
+      end
+
+      describe 'when given a monthly date-based trigger' do
+        before :each do
+          @puppet_trigger['schedule'] = 'monthly'
+          @puppet_trigger['on']       = [7, 14]
+        end
+
+        it_behaves_like 'a monthly schedule'
+
+        it "should not allow 'which_occurrence' to be specified" do
+          @puppet_trigger['which_occurrence'] = 'first'
+
+          expect {trigger}.to raise_error(
+            /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
+          )
+        end
+
+        it "should not allow 'day_of_week' to be specified" do
+          @puppet_trigger['day_of_week'] = 'mon'
+
+          expect {trigger}.to raise_error(
+            /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
+          )
+        end
+
+        it "should require 'on'" do
+          @puppet_trigger.delete('on')
+
+          expect {trigger}.to raise_error(
+            /Don't know how to create a 'monthly' schedule with the options: schedule, start_date, start_time/
+          )
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'monthly', 'months' => 1, 'on' => 1}}
+        end
+      end
+
+      describe 'when given a monthly day-of-week-based trigger' do
+        before :each do
+          @puppet_trigger['schedule']         = 'monthly'
+          @puppet_trigger['which_occurrence'] = 'first'
+          @puppet_trigger['day_of_week']      = 'mon'
+        end
+
+        it_behaves_like 'a monthly schedule'
+
+        it "should not allow 'on' to be specified" do
+          @puppet_trigger['on'] = 15
+
+          expect {trigger}.to raise_error(
+            /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
+          )
+        end
+
+        it "should require 'which_occurrence'" do
+          @puppet_trigger.delete('which_occurrence')
+
+          expect {trigger}.to raise_error(
+            /which_occurrence must be specified when creating a monthly day-of-week based trigger/
+          )
+        end
+
+        it "should require 'day_of_week'" do
+          @puppet_trigger.delete('day_of_week')
+
+          expect {trigger}.to raise_error(
+            /day_of_week must be specified when creating a monthly day-of-week based trigger/
+          )
+        end
+
+        it "should default 'start_date' to 'today'" do
+          pending("canonicalize_and_validate does not set defaults for 'start_date' or triggers_same? would fail")
+          @puppet_trigger.delete('start_date')
+          expect(trigger['start_date']).to eq(Time.now.strftime('%Y-%-m-%-d'))
+        end
+
+        it_behaves_like "a trigger that handles start_date and start_time" do
+          let(:trigger_hash) {{'schedule' => 'monthly', 'months' => 1, 'which_occurrence' => 'first', 'day_of_week' => 'mon'}}
+        end
       end
     end
   end
@@ -531,7 +663,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do
   end
 end
 
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Day do
   EXPECTED_DAY_CONVERSIONS =
   [
     { :days => 'sun', :bitmask => 0b1 },
@@ -579,7 +711,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Day do
   end
 end
 
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Days do
   EXPECTED_DAYS_CONVERSIONS =
   [
     { :days => 1,                       :bitmask => 0b00000000000000000000000000000001 },
@@ -636,7 +768,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Days do
     end
   end
 end
-describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Month do
   EXPECTED_MONTH_CONVERSIONS =
   [
     { :months => 1,            :bitmask => 0b000000000001 },
@@ -678,6 +810,223 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V1::Month do
   [ 'foo', -1, 0b111111111111 + 1 ].each do |value|
     it "should raise an ArgumentError with value: #{value}" do
       expect { subject.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
+    end
+  end
+end
+
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
+  EXPECTED_WEEKS_OF_MONTH_CONVERSIONS =
+  [
+    { :weeks => 'first', :bitmask => 0b1 },
+    { :weeks => [], :bitmask => 0 },
+    { :weeks => ['first'], :bitmask => 0b1 },
+    { :weeks => ['fourth', 'last'], :bitmask => 0b11000 },
+    {
+      :weeks => ['first', 'second', 'third', 'fourth', 'last'],
+      :bitmask => 0b11111
+    },
+  ].freeze
+
+  describe '#names_to_bitmask' do
+    EXPECTED_WEEKS_OF_MONTH_CONVERSIONS.each do |conversion|
+      it "should create expected bitmask #{'%08b' % conversion[:bitmask]} from weeks #{conversion[:weeks]}" do
+        expect(subject.class.names_to_bitmask(conversion[:weeks])).to eq(conversion[:bitmask])
+      end
+    end
+
+    [ nil, 1, {}, 'foo', ['bar'] ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.names_to_bitmask(value) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+  describe '#bitmask_to_names' do
+    EXPECTED_WEEKS_OF_MONTH_CONVERSIONS.each do |conversion|
+      it "should create expected weeks #{conversion[:weeks]} from bitmask #{'%08b' % conversion[:bitmask]}" do
+        expect(subject.class.bitmask_to_names(conversion[:bitmask])).to eq([conversion[:weeks]].flatten)
+      end
+    end
+
+    [ nil, {}, ['bar'] ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.bitmask_to_names(value) }.to raise_error(TypeError)
+      end
+    end
+
+    [ -1, 'foo', 0b11111 + 1 ].each do |value|
+      it "should raise an error with invalid value: #{value}" do
+        expect { subject.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+end
+
+describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
+  describe '#to_manifest_hash' do
+    DEFAULT_V2_ITRIGGER_PROPERTIES = {
+      :Id                 => '',
+      :Repetition         => { :Interval => '', :Duration => '', :StopAtDurationEnd => false },
+      :ExecutionTimeLimit => '',
+      :StartBoundary      => '',
+      :EndBoundary        => '',
+      :Enabled            => true,
+    }.freeze
+
+    [
+      { :Type => V2::Type::TASK_TRIGGER_TIME,
+        :RandomDelay  => '',
+       },
+      { :Type => V2::Type::TASK_TRIGGER_DAILY,
+        :DaysInterval => 1,
+        :RandomDelay  => '',
+      },
+      { :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+        :DaysOfWeek => 0,
+        :WeeksInterval => 1,
+        :RandomDelay  => '',
+      },
+      { :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+        :DaysOfMonth => 0,
+        :MonthsOfYear => 4095,
+        :RunOnLastDayOfMonth => false,
+        :RandomDelay  => '',
+      },
+      { :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+        :DaysOfWeek => 1,
+        :WeeksOfMonth => 1,
+        :MonthsOfYear => 1,
+        :RunOnLastWeekOfMonth => false,
+        :RandomDelay  => '',
+      },
+    ].each do |trigger_details|
+      it "should convert a default #{V2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
+        iTrigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
+        iTrigger = stub(iTrigger)
+        expect(subject.class.to_manifest_hash(iTrigger)).to_not be_nil
+      end
+    end
+
+    [
+      { :ole_type => 'IBootTrigger', :Type => V2::Type::TASK_TRIGGER_BOOT, },
+      { :ole_type => 'IIdleTrigger', :Type => V2::Type::TASK_TRIGGER_IDLE, },
+      { :ole_type => 'IRegistrationTrigger', :Type => V2::Type::TASK_TRIGGER_REGISTRATION, },
+      { :ole_type => 'ILogonTrigger', :Type => V2::Type::TASK_TRIGGER_LOGON, },
+      { :ole_type => 'ISessionStateChangeTrigger', :Type => V2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
+      { :ole_type => 'IEventTrigger', :Type => V2::Type::TASK_TRIGGER_EVENT, },
+    ].each do |trigger_details|
+      it "should fail to convert an #{trigger_details[:ole_type]} instance" do
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+        expect { subject.class.to_manifest_hash(iTrigger) }.to raise_error(ArgumentError)
+      end
+    end
+
+    FILLED_V2_ITRIGGER_PROPERTIES = {
+      :Id                 => '1',
+      :Repetition         => { :Interval => 'PT20M', :Duration => 'PT20M', :StopAtDurationEnd => false },
+      :ExecutionTimeLimit => 'P1M4DT2H5M',
+      # StartBoundary is usually specified in local time without TZ
+      :StartBoundary      => '2005-10-11T13:21:17' + Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone,
+      :EndBoundary        => '2005-10-11T13:21:17Z',
+      :Enabled            => true,
+    }.freeze
+
+    # manifest specifies dates / times as local time
+    CONVERTED_V2_MANIFEST_HASH = {
+      'start_date' => '2005-10-11',
+      'start_time' => '13:21',
+      'enabled'    => true,
+      'minutes_interval' => 20, # PT20M
+      'minutes_duration' => 20, # PT20M
+    }.freeze
+
+    [
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_TIME,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule' => 'once',
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_DAILY,
+          :DaysInterval => 2,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule' => 'daily',
+          'every'    => 2,
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+          :DaysOfWeek => 0b1111111,
+          :WeeksInterval => 2,
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule'    => 'weekly',
+          'every'       => 2,
+          'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+          :DaysOfMonth => 0b11111111111111111111111111111111,
+          :MonthsOfYear => 1,
+          :RunOnLastDayOfMonth => true, # ignored
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule' => 'monthly',
+          'months'   => [1],
+          'on'       => (1..31).to_a + ['last'],
+        }
+      },
+      {
+        :iTrigger =>
+        {
+          :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+          :DaysOfWeek => 0b1111111,
+          # HACK: choose only the last week selected for test conversion, as this LOSES information
+          :WeeksOfMonth => 0b10000,
+          :MonthsOfYear => 0b111111111111,
+          :RunOnLastWeekOfMonth => true, # ignored
+          :RandomDelay  => 'P2DT5S', # ignored
+        },
+        :expected =>
+        {
+          'schedule'         => 'monthly',
+          'months'           => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          'which_occurrence' => 'last',
+          'day_of_week'      => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+        }
+      },
+    ].each do |trigger_details|
+      it "should convert a full ITrigger type #{V2::TYPE_MANIFEST_MAP[trigger_details[:iTrigger][:Type]]} to the equivalent V1 hash" do
+        iTrigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger[:Repetition] = stub(iTrigger[:Repetition])
+        iTrigger = stub(iTrigger)
+        converted = CONVERTED_V2_MANIFEST_HASH.merge(trigger_details[:expected])
+        expect(subject.class.to_manifest_hash(iTrigger)).to eq(converted)
+      end
     end
   end
 end
