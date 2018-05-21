@@ -58,11 +58,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def trigger
     @triggers ||= task.trigger_count.times.map do |i|
-      v1trigger = task.trigger(i)
+      manifest_hash = task.trigger(i)
       # nil trigger definitions are unsupported ITrigger types
-      next if v1trigger.nil?
-      index = { 'index' => i }
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.to_manifest_hash(v1trigger).merge(index)
+      next if manifest_hash.nil?
+      manifest_hash.merge({ 'index' => i })
     end.compact
   end
 
@@ -147,8 +146,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
 
     needed_triggers.each do |trigger_hash|
-      v1trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(trigger_hash)
-      task.append_trigger(v1trigger)
+      task.append_trigger(trigger_hash)
     end
   end
 
@@ -194,18 +192,15 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def triggers_same?(current_trigger, desired_trigger)
-    return false unless current_trigger['schedule'] == desired_trigger['schedule']
     return false if current_trigger.has_key?('enabled') && !current_trigger['enabled']
-    return false if PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(desired_trigger)['trigger_type'] != PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(current_trigger)['trigger_type']
-
-    desired = desired_trigger.dup
-    desired['start_date']  ||= current_trigger['start_date']  if current_trigger.has_key?('start_date')
-    desired['every']       ||= current_trigger['every']       if current_trigger.has_key?('every')
-    desired['months']      ||= current_trigger['months']      if current_trigger.has_key?('months')
-    desired['on']          ||= current_trigger['on']          if current_trigger.has_key?('on')
-    desired['day_of_week'] ||= current_trigger['day_of_week'] if current_trigger.has_key?('day_of_week')
-
-    PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(current_trigger) == PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(desired)
+    # Canonicalizing the desired hash ensures it is in a matching state with what we convert from on-disk
+    desired = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(desired_trigger)
+    # This method ensures that current_trigger:
+    # - includes all of the key-value pairs from desired
+    # - that those key value pairs are exactly matched
+    # - does not preclude current_trigger from having _more_ keys than the desired trigger.
+    # It will return false if any pair is missing or the values do not match.
+    current_trigger.merge(desired) == current_trigger
   end
 
   def validate_trigger(value)
@@ -215,7 +210,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
           self.fail "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
         end
       end
-      PuppetX::PuppetLabs::ScheduledTask::Trigger::V1.from_manifest_hash(t)
+      PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(t)
     end
 
     true

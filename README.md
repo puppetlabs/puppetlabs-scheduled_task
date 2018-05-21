@@ -267,7 +267,7 @@ For all triggers:
   * `months` — Which months the task should run, as an array. Defaults to all months. Each month must be an integer between 1 and 12.
   * `day_of_week` (Required) — Which day of the week the task should run, as an array with only one element.
     Each day must be one of `mon`, `tues`, `wed`, `thurs`, `fri`, `sat`, `sun`, or `all`.
-  * `which_occurrence` (Required) — The occurrence of the chosen weekday when the task should run. Must be one of first, second, third, fourth, or fifth.
+  * `which_occurrence` (Required) — The occurrence of the chosen weekday when the task should run. Must be one of `first`, `second`, `third`, `fourth`, or `last`.
 
 ##### `user`
 
