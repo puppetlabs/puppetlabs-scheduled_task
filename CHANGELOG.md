@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Added
+
+- `boot` trigger support ([MODULES-6267](https://tickets.puppetlabs.com/browse/MODULES-6267))
+
 ## [0.2.0] - 2018-05-09
 
 ### Added

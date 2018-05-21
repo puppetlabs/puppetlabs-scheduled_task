@@ -145,6 +145,25 @@ scheduled_task { 'Disk Cleanup Monthly First Saturday':
 }
 ~~~
 
+You might also want a task to run every time the computer boots.
+
+~~~puppet
+scheduled_task { 'Disk Cleanup On Restart':
+  ensure        => 'present',
+  compatibility => 2,
+  command       => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  arguments     => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  enabled       => 'true',
+  trigger       => [{
+    'schedule'  => 'boot',
+    'minutes_interval' => '60',
+    'minutes_duration' => '720'
+  }],
+  user          => 'system',
+}
+~~~
+* Note: Duration properties like `minutes_duration` and `minutes_interval` must have `compatibility => 2` or higher specified for `boot` triggers. Windows does not support those options at the "Windows XP or Windows Server 2003 computer" compatibility level which is the default when compatibility is left unspecified.
+
 ## Reference
 
 ### Provider
@@ -237,9 +256,9 @@ A trigger can contain the following keys:
 For all triggers:
 
 * `schedule` (Required) — What kind of trigger this is.
-  Valid values are `daily`, `weekly`, `monthly`, or `once`.
+  Valid values are `daily`, `weekly`, `monthly`, `once`, or `boot`.
   Each kind of trigger is configured with a different set of keys; see the sections below (once triggers only need a start time/date.)
-* `start_time` (Required) — The time of day when the trigger should first become active.
+* `start_time` (Required except for `boot`) — The time of day when the trigger should first become active.
   Several time formats will work, but we suggest 24-hour time formatted as HH:MM.
 * `start_date` — The date when the trigger should first become active.
   Defaults to the current date.

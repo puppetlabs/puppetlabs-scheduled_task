@@ -85,7 +85,8 @@ module Trigger
       'once',
       'daily',
       'weekly',
-      'monthly'
+      'monthly',
+      'boot'
      ].freeze
 
     def self.default_trigger_settings_for(schedule = 'once')
@@ -142,8 +143,9 @@ module Trigger
         raise ArgumentError.new("Unknown schedule type: #{manifest_hash["schedule"].inspect}")
       end
 
-      # required fields
-      %w{start_time}.each do |field|
+      required = V2::EVENT_BASED_TRIGGER_MAP.value?(manifest_hash['schedule']) ? [] : %w{start_time}
+
+      required.each do |field|
         next if manifest_hash.key?(field)
         raise ArgumentError.new("Must specify '#{field}' when defining a trigger")
       end
@@ -151,7 +153,7 @@ module Trigger
       start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); true rescue false; end
       raise ArgumentError.new("Invalid start_time value: #{manifest_hash['start_time']}") unless start_time_valid
       # The start_time must be canonicalized to match the format that the rest of the code expects
-      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M')
+      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M') unless manifest_hash['start_time'].nil?
 
       # specific setting rules for schedule types
       case manifest_hash['schedule']
@@ -465,14 +467,26 @@ module Trigger
       TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
     end
 
-    TYPE_MANIFEST_MAP = {
-      Type::TASK_TRIGGER_DAILY => 'daily',
-      Type::TASK_TRIGGER_WEEKLY => 'weekly',
+    SCHEDULE_BASED_TRIGGER_MAP = {
+      Type::TASK_TRIGGER_DAILY      => 'daily',
+      Type::TASK_TRIGGER_WEEKLY     => 'weekly',
       # NOTE: monthly uses context to determine MONTHLY or MONTHLYDOW
-      Type::TASK_TRIGGER_MONTHLY => 'monthly',
+      Type::TASK_TRIGGER_MONTHLY    => 'monthly',
       Type::TASK_TRIGGER_MONTHLYDOW => 'monthly',
-      Type::TASK_TRIGGER_TIME => 'once',
+      Type::TASK_TRIGGER_TIME       => 'once',
     }.freeze
+
+    EVENT_BASED_TRIGGER_MAP = {
+      Type::TASK_TRIGGER_BOOT                 => 'boot',
+      # The triggers below are not yet supported.
+      # Type::TASK_TRIGGER_EVENT                => 'event',
+      # Type::TASK_TRIGGER_IDLE                 => 'idle',
+      # Type::TASK_TRIGGER_REGISTRATION         => 'task_registered',
+      # Type::TASK_TRIGGER_LOGON                => 'logon',
+      # Type::TASK_TRIGGER_SESSION_STATE_CHANGE => 'session_state_change',
+    }.freeze
+
+    TYPE_MANIFEST_MAP = (SCHEDULE_BASED_TRIGGER_MAP.merge(EVENT_BASED_TRIGGER_MAP)).freeze
 
     def self.type_from_manifest_hash(manifest_hash)
       # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
@@ -530,6 +544,10 @@ module Trigger
             'which_occurrence' => occurrences.first || '',
             'day_of_week'      => Day.bitmask_to_names(iTrigger.DaysOfWeek),
           })
+        when Type::TASK_TRIGGER_BOOT
+          manifest_hash.merge!({
+            'schedule' => 'boot'
+          })
       end
 
       manifest_hash
@@ -559,7 +577,7 @@ module Trigger
       # when start_date is null or missing, Time.parse returns today
       datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
       # Time.parse always assumes local time
-      iTrigger.StartBoundary = Time.parse(datetime_string).iso8601
+      iTrigger.StartBoundary = Time.parse(datetime_string).iso8601 unless datetime_string.strip.empty?
 
       # ITrigger specific settings
       case iTrigger.Type

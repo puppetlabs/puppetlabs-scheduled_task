@@ -121,6 +121,23 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
       expect(canonical).to eq(expected)
     end
 
+    [
+      {'schedule' => 'boot'},
+    ].each do |event_manifest|
+
+      describe 'when validating event based triggers' do
+
+        it 'should allow a nil start_time for event based triggers' do
+          expect {subject.class.canonicalize_and_validate(event_manifest)}.to_not raise_error(ArgumentError)
+        end
+
+        it 'should not set a default date' do
+          validated = subject.class.canonicalize_and_validate(event_manifest)
+          expect(validated).not_to have_key('start_date')
+        end
+      end
+    end
+
     it 'should canonicalize `start_time` to %H:%M' do
       manifest_hash = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '2:03 pm' })
       expected = MINIMAL_MANIFEST_HASH.merge({ 'start_time' => '14:03' })
@@ -911,6 +928,15 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
 
     [
       { :ole_type => 'IBootTrigger', :Type => V2::Type::TASK_TRIGGER_BOOT, },
+    ].each do |trigger_details|
+      it "should convert an #{trigger_details[:ole_type]} instance" do
+        # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
+        iTrigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+        expect { subject.class.to_manifest_hash(iTrigger) }.to_not raise_error(ArgumentError)
+      end
+    end
+
+    [
       { :ole_type => 'IIdleTrigger', :Type => V2::Type::TASK_TRIGGER_IDLE, },
       { :ole_type => 'IRegistrationTrigger', :Type => V2::Type::TASK_TRIGGER_REGISTRATION, },
       { :ole_type => 'ILogonTrigger', :Type => V2::Type::TASK_TRIGGER_LOGON, },
