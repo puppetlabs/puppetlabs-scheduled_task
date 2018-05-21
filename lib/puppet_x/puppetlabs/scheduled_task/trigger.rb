@@ -411,15 +411,6 @@ module Trigger
   end
   end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
-  class V1
-  class Flag
-    TASK_TRIGGER_FLAG_HAS_END_DATE         = 0x1
-    TASK_TRIGGER_FLAG_KILL_AT_DURATION_END = 0x2
-    TASK_TRIGGER_FLAG_DISABLED             = 0x4
-  end
-  end
-
   class V2
   class WeeksOfMonth
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380733(v=vs.85).aspx
@@ -498,11 +489,6 @@ module Trigger
         raise ArgumentError.new(_("Unknown trigger type %{type}") % { type: iTrigger.ole_type.to_s })
       end
 
-      trigger_flags = 0
-      trigger_flags = trigger_flags | V1::Flag::TASK_TRIGGER_FLAG_HAS_END_DATE unless iTrigger.EndBoundary.empty?
-      # There is no corresponding setting for the V1 flag TASK_TRIGGER_FLAG_KILL_AT_DURATION_END
-      trigger_flags = trigger_flags | V1::Flag::TASK_TRIGGER_FLAG_DISABLED unless iTrigger.Enabled
-
       # StartBoundary and EndBoundary may be empty strings per V2 API
       start_boundary = Trigger.iso8601_datetime_to_local(iTrigger.StartBoundary)
       end_boundary = Trigger.iso8601_datetime_to_local(iTrigger.EndBoundary)
@@ -510,7 +496,7 @@ module Trigger
       manifest_hash = {
         'start_date'       => start_boundary ? start_boundary.strftime('%Y-%-m-%-d') : '',
         'start_time'       => start_boundary ? start_boundary.strftime('%H:%M') : '',
-        'enabled'          => trigger_flags & V1::Flag::TASK_TRIGGER_FLAG_DISABLED == 0,
+        'enabled'          => iTrigger.Enabled,
         'minutes_interval' => Duration.to_minutes(iTrigger.Repetition.Interval) || 0,
         'minutes_duration' => Duration.to_minutes(iTrigger.Repetition.Duration) || 0,
       }
