@@ -118,6 +118,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       expect(subjectv2.exists?(@task_name)).to be true
     end
 
+    it 'should have a compatibility value of 1' do
+      expect(subjectv2.new(@task_name).compatibility).to eq(1)
+    end
+
     it 'should have same properties in the V2 API' do
       subjectv1.activate(@task_name)
       v2task = subjectv2.new(@task_name)
@@ -128,6 +132,42 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
       v1manifest_hash = to_manifest_hash(subjectv1.trigger(0))
       expect(v2task.trigger(0)).to eq(v1manifest_hash)
+    end
+  end
+
+  context "When created by a V2 API" do
+    before(:all) do
+      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
+
+      # create default task with 0 triggers
+      task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(@task_name)
+      task.application_name = 'cmd.exe'
+      task.parameters = '/c exit 0'
+      task.save
+    end
+
+    after(:all) do
+      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(@task_name) if PuppetX::PuppetLabs::ScheduledTask::V1Adapter.exists?(@task_name)
+    end
+
+    it 'should be visible by the V2 API' do
+      expect(subjectv2.exists?(@task_name)).to be true
+    end
+
+    it 'should have a compatibility value of 1' do
+      expect(subjectv2.new(@task_name).compatibility).to eq(1)
+    end
+
+    it 'should have same properties in the V2 API' do
+      subjectv1.activate(@task_name)
+      v2task = subjectv2.new(@task_name)
+
+      # flags in Win32::TaskScheduler cover all possible flag values
+      # flags in V1Adapter only cover enabled status
+      expect(v2task.parameters).to eq(subjectv1.parameters)
+      expect(v2task.application_name).to eq(subjectv1.application_name)
+      expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
+      # on triggers to actually compare for this test
     end
   end
 
@@ -149,6 +189,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
 
     it 'should be visible by the V2 API' do
       expect(subjectv2.exists?(@task_name)).to be true
+    end
+
+    it 'should have a compatibility value of 1' do
+      expect(subjectv2.new(@task_name).compatibility).to eq(1)
     end
 
     it 'should have same properties in the V1 API' do

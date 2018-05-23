@@ -4,11 +4,11 @@ host = find_only_one("default")
 
 describe "Should create a scheduled task", :node => host do
 
-  before(:all) do
+  before(:each) do
     @taskname = "pl#{rand(999999).to_i}"
   end
 
-  after(:all) do
+  after(:each) do
     on(host, "schtasks.exe /delete /tn #{@taskname} /f", :accept_all_exit_codes => true) do |r|
       # Empty means deletion was ok.  The 'The system cannot find the file specified' error occurs
       # if the task does not exist

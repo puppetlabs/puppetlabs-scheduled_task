@@ -25,7 +25,7 @@ class V1Adapter
       TaskScheduler2.task_definition(@task)
     @task_password = nil
 
-    compatibility = TaskScheduler2::TASK_COMPATIBILITY_V1
+    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY_V1
     set_account_information('',nil)
   end
 
