@@ -89,6 +89,10 @@ module Trigger
       'boot'
      ].freeze
 
+    def self.format_date(time)
+      time.strftime('%Y-%-m-%-d')
+    end
+
     def self.default_trigger_settings_for(schedule = 'once')
       case schedule
       when 'once'
@@ -122,7 +126,7 @@ module Trigger
         'enabled'             => true,
         'minutes_interval'    => 0,
         'minutes_duration'    => 0,
-        'start_date'          => now.strftime('%Y-%-m-%-d'),
+        'start_date'          => format_date(now),
         'start_time'          => now.strftime('%H:%M'),
       }.merge(default_trigger_settings_for(schedule))
     end
@@ -241,7 +245,7 @@ module Trigger
         min_date = Time.local(1753, 1, 1)
         start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
         raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
-        manifest_hash['start_date'] = start_date.strftime('%Y-%-m-%-d')
+        manifest_hash['start_date'] = format_date(start_date)
       end
 
       manifest_hash
@@ -508,7 +512,7 @@ module Trigger
       end_boundary = Trigger.iso8601_datetime_to_local(iTrigger.EndBoundary)
 
       manifest_hash = {
-        'start_date'       => start_boundary ? start_boundary.strftime('%Y-%-m-%-d') : '',
+        'start_date'       => start_boundary ? Manifest.format_date(start_boundary) : '',
         'start_time'       => start_boundary ? start_boundary.strftime('%H:%M') : '',
         'enabled'          => iTrigger.Enabled,
         'minutes_interval' => Duration.to_minutes(iTrigger.Repetition.Interval) || 0,

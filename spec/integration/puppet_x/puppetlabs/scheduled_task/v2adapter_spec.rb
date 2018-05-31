@@ -28,7 +28,7 @@ def manifest_triggers
   defaults = {
     'minutes_interval'        => 0,
     'minutes_duration'        => 0,
-    'start_date'              => now.strftime('%Y-%-m-%-d'),
+    'start_date'              => PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_date(now),
     'start_time'              => now.strftime('%H:%M'),
     'enabled'                 => true,
   }
