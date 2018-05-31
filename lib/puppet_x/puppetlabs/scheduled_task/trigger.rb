@@ -93,6 +93,11 @@ module Trigger
       time.strftime('%Y-%-m-%-d')
     end
 
+    def self.format_time(time)
+      # equivalent to the ISO8601 %H:%M
+      time.strftime('%R')
+    end
+
     def self.default_trigger_settings_for(schedule = 'once')
       case schedule
       when 'once'
@@ -127,7 +132,7 @@ module Trigger
         'minutes_interval'    => 0,
         'minutes_duration'    => 0,
         'start_date'          => format_date(now),
-        'start_time'          => now.strftime('%H:%M'),
+        'start_time'          => format_time(now),
       }.merge(default_trigger_settings_for(schedule))
     end
 
@@ -157,7 +162,7 @@ module Trigger
       start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); true rescue false; end
       raise ArgumentError.new("Invalid start_time value: #{manifest_hash['start_time']}") unless start_time_valid
       # The start_time must be canonicalized to match the format that the rest of the code expects
-      manifest_hash['start_time'] = Time.parse(manifest_hash['start_time']).strftime('%H:%M') unless manifest_hash['start_time'].nil?
+      manifest_hash['start_time'] = format_time(Time.parse(manifest_hash['start_time'])) unless manifest_hash['start_time'].nil?
 
       # specific setting rules for schedule types
       case manifest_hash['schedule']
@@ -513,7 +518,7 @@ module Trigger
 
       manifest_hash = {
         'start_date'       => start_boundary ? Manifest.format_date(start_boundary) : '',
-        'start_time'       => start_boundary ? start_boundary.strftime('%H:%M') : '',
+        'start_time'       => start_boundary ? Manifest.format_time(start_boundary) : '',
         'enabled'          => iTrigger.Enabled,
         'minutes_interval' => Duration.to_minutes(iTrigger.Repetition.Interval) || 0,
         'minutes_duration' => Duration.to_minutes(iTrigger.Repetition.Duration) || 0,
