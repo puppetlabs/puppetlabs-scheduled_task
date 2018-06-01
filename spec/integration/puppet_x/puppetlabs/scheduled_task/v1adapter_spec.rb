@@ -67,8 +67,8 @@ def to_manifest_hash(v1trigger)
     0
   )
 
-  manifest_hash['start_date'] = local_trigger_date.strftime('%Y-%-m-%-d')
-  manifest_hash['start_time'] = local_trigger_date.strftime('%H:%M')
+  manifest_hash['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_date(local_trigger_date)
+  manifest_hash['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_time(local_trigger_date)
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   manifest_hash['enabled']    = v1trigger['flags'] & 0x4 == 0 # TASK_TRIGGER_FLAG_DISABLED
   manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
