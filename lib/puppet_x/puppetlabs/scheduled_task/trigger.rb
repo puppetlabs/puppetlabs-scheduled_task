@@ -89,6 +89,10 @@ module Trigger
       'boot'
      ].freeze
 
+    # https://msdn.microsoft.com/en-us/library/system.datetime.fromoadate(v=vs.110).aspx
+    # d must be a value between -657435.0 (1/1/1753) through 2958465.99999999 (12/31/9999 11:59:59)
+    MINIMUM_TRIGGER_DATE = Time.local(1753, 1, 1)
+
     def self.format_date(time)
       time.strftime('%Y-%-m-%-d')
     end
@@ -247,9 +251,8 @@ module Trigger
       manifest_hash['minutes_duration'] = duration if duration
 
       if manifest_hash['start_date']
-        min_date = Time.local(1753, 1, 1)
         start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
-        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
+        raise ArgumentError.new("start_date must be on or after #{format_date(MINIMUM_TRIGGER_DATE)}") unless start_date >= MINIMUM_TRIGGER_DATE
         manifest_hash['start_date'] = format_date(start_date)
       end
 

@@ -14,6 +14,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     [
       { :input => '2018-01-02T03:04:05', :expected => Time.local(2018, 1, 2, 3, 4, 5).getutc },
+      { :input => '1753-01-01T00:00:00', :expected => Time.local(1753, 1, 1, 0, 0, 0).getutc },
       { :input => '1899-12-30T00:00:00', :expected => Time.local(1899, 12, 30, 0, 0, 0).getutc },
     ].each do |value|
       it "should return a valid Time object for date string #{value[:input]} in the local timezone" do
@@ -212,7 +213,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
           trigger_hash['start_date'] = '1752-12-31'
 
           expect { trigger['start_date'] }.to raise_error(
-            'start_date must be on or after 1753-01-01'
+            'start_date must be on or after 1753-1-1'
           )
         end
 
