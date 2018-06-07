@@ -682,6 +682,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Duration do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Day do
+  # 7 bits for 7 days
+  ALL_DAY_SET = 0b1111111
+
   EXPECTED_DAY_CONVERSIONS =
   [
     { :days => 'sun', :bitmask => 0b1 },
@@ -690,7 +693,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Day do
     { :days => ['sun', 'sat'], :bitmask => 0b1000001  },
     {
       :days => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-      :bitmask => 0b1111111
+      :bitmask => ALL_DAY_SET
     },
   ].freeze
 
@@ -721,7 +724,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Day do
       end
     end
 
-    [ -1, 'foo', 0b1111111 + 1 ].each do |value|
+    [ -1, 'foo', ALL_DAY_SET + 1 ].each do |value|
       it "should raise an error with invalid value: #{value}" do
         expect { subject.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
       end
@@ -730,6 +733,11 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Day do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Days do
+  # 31 bits for 31 days
+  ALL_NUMERIC_DAYS_SET = 0b01111111111111111111111111111111
+  # 32 bits for 31 days + 'last'
+  ALL_DAYS_SET = 0b11111111111111111111111111111111
+
   EXPECTED_DAYS_CONVERSIONS =
   [
     { :days => 1,                       :bitmask => 0b00000000000000000000000000000001 },
@@ -737,8 +745,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Days do
     { :days => [2],                     :bitmask => 0b00000000000000000000000000000010 },
     { :days => [3, 5, 8, 12],           :bitmask => 0b00000000000000000000100010010100 },
     { :days => [3, 5, 8, 12, 'last'],   :bitmask => 0b10000000000000000000100010010100 },
-    { :days => (1..31).to_a,            :bitmask => 0b01111111111111111111111111111111 },
-    { :days => (1..31).to_a + ['last'], :bitmask => 0b11111111111111111111111111111111 },
+    { :days => (1..31).to_a,            :bitmask => ALL_NUMERIC_DAYS_SET },
+    { :days => (1..31).to_a + ['last'], :bitmask => ALL_DAYS_SET },
     # equivalent representations
     { :days => 'last',                  :bitmask => 0b10000000000000000000000000000000 },
     { :days => ['last'],                :bitmask => 1 << (32-1) },
@@ -779,7 +787,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Days do
       end
     end
 
-    [ 'foo', -1, 0b11111111111111111111111111111111 + 1 ].each do |value|
+    [ 'foo', -1, ALL_DAYS_SET + 1 ].each do |value|
       it "should raise an ArgumentError with value: #{value}" do
         expect { subject.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
       end
@@ -787,6 +795,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Days do
   end
 end
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Month do
+  # 12 bits for 12 months
+  ALL_MONTHS_SET = 0b111111111111
+
   EXPECTED_MONTH_CONVERSIONS =
   [
     { :months => 1,            :bitmask => 0b000000000001 },
@@ -794,7 +805,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Month do
     { :months => [],           :bitmask => 0 },
     { :months => [1, 2],       :bitmask => 0b000000000011 },
     { :months => [1, 12],      :bitmask => 0b100000000001 },
-    { :months => (1..12).to_a, :bitmask => 0b111111111111 },
+    { :months => (1..12).to_a, :bitmask => ALL_MONTHS_SET },
   ].freeze
 
   describe '#indexes_to_bitmask' do
@@ -825,7 +836,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Month do
     end
   end
 
-  [ 'foo', -1, 0b111111111111 + 1 ].each do |value|
+  [ 'foo', -1, ALL_MONTHS_SET + 1 ].each do |value|
     it "should raise an ArgumentError with value: #{value}" do
       expect { subject.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
     end
@@ -833,6 +844,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::Month do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
+  ALL_WEEKS_OF_MONTH_SET = 0b11111
+
   EXPECTED_WEEKS_OF_MONTH_CONVERSIONS =
   [
     { :weeks => 'first', :bitmask => 0b1 },
@@ -841,7 +854,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
     { :weeks => ['fourth', 'last'], :bitmask => 0b11000 },
     {
       :weeks => ['first', 'second', 'third', 'fourth', 'last'],
-      :bitmask => 0b11111
+      :bitmask => ALL_WEEKS_OF_MONTH_SET
     },
   ].freeze
 
@@ -872,7 +885,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
       end
     end
 
-    [ -1, 'foo', 0b11111 + 1 ].each do |value|
+    [ -1, 'foo', ALL_WEEKS_OF_MONTH_SET + 1 ].each do |value|
       it "should raise an error with invalid value: #{value}" do
         expect { subject.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
       end
