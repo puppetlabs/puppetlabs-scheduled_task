@@ -183,15 +183,13 @@ class V2Adapter
   # must OR the return value to determine the flags yourself.
   #
   def flags
-    flags = 0
-    flags = flags | TaskScheduler2::TASK_FLAG_DISABLED if !@definition.Settings.Enabled
-    flags
+    @definition.Settings.Enabled ? 0 : TaskScheduler2::TASK_FLAG_DISABLED
   end
 
   # Sets an OR'd value of flags that modify the behavior of the work item.
   #
-  def flags=(flags)
-    @definition.Settings.Enabled = (flags & TaskScheduler2::TASK_FLAG_DISABLED == 0)
+  def flags=(value)
+    @definition.Settings.Enabled = (value & TaskScheduler2::TASK_FLAG_DISABLED == 0)
   end
 
   private
