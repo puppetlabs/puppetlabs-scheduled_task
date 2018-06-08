@@ -89,6 +89,10 @@ module Trigger
       'boot'
      ].freeze
 
+    # https://msdn.microsoft.com/en-us/library/system.datetime.fromoadate(v=vs.110).aspx
+    # d must be a value between -657435.0 (1/1/1753) through 2958465.99999999 (12/31/9999 11:59:59)
+    MINIMUM_TRIGGER_DATE = Time.local(1753, 1, 1)
+
     def self.format_date(time)
       time.strftime('%Y-%-m-%-d')
     end
@@ -247,9 +251,8 @@ module Trigger
       manifest_hash['minutes_duration'] = duration if duration
 
       if manifest_hash['start_date']
-        min_date = Time.local(1753, 1, 1)
         start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
-        raise ArgumentError.new("start_date must be on or after 1753-01-01") unless start_date >= min_date
+        raise ArgumentError.new("start_date must be on or after #{format_date(MINIMUM_TRIGGER_DATE)}") unless start_date >= MINIMUM_TRIGGER_DATE
         manifest_hash['start_date'] = format_date(start_date)
       end
 
@@ -281,6 +284,9 @@ module Trigger
     TASK_FRIDAY       = 0x20
     TASK_SATURDAY     = 0x40
 
+    # 7 bits for 7 possible days to set
+    MAX_VALUE = 0b1111111
+
     DAY_CONST_MAP = {
       'sun'   => TASK_SUNDAY,
       'mon'   => TASK_MONDAY,
@@ -309,8 +315,8 @@ module Trigger
 
     def self.bitmask_to_names(bitmask)
       bitmask = Integer(bitmask)
-      if (bitmask < 0 || bitmask > 0b1111111)
-        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b1111111.to_s(10)}")
+      if (bitmask < 0 || bitmask > MAX_VALUE)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}")
       end
 
       DAY_CONST_MAP.values.each_with_object([]) do |day, names|
@@ -322,6 +328,9 @@ module Trigger
 
   class V2
   class Days
+    # 32 bits for 31 possible days to set + value 'last'
+    MAX_VALUE = 0b11111111111111111111111111111111
+
     # V1 MONTHLYDATE structure
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
     # V2 IMonthlyTrigger::DaysOfMonth
@@ -345,9 +354,8 @@ module Trigger
 
     def self.bitmask_to_indexes(bitmask)
       bitmask = Integer(bitmask)
-      max_mask = 0b11111111111111111111111111111111
-      if (bitmask < 0 || bitmask > max_mask)
-        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{max_mask.to_s(10)}")
+      if (bitmask < 0 || bitmask > MAX_VALUE)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}")
       end
 
       (0..31).select do |bit_index|
@@ -382,6 +390,9 @@ module Trigger
     TASK_NOVEMBER     = 0x400
     TASK_DECEMBER     = 0x800
 
+    # 12 bits for 12 possible months to set
+    MAX_VALUE = 0b111111111111
+
     MONTHNUM_CONST_MAP = {
       1  => TASK_JANUARY,
       2  => TASK_FEBRUARY,
@@ -411,8 +422,8 @@ module Trigger
 
     def self.bitmask_to_indexes(bitmask)
       bitmask = Integer(bitmask)
-      if (bitmask < 0 || bitmask > 0b111111111111)
-        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b111111111111.to_s(10)}")
+      if (bitmask < 0 || bitmask > MAX_VALUE)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}")
       end
 
       MONTHNUM_CONST_MAP.values.each_with_object([]) do |day, indexes|
@@ -430,6 +441,9 @@ module Trigger
     THIRD   = 0x04
     FOURTH  = 0x08
     LAST    = 0x10
+
+    # 5 bits for 5 possible weeks to set
+    MAX_VALUE = 0b11111
 
     WEEK_OF_MONTH_CONST_MAP = {
       'first'  => FIRST,
@@ -449,8 +463,8 @@ module Trigger
 
     def self.bitmask_to_names(bitmask)
       bitmask = Integer(bitmask)
-      if (bitmask < 0 || bitmask > 0b11111)
-        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{0b11111.to_s(10)}")
+      if (bitmask < 0 || bitmask > MAX_VALUE)
+        raise ArgumentError.new("bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}")
       end
 
       WEEK_OF_MONTH_CONST_MAP.values.each_with_object([]) do |week, names|
