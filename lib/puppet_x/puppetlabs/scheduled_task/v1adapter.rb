@@ -25,7 +25,7 @@ class V1Adapter
       TaskScheduler2.task_definition(@task)
     @task_password = nil
 
-    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY_V1
+    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
     set_account_information('',nil)
   end
 
@@ -34,7 +34,10 @@ class V1Adapter
   def self.tasks
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [TaskScheduler2::TASK_COMPATIBILITY_AT, TaskScheduler2::TASK_COMPATIBILITY_V1]).map do |item|
+      include_compatibility: [
+        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
+        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+      ]).map do |item|
         TaskScheduler2.task_name_from_task_path(item)
     end
   end

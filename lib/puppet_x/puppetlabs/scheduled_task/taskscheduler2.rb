@@ -23,18 +23,19 @@ module TaskScheduler2
     TASK_ACTION_SHOW_MESSAGE  = 7
   end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383557(v=vs.85).aspx
-  # Undocumented values
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_compatibility
   # Win7/2008 R2                       = 3
   # Win8/Server 2012 R2 or Server 2016 = 4
   # Windows 10                         = 5 / 6
-  TASK_COMPATIBILITY_AT = 0
-  TASK_COMPATIBILITY_V1 = 1
-  TASK_COMPATIBILITY_V2 = 2
-  TASK_COMPATIBILITY_V2_1 = 3
-  TASK_COMPATIBILITY_V2_2 = 4
-  TASK_COMPATIBILITY_V2_3 = 5
-  TASK_COMPATIBILITY_V2_4 = 6
+  class TASK_COMPATIBILITY
+    TASK_COMPATIBILITY_AT     = 0
+    TASK_COMPATIBILITY_V1     = 1
+    TASK_COMPATIBILITY_V2     = 2
+    TASK_COMPATIBILITY_V2_1   = 3
+    TASK_COMPATIBILITY_V2_2   = 4
+    TASK_COMPATIBILITY_V2_3   = 5
+    TASK_COMPATIBILITY_V2_4   = 6
+  end
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
   TASK_VALIDATE_ONLY                 = 0x1
