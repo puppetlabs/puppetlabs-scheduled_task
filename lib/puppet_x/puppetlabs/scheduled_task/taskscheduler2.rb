@@ -37,14 +37,17 @@ module TaskScheduler2
     TASK_COMPATIBILITY_V2_4   = 6
   end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
-  TASK_VALIDATE_ONLY                 = 0x1
-  TASK_CREATE                        = 0x2
-  TASK_UPDATE                        = 0x4
-  TASK_CREATE_OR_UPDATE              = 0x6
-  TASK_DISABLE                       = 0x8
-  TASK_DONT_ADD_PRINCIPAL_ACE        = 0x10
-  TASK_IGNORE_REGISTRATION_TRIGGERS  = 0x20
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_creation
+  class TASK_CREATION
+    TASK_VALIDATE_ONLY                 = 0x1
+    TASK_CREATE                        = 0x2
+    TASK_UPDATE                        = 0x4
+    # ( TASK_CREATE | TASK_UPDATE )
+    TASK_CREATE_OR_UPDATE              = 0x6
+    TASK_DISABLE                       = 0x8
+    TASK_DONT_ADD_PRINCIPAL_ACE        = 0x10
+    TASK_IGNORE_REGISTRATION_TRIGGERS  = 0x20
+  end
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383566(v=vs.85).aspx
   TASK_LOGON_NONE                           = 0
@@ -160,7 +163,7 @@ module TaskScheduler2
         task_password = password
     end
     task_folder.RegisterTaskDefinition(task_name_from_task_path(task_path),
-                                       definition, TASK_CREATE_OR_UPDATE, task_user, task_password,
+                                       definition, TASK_CREATION::TASK_CREATE_OR_UPDATE, task_user, task_password,
                                        definition.Principal.LogonType)
   end
 
