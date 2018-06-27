@@ -196,12 +196,12 @@ class V1Adapter
     action = nil
     (1..TaskScheduler2.action_count(@definition)).each do |i|
       index_action = TaskScheduler2.action(@definition, i)
-      action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_EXEC
+      action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC
       break if action
     end
 
     if action.nil? && create_if_missing
-      action = TaskScheduler2.create_action(@definition, TaskScheduler2::TASK_ACTION_EXEC)
+      action = TaskScheduler2.create_action(@definition, TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
     end
 
     action

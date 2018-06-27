@@ -38,7 +38,7 @@ def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TA
   trigger = definition.Triggers.Create(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
   trigger.StartBoundary = '2017-09-11T14:02:00'
   # Create an action
-  new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_EXEC)
+  new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
   new_action.Path = 'cmd.exe'
   new_action.Arguments = '/c exit 0'
   tasksched.save(task_name, definition)
@@ -144,7 +144,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should have an action of type Execution' do
-        expect(subject.action(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_EXEC)
+        expect(subject.action(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
       end
 
       it 'should have the specified action path' do

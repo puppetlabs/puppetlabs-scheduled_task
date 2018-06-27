@@ -13,11 +13,13 @@ module TaskScheduler2
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383558(v=vs.85).aspx
   TASK_ENUM_HIDDEN  = 0x1
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380596(v=vs.85).aspx
-  TASK_ACTION_EXEC = 0
-  TASK_ACTION_COM_HANDLER = 5
-  TASK_ACTION_SEND_EMAIL = 6
-  TASK_ACTION_SHOW_MESSAGE = 7
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_action_type
+  class TASK_ACTION_TYPE
+    TASK_ACTION_EXEC          = 0
+    TASK_ACTION_COM_HANDLER   = 5
+    TASK_ACTION_SEND_EMAIL    = 6
+    TASK_ACTION_SHOW_MESSAGE  = 7
+  end
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383557(v=vs.85).aspx
   # Undocumented values
