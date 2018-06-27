@@ -10,8 +10,10 @@ module TaskScheduler2
   # The name of the root folder for tasks
   ROOT_FOLDER = '\\'.freeze
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383558(v=vs.85).aspx
-  TASK_ENUM_HIDDEN  = 0x1
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_enum_flags
+  class TASK_ENUM_FLAGS
+    TASK_ENUM_HIDDEN  = 0x1
+  end
 
   # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_action_type
   class TASK_ACTION_TYPE
@@ -101,7 +103,7 @@ module TaskScheduler2
 
     task_folder = task_service.GetFolder(folder_path)
     filter_compatibility = !options[:include_compatibility].empty?
-    task_folder.GetTasks(TASK_ENUM_HIDDEN).each do |task|
+    task_folder.GetTasks(TASK_ENUM_FLAGS::TASK_ENUM_HIDDEN).each do |task|
       next if filter_compatibility && !options[:include_compatibility].include?(task.Definition.Settings.Compatibility)
       array << task.Path
     end
