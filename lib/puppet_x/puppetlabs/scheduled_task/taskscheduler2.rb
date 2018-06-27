@@ -49,14 +49,16 @@ module TaskScheduler2
     TASK_IGNORE_REGISTRATION_TRIGGERS  = 0x20
   end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383566(v=vs.85).aspx
-  TASK_LOGON_NONE                           = 0
-  TASK_LOGON_PASSWORD                       = 1
-  TASK_LOGON_S4U                            = 2
-  TASK_LOGON_INTERACTIVE_TOKEN              = 3
-  TASK_LOGON_GROUP                          = 4
-  TASK_LOGON_SERVICE_ACCOUNT                = 5
-  TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_logon_type
+  class TASK_LOGON_TYPE
+    TASK_LOGON_NONE                           = 0
+    TASK_LOGON_PASSWORD                       = 1
+    TASK_LOGON_S4U                            = 2
+    TASK_LOGON_INTERACTIVE_TOKEN              = 3
+    TASK_LOGON_GROUP                          = 4
+    TASK_LOGON_SERVICE_ACCOUNT                = 5
+    TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
+  end
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380747(v=vs.85).aspx
   TASK_RUNLEVEL_LUA     = 0
@@ -158,7 +160,7 @@ module TaskScheduler2
     task_password = nil
 
     case definition.Principal.LogonType
-      when TASK_LOGON_PASSWORD, TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
+      when TASK_LOGON_TYPE::TASK_LOGON_PASSWORD, TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
         task_user = definition.Principal.UserId
         task_password = password
     end
@@ -185,12 +187,12 @@ module TaskScheduler2
     if (user.nil? || user == "")
       # Setup for the local system account
       definition.Principal.UserId = 'SYSTEM'
-      definition.Principal.LogonType = TASK_LOGON_SERVICE_ACCOUNT
+      definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
       definition.Principal.RunLevel = TASK_RUNLEVEL_HIGHEST
       return true
     else
       definition.Principal.UserId = user
-      definition.Principal.LogonType = TASK_LOGON_PASSWORD
+      definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_PASSWORD
       definition.Principal.RunLevel = TASK_RUNLEVEL_HIGHEST
       return true
     end
