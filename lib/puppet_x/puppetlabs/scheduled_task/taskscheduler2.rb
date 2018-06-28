@@ -60,6 +60,15 @@ module TaskScheduler2
     TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
   end
 
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_run_flags
+  class TASK_RUN_FLAGS
+    TASK_RUN_NO_FLAGS             = 0
+    TASK_RUN_AS_SELF              = 0x1
+    TASK_RUN_IGNORE_CONSTRAINTS   = 0x2
+    TASK_RUN_USE_SESSION_ID       = 0x4
+    TASK_RUN_USER_SID             = 0x8
+  end
+
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380747(v=vs.85).aspx
   TASK_RUNLEVEL_LUA     = 0
   TASK_RUNLEVEL_HIGHEST = 1
