@@ -75,6 +75,13 @@ module TaskScheduler2
     TASK_RUNLEVEL_HIGHEST = 1
   end
 
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_processtokensid
+  class TASK_PROCESSTOKENSID_TYPE
+    TASK_PROCESSTOKENSID_NONE           = 0
+    TASK_PROCESSTOKENSID_UNRESTRICTED   = 1
+    TASK_PROCESSTOKENSID_DEFAULT        = 2
+  end
+
   RESERVED_FOR_FUTURE_USE = 0
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381283(v=vs.85).aspx
