@@ -82,6 +82,15 @@ module TaskScheduler2
     TASK_PROCESSTOKENSID_DEFAULT        = 2
   end
 
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_state
+  class TASK_STATE
+    TASK_STATE_UNKNOWN    = 0
+    TASK_STATE_DISABLED   = 1
+    TASK_STATE_QUEUED     = 2
+    TASK_STATE_READY      = 3
+    TASK_STATE_RUNNING    = 4
+  end
+
   RESERVED_FOR_FUTURE_USE = 0
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381283(v=vs.85).aspx
