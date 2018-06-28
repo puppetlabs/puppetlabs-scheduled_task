@@ -91,6 +91,14 @@ module TaskScheduler2
     TASK_STATE_RUNNING    = 4
   end
 
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_instances_policy
+  class TASK_INSTANCES_POLICY
+    TASK_INSTANCES_PARALLEL       = 0
+    TASK_INSTANCES_QUEUE          = 1
+    TASK_INSTANCES_IGNORE_NEW     = 2
+    TASK_INSTANCES_STOP_EXISTING  = 3
+  end
+
   RESERVED_FOR_FUTURE_USE = 0
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381283(v=vs.85).aspx
