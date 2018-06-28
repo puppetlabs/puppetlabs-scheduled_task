@@ -491,6 +491,16 @@ module Trigger
       TASK_TRIGGER_CUSTOM_TRIGGER_01     = 12
     end
 
+    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_session_state_change_type
+    class SessionStateChangeType
+      TASK_CONSOLE_CONNECT      = 1
+      TASK_CONSOLE_DISCONNECT   = 2
+      TASK_REMOTE_CONNECT       = 3
+      TASK_REMOTE_DISCONNECT    = 4
+      TASK_SESSION_LOCK         = 7
+      TASK_SESSION_UNLOCK       = 8
+    end
+
     SCHEDULE_BASED_TRIGGER_MAP = {
       Type::TASK_TRIGGER_DAILY      => 'daily',
       Type::TASK_TRIGGER_WEEKLY     => 'weekly',
