@@ -69,9 +69,11 @@ module TaskScheduler2
     TASK_RUN_USER_SID             = 0x8
   end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380747(v=vs.85).aspx
-  TASK_RUNLEVEL_LUA     = 0
-  TASK_RUNLEVEL_HIGHEST = 1
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_runlevel
+  class TASK_RUNLEVEL_TYPE
+    TASK_RUNLEVEL_LUA     = 0
+    TASK_RUNLEVEL_HIGHEST = 1
+  end
 
   RESERVED_FOR_FUTURE_USE = 0
 
@@ -197,12 +199,12 @@ module TaskScheduler2
       # Setup for the local system account
       definition.Principal.UserId = 'SYSTEM'
       definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
-      definition.Principal.RunLevel = TASK_RUNLEVEL_HIGHEST
+      definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
       return true
     else
       definition.Principal.UserId = user
       definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_PASSWORD
-      definition.Principal.RunLevel = TASK_RUNLEVEL_HIGHEST
+      definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
       return true
     end
   end
