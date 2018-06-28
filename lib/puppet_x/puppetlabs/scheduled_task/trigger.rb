@@ -476,7 +476,7 @@ module Trigger
 
   class V2
     class Type
-      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383915%28v=vs.85%29.aspx
+      # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_trigger_type2
       TASK_TRIGGER_EVENT                 = 0
       TASK_TRIGGER_TIME                  = 1
       TASK_TRIGGER_DAILY                 = 2
@@ -488,6 +488,7 @@ module Trigger
       TASK_TRIGGER_BOOT                  = 8
       TASK_TRIGGER_LOGON                 = 9
       TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
+      TASK_TRIGGER_CUSTOM_TRIGGER_01     = 12
     end
 
     SCHEDULE_BASED_TRIGGER_MAP = {
