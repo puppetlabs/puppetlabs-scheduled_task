@@ -25,7 +25,7 @@ class V1Adapter
       TaskScheduler2.task_definition(@task)
     @task_password = nil
 
-    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY_V1
+    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
     set_account_information('',nil)
   end
 
@@ -34,7 +34,10 @@ class V1Adapter
   def self.tasks
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [TaskScheduler2::TASK_COMPATIBILITY_AT, TaskScheduler2::TASK_COMPATIBILITY_V1]).map do |item|
+      include_compatibility: [
+        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
+        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+      ]).map do |item|
         TaskScheduler2.task_name_from_task_path(item)
     end
   end
@@ -196,12 +199,12 @@ class V1Adapter
     action = nil
     (1..TaskScheduler2.action_count(@definition)).each do |i|
       index_action = TaskScheduler2.action(@definition, i)
-      action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_EXEC
+      action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC
       break if action
     end
 
     if action.nil? && create_if_missing
-      action = TaskScheduler2.create_action(@definition, TaskScheduler2::TASK_ACTION_EXEC)
+      action = TaskScheduler2.create_action(@definition, TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
     end
 
     action

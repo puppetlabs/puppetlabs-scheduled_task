@@ -12,66 +12,101 @@ module TaskScheduler2
   # The name of the root folder for tasks
   ROOT_FOLDER = '\\'.freeze
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383558(v=vs.85).aspx
-  TASK_ENUM_HIDDEN  = 0x1
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_enum_flags
+  class TASK_ENUM_FLAGS
+    TASK_ENUM_HIDDEN  = 0x1
+  end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380596(v=vs.85).aspx
-  TASK_ACTION_EXEC = 0
-  TASK_ACTION_COM_HANDLER = 5
-  TASK_ACTION_SEND_EMAIL = 6
-  TASK_ACTION_SHOW_MESSAGE = 7
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_action_type
+  class TASK_ACTION_TYPE
+    TASK_ACTION_EXEC          = 0
+    TASK_ACTION_COM_HANDLER   = 5
+    TASK_ACTION_SEND_EMAIL    = 6
+    TASK_ACTION_SHOW_MESSAGE  = 7
+  end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383557(v=vs.85).aspx
-  # Undocumented values
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_compatibility
   # Win7/2008 R2                       = 3
   # Win8/Server 2012 R2 or Server 2016 = 4
   # Windows 10                         = 5 / 6
-  TASK_COMPATIBILITY_AT = 0
-  TASK_COMPATIBILITY_V1 = 1
-  TASK_COMPATIBILITY_V2 = 2
-  TASK_COMPATIBILITY_V2_1 = 3
-  TASK_COMPATIBILITY_V2_2 = 4
-  TASK_COMPATIBILITY_V2_3 = 5
-  TASK_COMPATIBILITY_V2_4 = 6
+  class TASK_COMPATIBILITY
+    TASK_COMPATIBILITY_AT     = 0
+    TASK_COMPATIBILITY_V1     = 1
+    TASK_COMPATIBILITY_V2     = 2
+    TASK_COMPATIBILITY_V2_1   = 3
+    TASK_COMPATIBILITY_V2_2   = 4
+    TASK_COMPATIBILITY_V2_3   = 5
+    TASK_COMPATIBILITY_V2_4   = 6
+  end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382538%28v=vs.85%29.aspx
-  TASK_VALIDATE_ONLY                 = 0x1
-  TASK_CREATE                        = 0x2
-  TASK_UPDATE                        = 0x4
-  TASK_CREATE_OR_UPDATE              = 0x6
-  TASK_DISABLE                       = 0x8
-  TASK_DONT_ADD_PRINCIPAL_ACE        = 0x10
-  TASK_IGNORE_REGISTRATION_TRIGGERS  = 0x20
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_creation
+  class TASK_CREATION
+    TASK_VALIDATE_ONLY                 = 0x1
+    TASK_CREATE                        = 0x2
+    TASK_UPDATE                        = 0x4
+    # ( TASK_CREATE | TASK_UPDATE )
+    TASK_CREATE_OR_UPDATE              = 0x6
+    TASK_DISABLE                       = 0x8
+    TASK_DONT_ADD_PRINCIPAL_ACE        = 0x10
+    TASK_IGNORE_REGISTRATION_TRIGGERS  = 0x20
+  end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383566(v=vs.85).aspx
-  TASK_LOGON_NONE                           = 0
-  TASK_LOGON_PASSWORD                       = 1
-  TASK_LOGON_S4U                            = 2
-  TASK_LOGON_INTERACTIVE_TOKEN              = 3
-  TASK_LOGON_GROUP                          = 4
-  TASK_LOGON_SERVICE_ACCOUNT                = 5
-  TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_logon_type
+  class TASK_LOGON_TYPE
+    TASK_LOGON_NONE                           = 0
+    TASK_LOGON_PASSWORD                       = 1
+    TASK_LOGON_S4U                            = 2
+    TASK_LOGON_INTERACTIVE_TOKEN              = 3
+    TASK_LOGON_GROUP                          = 4
+    TASK_LOGON_SERVICE_ACCOUNT                = 5
+    TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
+  end
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380747(v=vs.85).aspx
-  TASK_RUNLEVEL_LUA     = 0
-  TASK_RUNLEVEL_HIGHEST = 1
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_run_flags
+  class TASK_RUN_FLAGS
+    TASK_RUN_NO_FLAGS             = 0
+    TASK_RUN_AS_SELF              = 0x1
+    TASK_RUN_IGNORE_CONSTRAINTS   = 0x2
+    TASK_RUN_USE_SESSION_ID       = 0x4
+    TASK_RUN_USER_SID             = 0x8
+  end
+
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_runlevel
+  class TASK_RUNLEVEL_TYPE
+    TASK_RUNLEVEL_LUA     = 0
+    TASK_RUNLEVEL_HIGHEST = 1
+  end
+
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_processtokensid
+  class TASK_PROCESSTOKENSID_TYPE
+    TASK_PROCESSTOKENSID_NONE           = 0
+    TASK_PROCESSTOKENSID_UNRESTRICTED   = 1
+    TASK_PROCESSTOKENSID_DEFAULT        = 2
+  end
+
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_state
+  class TASK_STATE
+    TASK_STATE_UNKNOWN    = 0
+    TASK_STATE_DISABLED   = 1
+    TASK_STATE_QUEUED     = 2
+    TASK_STATE_READY      = 3
+    TASK_STATE_RUNNING    = 4
+  end
+
+  # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_instances_policy
+  class TASK_INSTANCES_POLICY
+    TASK_INSTANCES_PARALLEL       = 0
+    TASK_INSTANCES_QUEUE          = 1
+    TASK_INSTANCES_IGNORE_NEW     = 2
+    TASK_INSTANCES_STOP_EXISTING  = 3
+  end
 
   RESERVED_FOR_FUTURE_USE = 0
 
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381283(v=vs.85).aspx
-  TASK_FLAG_INTERACTIVE                  = 0x1
-  TASK_FLAG_DELETE_WHEN_DONE             = 0x2
+  # NOTE: this is a V1 API constant that shouldn't be in use
   TASK_FLAG_DISABLED                     = 0x4
-  TASK_FLAG_START_ONLY_IF_IDLE           = 0x10
-  TASK_FLAG_KILL_ON_IDLE_END             = 0x20
-  TASK_FLAG_DONT_START_IF_ON_BATTERIES   = 0x40
-  TASK_FLAG_KILL_IF_GOING_ON_BATTERIES   = 0x80
-  TASK_FLAG_RUN_ONLY_IF_DOCKED           = 0x100
-  TASK_FLAG_HIDDEN                       = 0x200
-  TASK_FLAG_RUN_IF_CONNECTED_TO_INTERNET = 0x400
-  TASK_FLAG_RESTART_ON_IDLE_RESUME       = 0x800
-  TASK_FLAG_SYSTEM_REQUIRED              = 0x1000
-  TASK_FLAG_RUN_ONLY_IF_LOGGED_ON        = 0x2000
+  # TASK_FLAG_RUN_ONLY_IF_LOGGED_ON        = 0x2000
 
   def self.is_com_error_type(win32OLERuntimeError, hresult)
     # to_s(16) does not include 0x prefix
@@ -109,7 +144,7 @@ module TaskScheduler2
 
     task_folder = task_service.GetFolder(folder_path)
     filter_compatibility = !options[:include_compatibility].empty?
-    task_folder.GetTasks(TASK_ENUM_HIDDEN).each do |task|
+    task_folder.GetTasks(TASK_ENUM_FLAGS::TASK_ENUM_HIDDEN).each do |task|
       next if filter_compatibility && !options[:include_compatibility].include?(task.Definition.Settings.Compatibility)
       array << task.Path
     end
@@ -159,12 +194,12 @@ module TaskScheduler2
     task_password = nil
 
     case definition.Principal.LogonType
-      when TASK_LOGON_PASSWORD, TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
+      when TASK_LOGON_TYPE::TASK_LOGON_PASSWORD, TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
         task_user = definition.Principal.UserId
         task_password = password
     end
     task_folder.RegisterTaskDefinition(task_name_from_task_path(task_path),
-                                       definition, TASK_CREATE_OR_UPDATE, task_user, task_password,
+                                       definition, TASK_CREATION::TASK_CREATE_OR_UPDATE, task_user, task_password,
                                        definition.Principal.LogonType)
   end
 
@@ -186,13 +221,13 @@ module TaskScheduler2
     if (user.nil? || user == "")
       # Setup for the local system account
       definition.Principal.UserId = 'SYSTEM'
-      definition.Principal.LogonType = TASK_LOGON_SERVICE_ACCOUNT
-      definition.Principal.RunLevel = TASK_RUNLEVEL_HIGHEST
+      definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
+      definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
       return true
     else
       definition.Principal.UserId = user
-      definition.Principal.LogonType = TASK_LOGON_PASSWORD
-      definition.Principal.RunLevel = TASK_RUNLEVEL_HIGHEST
+      definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_PASSWORD
+      definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
       return true
     end
   end

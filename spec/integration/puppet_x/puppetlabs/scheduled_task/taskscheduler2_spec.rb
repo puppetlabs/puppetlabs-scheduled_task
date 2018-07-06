@@ -26,7 +26,7 @@ end
 
 ST = PuppetX::PuppetLabs::ScheduledTask
 
-def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TASK_COMPATIBILITY_V2)
+def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
   tasksched = ST::TaskScheduler2
   task_name = tasksched::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
   definition = tasksched.new_task_definition
@@ -38,7 +38,7 @@ def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TA
   trigger = definition.Triggers.Create(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
   trigger.StartBoundary = '2017-09-11T14:02:00'
   # Create an action
-  new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_EXEC)
+  new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
   new_action.Path = 'cmd.exe'
   new_action.Arguments = '/c exit 0'
   tasksched.save(task_name, definition)
@@ -53,7 +53,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
   describe '#enum_task_names' do
     before(:all) do
       # Need a V1 task as a test fixture
-      @task_name = create_test_task(nil, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1)
+      @task_name = create_test_task(nil, PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1)
     end
 
     after(:all) do
@@ -73,7 +73,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
     end
 
     it 'should only return compatible tasks if specified' do
-      subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V1]}).count
+      subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]}).count
       ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
     end
@@ -128,7 +128,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should be V2 compatible' do
-        expect(subject.compatibility(task_definition)).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY_V2)
+        expect(subject.compatibility(task_definition)).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
       end
 
       it 'should have a single trigger' do
@@ -144,7 +144,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should have an action of type Execution' do
-        expect(subject.action(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_EXEC)
+        expect(subject.action(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
       end
 
       it 'should have the specified action path' do
