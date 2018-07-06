@@ -103,11 +103,6 @@ module TaskScheduler2
 
   RESERVED_FOR_FUTURE_USE = 0
 
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381283(v=vs.85).aspx
-  # NOTE: this is a V1 API constant that shouldn't be in use
-  TASK_FLAG_DISABLED                     = 0x4
-  # TASK_FLAG_RUN_ONLY_IF_LOGGED_ON        = 0x2000
-
   def self.is_com_error_type(win32OLERuntimeError, hresult)
     # to_s(16) does not include 0x prefix
     # assume actual hex for error is what message contains - i.e. 80070002

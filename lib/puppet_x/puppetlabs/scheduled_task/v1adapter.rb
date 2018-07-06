@@ -71,10 +71,6 @@ class V1Adapter
   #
   # Note that if intending to use SYSTEM, specify an empty user and nil password
   #
-  # Calling task.set_account_information('SYSTEM', nil) will generally not
-  # work, except for one special case where flags are also set like:
-  # task.flags = TaskScheduler2::TASK_FLAG_RUN_ONLY_IF_LOGGED_ON
-  #
   # This must be done prior to the 1st save() call for the task to be
   # properly registered and visible through the MMC snap-in / schtasks.exe
   #
@@ -178,17 +174,12 @@ class V1Adapter
     Trigger::V2.append_trigger(@definition, manifest_hash)
   end
 
-  # Returns the flags (integer) that modify the behavior of the work item. You
-  # must OR the return value to determine the flags yourself.
-  #
-  def flags
-    @definition.Settings.Enabled ? 0 : TaskScheduler2::TASK_FLAG_DISABLED
+  def enabled
+    @definition.Settings.Enabled
   end
 
-  # Sets an OR'd value of flags that modify the behavior of the work item.
-  #
-  def flags=(value)
-    @definition.Settings.Enabled = (value & TaskScheduler2::TASK_FLAG_DISABLED == 0)
+  def enabled=(value)
+    @definition.Settings.Enabled = value
   end
 
   private
