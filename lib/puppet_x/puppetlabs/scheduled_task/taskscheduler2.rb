@@ -1,6 +1,8 @@
 # The TaskScheduler2 class encapsulates taskscheduler settings and behavior using the v2 API
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383600(v=vs.85).aspx
 
+require_relative './error'
+
 # @api private
 module PuppetX
 module PuppetLabs
@@ -71,6 +73,14 @@ module TaskScheduler2
   TASK_FLAG_SYSTEM_REQUIRED              = 0x1000
   TASK_FLAG_RUN_ONLY_IF_LOGGED_ON        = 0x2000
 
+  def self.is_com_error_type(win32OLERuntimeError, hresult)
+    # to_s(16) does not include 0x prefix
+    # assume actual hex for error is what message contains - i.e. 80070002
+    return true if win32OLERuntimeError.message =~ /#{hresult.to_s(16)}/
+    # if not, look for 2s complement (negative value) - i.e. -2147024894
+    win32OLERuntimeError.message =~ /#{Error.to_signed_value(hresult)}/m
+  end
+
   def self.folder_path_from_task_path(task_path)
     path = task_path.rpartition('\\')[0]
 
@@ -119,8 +129,7 @@ module TaskScheduler2
       # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
       return task_folder.GetTask(task_name_from_task_path(task_path))
     rescue WIN32OLERuntimeError => e
-      # ERROR_FILE_NOT_FOUND 2L from winerror.h becomes this in COM
-      unless e.message =~ /80070002/m
+      unless is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
       end
     end
@@ -214,12 +223,8 @@ module TaskScheduler2
     begin
       result = definition.Actions.Item(index)
     rescue WIN32OLERuntimeError => err
-      # E_INVALIDARG 0x80070057 from # https://msdn.microsoft.com/en-us/library/windows/desktop/aa378137%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
-      if err.message =~ /80070057/m
-        result = nil
-      else
-        raise
-      end
+      raise unless is_com_error_type(err, Error::E_INVALIDARG)
+      result = nil
     end
 
     result
@@ -247,12 +252,8 @@ module TaskScheduler2
     begin
       result = definition.Triggers.Item(index)
     rescue WIN32OLERuntimeError => err
-      # E_INVALIDARG 0x80070057 from # https://msdn.microsoft.com/en-us/library/windows/desktop/aa378137%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
-      if err.message =~ /80070057/m
-        result = nil
-      else
-        raise
-      end
+      raise unless is_com_error_type(err, Error::E_INVALIDARG)
+      result = nil
     end
 
     result
