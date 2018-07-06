@@ -80,15 +80,15 @@ end
 describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
   let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::V1Adapter }
-  V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
 
   context "should ignore unknown Trigger types" do
+    v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
     [
-      { :ole_type => 'IIdleTrigger', :Type => V2::Type::TASK_TRIGGER_IDLE, },
-      { :ole_type => 'IRegistrationTrigger', :Type => V2::Type::TASK_TRIGGER_REGISTRATION, },
-      { :ole_type => 'ILogonTrigger', :Type => V2::Type::TASK_TRIGGER_LOGON, },
-      { :ole_type => 'ISessionStateChangeTrigger', :Type => V2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
-      { :ole_type => 'IEventTrigger', :Type => V2::Type::TASK_TRIGGER_EVENT, },
+      { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
+      { :ole_type => 'IRegistrationTrigger', :Type => v2::Type::TASK_TRIGGER_REGISTRATION, },
+      { :ole_type => 'ILogonTrigger', :Type => v2::Type::TASK_TRIGGER_LOGON, },
+      { :ole_type => 'ISessionStateChangeTrigger', :Type => v2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
+      { :ole_type => 'IEventTrigger', :Type => v2::Type::TASK_TRIGGER_EVENT, },
     ].each do |trigger_details|
       it "by returning nil for a #{trigger_details[:ole_type]} instance" do
         task_object = subjectv2.new('foo')

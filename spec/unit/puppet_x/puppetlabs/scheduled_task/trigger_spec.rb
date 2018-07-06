@@ -2,8 +2,6 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
 
-V2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
-
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
   describe "#iso8601_datetime_to_local" do
     [nil, ''].each do |value|
@@ -456,7 +454,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
 
         it "should default 'day_of_week' to be every day of the week" do
           pending("canonicalize_and_validate does not set defaults for 'day_of_week' or triggers_same? would fail")
-          expect(trigger['day_of_week']).to eq(V2::Day.names)
+          v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
+          expect(trigger['day_of_week']).to eq(v2::Day.names)
         end
 
         it "should use the specified value for 'day_of_week'" do
@@ -479,7 +478,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
       shared_examples_for 'a monthly schedule' do
         it "should default 'months' to be every month" do
           pending("canonicalize_and_validate does not set defaults for 'months' or triggers_same? would fail")
-          expect(trigger['months']).to eq(V2::Month.indexes)
+          v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
+          expect(trigger['months']).to eq(v2::Month.indexes)
         end
 
         it "should use the specified value for 'months'" do
@@ -894,6 +894,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2::WeeksOfMonth do
 end
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
+  v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
   describe '#to_manifest_hash' do
     DEFAULT_V2_ITRIGGER_PROPERTIES = {
       :Id                 => '',
@@ -905,25 +906,25 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
     }.freeze
 
     [
-      { :Type => V2::Type::TASK_TRIGGER_TIME,
+      { :Type => v2::Type::TASK_TRIGGER_TIME,
         :RandomDelay  => '',
        },
-      { :Type => V2::Type::TASK_TRIGGER_DAILY,
+      { :Type => v2::Type::TASK_TRIGGER_DAILY,
         :DaysInterval => 1,
         :RandomDelay  => '',
       },
-      { :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+      { :Type => v2::Type::TASK_TRIGGER_WEEKLY,
         :DaysOfWeek => 0,
         :WeeksInterval => 1,
         :RandomDelay  => '',
       },
-      { :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+      { :Type => v2::Type::TASK_TRIGGER_MONTHLY,
         :DaysOfMonth => 0,
         :MonthsOfYear => 4095,
         :RunOnLastDayOfMonth => false,
         :RandomDelay  => '',
       },
-      { :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+      { :Type => v2::Type::TASK_TRIGGER_MONTHLYDOW,
         :DaysOfWeek => 1,
         :WeeksOfMonth => 1,
         :MonthsOfYear => 1,
@@ -931,7 +932,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
         :RandomDelay  => '',
       },
     ].each do |trigger_details|
-      it "should convert a default #{V2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
+      it "should convert a default #{v2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
         iTrigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
         iTrigger[:Repetition] = stub(iTrigger[:Repetition])
@@ -941,7 +942,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
     end
 
     [
-      { :ole_type => 'IBootTrigger', :Type => V2::Type::TASK_TRIGGER_BOOT, },
+      { :ole_type => 'IBootTrigger', :Type => v2::Type::TASK_TRIGGER_BOOT, },
     ].each do |trigger_details|
       it "should convert an #{trigger_details[:ole_type]} instance" do
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
@@ -951,11 +952,11 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
     end
 
     [
-      { :ole_type => 'IIdleTrigger', :Type => V2::Type::TASK_TRIGGER_IDLE, },
-      { :ole_type => 'IRegistrationTrigger', :Type => V2::Type::TASK_TRIGGER_REGISTRATION, },
-      { :ole_type => 'ILogonTrigger', :Type => V2::Type::TASK_TRIGGER_LOGON, },
-      { :ole_type => 'ISessionStateChangeTrigger', :Type => V2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
-      { :ole_type => 'IEventTrigger', :Type => V2::Type::TASK_TRIGGER_EVENT, },
+      { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
+      { :ole_type => 'IRegistrationTrigger', :Type => v2::Type::TASK_TRIGGER_REGISTRATION, },
+      { :ole_type => 'ILogonTrigger', :Type => v2::Type::TASK_TRIGGER_LOGON, },
+      { :ole_type => 'ISessionStateChangeTrigger', :Type => v2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
+      { :ole_type => 'IEventTrigger', :Type => v2::Type::TASK_TRIGGER_EVENT, },
     ].each do |trigger_details|
       it "should fail to convert an #{trigger_details[:ole_type]} instance" do
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
@@ -987,7 +988,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
       {
         :iTrigger =>
         {
-          :Type => V2::Type::TASK_TRIGGER_TIME,
+          :Type => v2::Type::TASK_TRIGGER_TIME,
           :RandomDelay  => 'P2DT5S', # ignored
         },
         :expected =>
@@ -998,7 +999,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
       {
         :iTrigger =>
         {
-          :Type => V2::Type::TASK_TRIGGER_DAILY,
+          :Type => v2::Type::TASK_TRIGGER_DAILY,
           :DaysInterval => 2,
           :RandomDelay  => 'P2DT5S', # ignored
         },
@@ -1011,7 +1012,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
       {
         :iTrigger =>
         {
-          :Type => V2::Type::TASK_TRIGGER_WEEKLY,
+          :Type => v2::Type::TASK_TRIGGER_WEEKLY,
           :DaysOfWeek => 0b1111111,
           :WeeksInterval => 2,
           :RandomDelay  => 'P2DT5S', # ignored
@@ -1026,7 +1027,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
       {
         :iTrigger =>
         {
-          :Type => V2::Type::TASK_TRIGGER_MONTHLY,
+          :Type => v2::Type::TASK_TRIGGER_MONTHLY,
           :DaysOfMonth => 0b11111111111111111111111111111111,
           :MonthsOfYear => 1,
           :RunOnLastDayOfMonth => true, # ignored
@@ -1042,7 +1043,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
       {
         :iTrigger =>
         {
-          :Type => V2::Type::TASK_TRIGGER_MONTHLYDOW,
+          :Type => v2::Type::TASK_TRIGGER_MONTHLYDOW,
           :DaysOfWeek => 0b1111111,
           # HACK: choose only the last week selected for test conversion, as this LOSES information
           :WeeksOfMonth => 0b10000,
@@ -1059,7 +1060,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
         }
       },
     ].each do |trigger_details|
-      it "should convert a full ITrigger type #{V2::TYPE_MANIFEST_MAP[trigger_details[:iTrigger][:Type]]} to the equivalent V1 hash" do
+      it "should convert a full ITrigger type #{v2::TYPE_MANIFEST_MAP[trigger_details[:iTrigger][:Type]]} to the equivalent V1 hash" do
         iTrigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:iTrigger])
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
         iTrigger[:Repetition] = stub(iTrigger[:Repetition])
