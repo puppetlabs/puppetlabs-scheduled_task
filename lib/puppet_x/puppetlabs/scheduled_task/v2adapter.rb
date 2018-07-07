@@ -84,7 +84,7 @@ class V2Adapter
   # been associated with the task.
   #
   def account_information
-    principal = TaskScheduler2.principal(@definition)
+    principal = @definition.Principal
     principal.nil? ? nil : principal.UserId
   end
 

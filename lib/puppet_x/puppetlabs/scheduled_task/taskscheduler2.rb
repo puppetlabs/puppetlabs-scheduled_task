@@ -208,10 +208,6 @@ module TaskScheduler2
   end
 
   # General Properties
-  def self.principal(definition)
-    definition.Principal
-  end
-
   def self.set_principal(definition, user)
     if (user.nil? || user == "")
       # Setup for the local system account
