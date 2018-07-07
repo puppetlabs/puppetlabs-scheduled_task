@@ -223,11 +223,6 @@ module TaskScheduler2
     end
   end
 
-  # Task Triggers
-  def self.trigger_count(definition)
-    definition.Triggers.count
-  end
-
   # Returns a Win32OLE Trigger Object for the trigger at the given index for the
   # supplied definition.
   #

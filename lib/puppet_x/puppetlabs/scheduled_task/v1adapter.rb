@@ -146,7 +146,7 @@ class V1Adapter
   # Returns the number of triggers associated with the active task.
   #
   def trigger_count
-    TaskScheduler2.trigger_count(@definition)
+    @definition.Triggers.count
   end
 
   # Deletes the trigger at the specified index.

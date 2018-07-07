@@ -135,12 +135,6 @@ class V2Adapter
     dir
   end
 
-  # Returns the number of triggers associated with the active task.
-  #
-  def trigger_count
-    TaskScheduler2.trigger_count(@definition)
-  end
-
   def compatibility
     @definition.Settings.Compatibility
   end
@@ -148,6 +142,12 @@ class V2Adapter
   def compatibility=(value)
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381846(v=vs.85).aspx
     @definition.Settings.Compatibility = value
+  end
+
+  # Returns the number of triggers associated with the active task.
+  #
+  def trigger_count
+    @definition.Triggers.count
   end
 
   # Deletes the trigger at the specified index.
