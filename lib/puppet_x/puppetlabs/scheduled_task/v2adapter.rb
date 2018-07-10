@@ -204,16 +204,10 @@ class V2Adapter
   end
 
   def action_at(index)
-    result = nil
-
-    begin
-      result = @definition.Actions.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
-      result = nil
-    end
-
-    result
+    @definition.Actions.Item(index)
+  rescue WIN32OLERuntimeError => err
+    raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    nil
   end
 end
 
