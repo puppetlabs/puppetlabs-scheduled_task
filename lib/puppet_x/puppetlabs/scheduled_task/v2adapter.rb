@@ -16,10 +16,8 @@ class V2Adapter
     raise TypeError unless task_name.is_a?(String)
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
-    @task = TaskScheduler2.task(@full_task_path)
-    @definition = @task.nil? ?
-      TaskScheduler2.new_task_definition :
-      TaskScheduler2.task_definition(@task)
+    # definition populated when task exists, otherwise new
+    @task, @definition = TaskScheduler2.task(@full_task_path)
     @task_password = nil
 
     set_account_information('',nil)

@@ -154,28 +154,19 @@ module TaskScheduler2
 
   def self.task(task_path)
     raise TypeError unless task_path.is_a?(String)
+    service = task_service
     begin
-      task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
+      task_folder = service.GetFolder(folder_path_from_task_path(task_path))
       # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
-      return task_folder.GetTask(task_name_from_task_path(task_path))
+      _task = task_folder.GetTask(task_name_from_task_path(task_path))
+      return _task, task_definition(_task)
     rescue WIN32OLERuntimeError => e
       unless is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
       end
     end
 
-    nil
-  end
-
-  def self.new_task_definition
-    task_service.NewTask(0)
-  end
-
-  def self.task_definition(task)
-    definition = task_service.NewTask(0)
-    definition.XmlText = task.XML
-
-    definition
+    return nil, service.NewTask(0)
   end
 
   # Creates or Updates an existing task with the supplied task definition
@@ -231,6 +222,14 @@ module TaskScheduler2
     service
   end
   private_class_method :task_service
+
+  def self.task_definition(task)
+    definition = task_service.NewTask(0)
+    definition.XmlText = task.XML
+
+    definition
+  end
+  private_class_method :task_definition
 end
 
 end

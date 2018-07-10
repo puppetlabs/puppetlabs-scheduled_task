@@ -29,7 +29,7 @@ ST = PuppetX::PuppetLabs::ScheduledTask
 def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
   tasksched = ST::TaskScheduler2
   task_name = tasksched::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
-  definition = tasksched.new_task_definition
+  _, definition = tasksched.task(task_name)
   # Set task settings
   definition.Settings.Compatibility = task_compatiblity
   tasksched.set_principal(definition, '')
@@ -119,8 +119,9 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(@task_name)
     end
 
-    let(:task_object) { subject.task(@task_name) }
-    let(:task_definition) { subject.task_definition(task_object) }
+    let(:task_return) { subject.task(@task_name) }
+    let(:task_object) { task_return[0] }
+    let(:task_definition) { task_return[1] }
 
     context 'given a test task fixture' do
       it 'should be disabled' do
@@ -172,8 +173,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
         # using path and name
         ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Execute'
 
-        task_object = subject.task(@task_name)
-        task_definition = subject.task_definition(task_object)
+        task_object, task_definition = subject.task(@task_name)
         expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
 
         task_definition.Actions.Item(1).Path = 'notepad.exe'
