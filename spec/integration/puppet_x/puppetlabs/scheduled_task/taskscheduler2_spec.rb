@@ -31,7 +31,7 @@ def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TA
   task_name = tasksched::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
   definition = tasksched.new_task_definition
   # Set task settings
-  tasksched.set_compatibility(definition, task_compatiblity)
+  definition.Settings.Compatibility = task_compatiblity
   tasksched.set_principal(definition, '')
   definition.Settings.Enabled = false
   # Create a trigger
@@ -128,7 +128,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should be V2 compatible' do
-        expect(subject.compatibility(task_definition)).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+        expect(task_definition.Settings.Compatibility).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
       end
 
       it 'should have a single trigger' do

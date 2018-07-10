@@ -135,11 +135,12 @@ class V1Adapter
   end
 
   def compatibility
-    TaskScheduler2.compatibility(@definition)
+    @definition.Settings.Compatibility
   end
 
   def compatibility=(value)
-    TaskScheduler2.set_compatibility(@definition, value)
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381846(v=vs.85).aspx
+    @definition.Settings.Compatibility = value
   end
 
   # Returns the number of triggers associated with the active task.

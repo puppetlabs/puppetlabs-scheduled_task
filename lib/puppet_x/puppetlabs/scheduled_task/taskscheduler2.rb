@@ -223,19 +223,6 @@ module TaskScheduler2
     end
   end
 
-  # Returns the compatibility level of the task.
-  #
-  def self.compatibility(definition)
-    definition.Settings.Compatibility
-  end
-
-  # Sets the compatibility with the task.
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381846(v=vs.85).aspx
-  #
-  def self.set_compatibility(definition, value)
-    definition.Settings.Compatibility = value
-  end
-
   # Task Actions
   # Returns the number of actions associated with the active task.
   #
