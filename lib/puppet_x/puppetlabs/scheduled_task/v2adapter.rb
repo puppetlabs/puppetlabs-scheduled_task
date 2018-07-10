@@ -155,7 +155,10 @@ class V2Adapter
   def delete_trigger(index)
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
-    TaskScheduler2.delete_trigger(@definition, index + 1)
+    index += 1
+    @definition.Triggers.Remove(index)
+
+    index
   end
 
   # Returns a hash that describes the trigger at the given index for the

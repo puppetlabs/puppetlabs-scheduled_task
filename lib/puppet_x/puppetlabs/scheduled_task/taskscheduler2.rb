@@ -243,14 +243,6 @@ module TaskScheduler2
     result
   end
 
-  # Deletes the trigger at the specified index.
-  #
-  def self.delete_trigger(definition, index)
-    definition.Triggers.Remove(index)
-
-    index
-  end
-
   # Private methods
   def self.task_service
     service = WIN32OLE.new('Schedule.Service')
