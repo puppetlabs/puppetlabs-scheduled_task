@@ -144,15 +144,15 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should have an action of type Execution' do
-        expect(subject.action(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+        expect(task_definition.Actions.Item(1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
       end
 
       it 'should have the specified action path' do
-        expect(subject.action(task_definition, 1).Path).to eq('cmd.exe')
+        expect(task_definition.Actions.Item(1).Path).to eq('cmd.exe')
       end
 
       it 'should have the specified action arguments' do
-        expect(subject.action(task_definition, 1).Arguments).to eq('/c exit 0')
+        expect(task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
       end
     end
   end
@@ -176,7 +176,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
         task_definition = subject.task_definition(task_object)
         expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
 
-        subject.action(task_definition, 1).Path = 'notepad.exe'
+        task_definition.Actions.Item(1).Path = 'notepad.exe'
         subject.save(task_object, task_definition)
         expect('notepad.exe').to be_same_as_powershell_command(ps_cmd)
       end

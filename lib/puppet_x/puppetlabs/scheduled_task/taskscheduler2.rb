@@ -223,22 +223,6 @@ module TaskScheduler2
     end
   end
 
-  # Task Actions
-  # Returns the number of actions associated with the active task.
-  #
-  def self.action(definition, index)
-    result = nil
-
-    begin
-      result = definition.Actions.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless is_com_error_type(err, Error::E_INVALIDARG)
-      result = nil
-    end
-
-    result
-  end
-
   # Task Triggers
   def self.trigger_count(definition)
     definition.Triggers.count

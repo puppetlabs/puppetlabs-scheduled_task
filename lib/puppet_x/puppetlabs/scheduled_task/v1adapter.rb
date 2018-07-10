@@ -190,7 +190,7 @@ class V1Adapter
   def default_action(create_if_missing: false)
     action = nil
     (1..@definition.Actions.count).each do |i|
-      index_action = TaskScheduler2.action(@definition, i)
+      index_action = action_at(i)
       action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC
       break if action
     end
@@ -200,6 +200,19 @@ class V1Adapter
     end
 
     action
+  end
+
+  def action_at(index)
+    result = nil
+
+    begin
+      result = @definition.Actions.Item(index)
+    rescue WIN32OLERuntimeError => err
+      raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+      result = nil
+    end
+
+    result
   end
 end
 
