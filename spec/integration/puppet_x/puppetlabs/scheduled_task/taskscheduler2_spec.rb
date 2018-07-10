@@ -38,7 +38,7 @@ def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TA
   trigger = definition.Triggers.Create(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
   trigger.StartBoundary = '2017-09-11T14:02:00'
   # Create an action
-  new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+  new_action = definition.Actions.Create(tasksched::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
   new_action.Path = 'cmd.exe'
   new_action.Arguments = '/c exit 0'
   tasksched.save(task_name, definition)
@@ -140,7 +140,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should have a single action' do
-        expect(subject.action_count(task_definition)).to eq(1)
+        expect(task_definition.Actions.Count).to eq(1)
       end
 
       it 'should have an action of type Execution' do

@@ -226,10 +226,6 @@ module TaskScheduler2
   # Task Actions
   # Returns the number of actions associated with the active task.
   #
-  def self.action_count(definition)
-    definition.Actions.count
-  end
-
   def self.action(definition, index)
     result = nil
 
@@ -241,10 +237,6 @@ module TaskScheduler2
     end
 
     result
-  end
-
-  def self.create_action(definition, action_type)
-    definition.Actions.Create(action_type)
   end
 
   # Task Triggers
