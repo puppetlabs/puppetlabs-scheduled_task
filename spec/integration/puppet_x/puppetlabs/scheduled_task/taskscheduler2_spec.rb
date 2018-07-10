@@ -136,7 +136,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should have a trigger of type TimeTrigger' do
-        expect(subject.trigger(task_definition, 1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
+        expect(task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
       end
 
       it 'should have a single action' do

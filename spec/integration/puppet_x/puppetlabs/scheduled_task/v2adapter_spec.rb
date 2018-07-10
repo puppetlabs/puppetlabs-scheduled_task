@@ -78,7 +78,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V2Adapter", :if => Puppet.features
         task_object = subject.new('foo')
         # guarantee task not saved to system
         task_object.stubs(:save)
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.expects(:trigger).returns(stub(trigger_details))
+        task_object.expects(:trigger_at).with(1).returns(stub(trigger_details))
 
         expect(task_object.trigger(0)).to be_nil
       end

@@ -166,7 +166,7 @@ class V1Adapter
   def trigger(index)
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
-    trigger_object = TaskScheduler2.trigger(@definition, index + 1)
+    trigger_object = trigger_at(index + 1)
     trigger_object.nil? || Trigger::V2::TYPE_MANIFEST_MAP[trigger_object.Type].nil? ?
       nil :
       Trigger::V2.to_manifest_hash(trigger_object)
@@ -210,6 +210,26 @@ class V1Adapter
   rescue WIN32OLERuntimeError => err
     raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
     nil
+  end
+
+  # Returns a Win32OLE Trigger Object for the trigger at the given index for the
+  # supplied definition.
+  #
+  # Returns nil if the index does not exist
+  #
+  # Note - This is a 1 based array (not zero)
+  #
+  def trigger_at(index)
+    result = nil
+
+    begin
+      result = @definition.Triggers.Item(index)
+    rescue WIN32OLERuntimeError => err
+      raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+      result = nil
+    end
+
+    result
   end
 end
 

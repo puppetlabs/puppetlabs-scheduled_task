@@ -223,26 +223,6 @@ module TaskScheduler2
     end
   end
 
-  # Returns a Win32OLE Trigger Object for the trigger at the given index for the
-  # supplied definition.
-  #
-  # Returns nil if the index does not exist
-  #
-  # Note - This is a 1 based array (not zero)
-  #
-  def self.trigger(definition, index)
-    result = nil
-
-    begin
-      result = definition.Triggers.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless is_com_error_type(err, Error::E_INVALIDARG)
-      result = nil
-    end
-
-    result
-  end
-
   # Private methods
   def self.task_service
     service = WIN32OLE.new('Schedule.Service')
