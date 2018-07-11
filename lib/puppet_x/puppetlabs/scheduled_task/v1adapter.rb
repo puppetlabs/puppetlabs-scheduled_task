@@ -56,8 +56,8 @@ class V1Adapter
   # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
   #
   def save
-    task_object = @task.nil? ? @full_task_path : @task
-    TaskScheduler2.save(task_object, @definition, @task_password)
+    saved = TaskScheduler2.save(@task || @full_task_path, @definition, @task_password)
+    @task ||= saved
   end
 
   # Sets the +user+ and +password+ for the given task. If the user and
