@@ -207,7 +207,7 @@ class V2Adapter
   def action_at(index)
     @definition.Actions.Item(index)
   rescue WIN32OLERuntimeError => err
-    raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    raise unless TaskScheduler2::Error.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
     nil
   end
 
@@ -221,7 +221,7 @@ class V2Adapter
   def trigger_at(index)
     @definition.Triggers.Item(index)
   rescue WIN32OLERuntimeError => err
-    raise unless TaskScheduler2.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    raise unless TaskScheduler2::Error.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
     nil
   end
 end

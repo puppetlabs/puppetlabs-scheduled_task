@@ -103,14 +103,6 @@ module TaskScheduler2
 
   RESERVED_FOR_FUTURE_USE = 0
 
-  def self.is_com_error_type(win32OLERuntimeError, hresult)
-    # to_s(16) does not include 0x prefix
-    # assume actual hex for error is what message contains - i.e. 80070002
-    return true if win32OLERuntimeError.message =~ /#{hresult.to_s(16)}/
-    # if not, look for 2s complement (negative value) - i.e. -2147024894
-    win32OLERuntimeError.message =~ /#{Error.to_signed_value(hresult)}/m
-  end
-
   def self.task_name_from_task_path(task_path)
     task_path.rpartition('\\')[2]
   end
@@ -155,7 +147,7 @@ module TaskScheduler2
       _task = task_folder.GetTask(task_name_from_task_path(task_path))
       return _task, task_definition(_task)
     rescue WIN32OLERuntimeError => e
-      unless is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
+      unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
       end
     end
