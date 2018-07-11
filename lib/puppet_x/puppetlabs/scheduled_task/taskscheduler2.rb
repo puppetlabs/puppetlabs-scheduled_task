@@ -111,12 +111,6 @@ module TaskScheduler2
     win32OLERuntimeError.message =~ /#{Error.to_signed_value(hresult)}/m
   end
 
-  def self.folder_path_from_task_path(task_path)
-    path = task_path.rpartition('\\')[0]
-
-    path.empty? ? ROOT_FOLDER : path
-  end
-
   def self.task_name_from_task_path(task_path)
     task_path.rpartition('\\')[2]
   end
@@ -230,6 +224,13 @@ module TaskScheduler2
     definition
   end
   private_class_method :task_definition
+
+  def self.folder_path_from_task_path(task_path)
+    path = task_path.rpartition('\\')[0]
+
+    path.empty? ? ROOT_FOLDER : path
+  end
+  private_class_method :folder_path_from_task_path
 end
 
 end
