@@ -424,19 +424,19 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'whether the task is enabled' do
       it 'should report tasks with the disabled bit set as disabled' do
-        @mock_task.stubs(:flags).returns(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
+        @mock_task.stubs(:enabled).returns(false)
 
         expect(resource.provider.enabled).to eq(:false)
       end
 
       it 'should report tasks without the disabled bit set as enabled' do
-        @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
+        @mock_task.stubs(:enabled).returns(true)
 
         expect(resource.provider.enabled).to eq(:true)
       end
 
       it 'should not consider triggers for determining if the task is enabled' do
-        @mock_task.stubs(:flags).returns(~PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
+        @mock_task.stubs(:enabled).returns(:true)
         @mock_task.stubs(:trigger_count).returns(1)
         manifest = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest
         default_once = manifest.default_trigger_for('once').merge(
@@ -1090,16 +1090,16 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
 
     describe '#enabled=' do
-      it 'should set the disabled flag if the task should be disabled' do
-        @mock_task.stubs(:flags).returns(0)
-        @mock_task.expects(:flags=).with(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
+      it 'should set the enabled property if the task should be disabled' do
+        @mock_task.stubs(:enabled).returns(true)
+        @mock_task.expects(:enabled=).with(false)
 
         resource.provider.enabled = :false
       end
 
-      it 'should clear the disabled flag if the task should be enabled' do
-        @mock_task.stubs(:flags).returns(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED)
-        @mock_task.expects(:flags=).with(0)
+      it 'should clear the enabled property if the task should be enabled' do
+        @mock_task.stubs(:enabled).returns(false)
+        @mock_task.expects(:enabled=).with(true)
 
         resource.provider.enabled = :true
       end
@@ -1238,8 +1238,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @mock_task.stubs(:parameters=)
       @mock_task.stubs(:working_directory=)
       @mock_task.stubs(:set_account_information)
-      @mock_task.stubs(:flags)
-      @mock_task.stubs(:flags=)
+      @mock_task.stubs(:enabled)
+      @mock_task.stubs(:enabled=)
       @mock_task.stubs(:trigger_count).returns(0)
       @mock_task.stubs(:append_trigger)
       if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderTaskscheduler_api2)
@@ -1302,8 +1302,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         @new_mock_task.stubs(:application_name=)
         @new_mock_task.stubs(:parameters=)
         @new_mock_task.stubs(:working_directory=)
-        @new_mock_task.stubs(:flags)
-        @new_mock_task.stubs(:flags=)
+        @new_mock_task.stubs(:enabled)
+        @new_mock_task.stubs(:enabled=)
         @new_mock_task.stubs(:delete_trigger)
         @new_mock_task.stubs(:append_trigger)
         @new_mock_task.stubs(:set_account_information)

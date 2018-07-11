@@ -126,7 +126,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       task = Win32::TaskScheduler.new(@task_name, default_once_trigger)
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
-      task.flags = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED
+      task.flags = Win32::TaskScheduler::TASK_FLAG_DISABLED
       task.save
     end
 
@@ -147,7 +147,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       subjectv1.activate(@task_name)
       v2task = subjectv2.new(@task_name)
 
-      expect(v2task.flags).to eq(subjectv1.flags)
+      # flags in Win32::TaskScheduler cover all possible flag values
+      # flags in V1Adapter only cover enabled status
+      v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
+      expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
       expect(v2task.application_name).to eq(subjectv1.application_name)
       expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
@@ -185,6 +188,8 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
 
       # flags in Win32::TaskScheduler cover all possible flag values
       # flags in V1Adapter only cover enabled status
+      v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
+      expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
       expect(v2task.application_name).to eq(subjectv1.application_name)
       expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
@@ -199,7 +204,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       task = Win32::TaskScheduler.new(@task_name, default_once_trigger)
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
-      task.flags = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_FLAG_DISABLED
+      task.flags = Win32::TaskScheduler::TASK_FLAG_DISABLED
       task.save
     end
 
@@ -224,7 +229,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
 
       subjectv1.activate(@task_name)
 
-      expect(subjectv1.flags).to eq(v2task.flags)
+      # flags in Win32::TaskScheduler cover all possible flag values
+      # flags in V1Adapter only cover enabled status
+      v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
+      expect(!v1_disabled).to eq(v2task.enabled)
       expect(subjectv1.parameters).to eq(arguments_after)
       expect(subjectv1.application_name).to eq(v2task.application_name)
       expect(subjectv1.trigger_count).to eq(v2task.trigger_count)
