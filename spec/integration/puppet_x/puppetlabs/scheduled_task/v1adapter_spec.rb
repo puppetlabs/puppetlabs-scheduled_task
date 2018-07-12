@@ -63,7 +63,7 @@ end
 
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
-describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features.microsoft_windows? do
+describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
   subject = PuppetX::PuppetLabs::ScheduledTask::V1Adapter
 
   context "should ignore unknown Trigger types" do
@@ -276,29 +276,9 @@ def to_manifest_hash(v1trigger)
   manifest_hash
 end
 
-describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features.microsoft_windows? do
+describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
   let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::V1Adapter }
-
-  context "should ignore unknown Trigger types" do
-    v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
-    [
-      { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
-      { :ole_type => 'IRegistrationTrigger', :Type => v2::Type::TASK_TRIGGER_REGISTRATION, },
-      { :ole_type => 'ILogonTrigger', :Type => v2::Type::TASK_TRIGGER_LOGON, },
-      { :ole_type => 'ISessionStateChangeTrigger', :Type => v2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
-      { :ole_type => 'IEventTrigger', :Type => v2::Type::TASK_TRIGGER_EVENT, },
-    ].each do |trigger_details|
-      it "by returning nil for a #{trigger_details[:ole_type]} instance" do
-        task_object = subjectv2.new('foo', :v1_compatibility)
-        # guarantee task not saved to system
-        task_object.stubs(:save)
-        task_object.expects(:trigger_at).with(1).returns(stub(trigger_details))
-
-        expect(task_object.trigger(0)).to be_nil
-      end
-    end
-  end
 
   now = Time.now
   default_once_trigger =
@@ -318,7 +298,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     # 'once' has no specific settings, so 'type' should be omitted
   }
 
-  context "When created by a V1 API" do
+  context "When created by the legacy V1 COM API" do
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
@@ -358,7 +338,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     end
   end
 
-  context "When created by a V2 API" do
+  context "When created by the V2 API" do
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
@@ -396,7 +376,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     end
   end
 
-  context "When modified by a V2 API" do
+  context "When modifiying a legacy V1 COM API task using the V2 API" do
     before(:all) do
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
