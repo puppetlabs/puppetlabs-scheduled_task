@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/v2adapter'
+require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if => Puppet.features.microsoft_windows? do
   it 'should be the default provider' do
@@ -17,12 +17,7 @@ end
 task_providers = Puppet.features.microsoft_windows? ? [:win32_taskscheduler, :taskscheduler_api2] : []
 task_providers.each do |task_provider|
 
-case task_provider
-when :win32_taskscheduler
-  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::V1Adapter
-when :taskscheduler_api2
-  concrete_klass = PuppetX::PuppetLabs::ScheduledTask::V2Adapter
-end
+concrete_klass = PuppetX::PuppetLabs::ScheduledTask::V1Adapter
 
 describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
   before :each do

@@ -1,6 +1,4 @@
-# This class is used to manage V1 compatible tasks using the Task Scheduler V2 API
-# It is designed to be a binary compatible API to puppet/util/windows/taskscheduler.rb but
-# will only surface the features used by the Puppet scheduledtask provider
+# This class is used to manage tasks using the Task Scheduler V2 API
 #
 require_relative './taskscheduler2'
 require_relative './trigger'
@@ -35,9 +33,19 @@ class V1Adapter
     TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
   ].freeze
 
+  V2_COMPATIBILITY = [
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_4,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_3,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_2,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_1,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+  ].freeze
+
   # Returns an array of scheduled task names.
   #
-  def self.tasks(compatibility = V1_COMPATIBILITY)
+  def self.tasks(compatibility = V2_COMPATIBILITY)
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: compatibility).map do |item|
