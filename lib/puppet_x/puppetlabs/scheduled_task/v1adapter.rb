@@ -30,15 +30,17 @@ class V1Adapter
     set_account_information('',nil)
   end
 
+  V1_COMPATIBILITY = [
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+  ].freeze
+
   # Returns an array of scheduled task names.
   #
-  def self.tasks
+  def self.tasks(compatibility = V1_COMPATIBILITY)
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [
-        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
-        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
-      ]).map do |item|
+      include_compatibility: compatibility).map do |item|
         TaskScheduler2.task_name_from_task_path(item)
     end
   end
