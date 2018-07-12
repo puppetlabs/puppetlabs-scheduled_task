@@ -15,7 +15,7 @@ class V1Adapter
   # An existing task named task_name will be returned if one exists,
   # otherwise a new task is created by that name (but not yet saved to the system).
   #
-  def initialize(task_name)
+  def initialize(task_name, compatibility_level = nil)
     raise TypeError unless task_name.is_a?(String)
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
@@ -23,7 +23,10 @@ class V1Adapter
     @task, @definition = TaskScheduler2.task(@full_task_path)
     @task_password = nil
 
-    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+    if compatibility_level == :v1_compatibility
+      self.compatibility = TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+    end
+
     set_account_information('',nil)
   end
 

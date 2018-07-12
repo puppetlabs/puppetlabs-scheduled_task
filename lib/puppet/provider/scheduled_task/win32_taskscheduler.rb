@@ -24,7 +24,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def task
     @task ||=
-      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(resource[:name])
+      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(resource[:name], :v1_compatibility)
   end
 
   def enabled
@@ -149,7 +149,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def create
     @triggers = nil
-    @task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(resource[:name])
+    @task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(resource[:name], :v1_compatibility)
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user].each do |prop|

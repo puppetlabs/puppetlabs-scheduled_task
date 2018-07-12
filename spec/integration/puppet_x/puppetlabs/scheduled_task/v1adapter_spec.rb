@@ -91,7 +91,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       { :ole_type => 'IEventTrigger', :Type => v2::Type::TASK_TRIGGER_EVENT, },
     ].each do |trigger_details|
       it "by returning nil for a #{trigger_details[:ole_type]} instance" do
-        task_object = subjectv2.new('foo')
+        task_object = subjectv2.new('foo', :v1_compatibility)
         # guarantee task not saved to system
         task_object.stubs(:save)
         task_object.expects(:trigger_at).with(1).returns(stub(trigger_details))
@@ -140,12 +140,12 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     end
 
     it 'should have a compatibility value of 1' do
-      expect(subjectv2.new(@task_name).compatibility).to eq(1)
+      expect(subjectv2.new(@task_name, :v1_compatibility).compatibility).to eq(1)
     end
 
     it 'should have same properties in the V2 API' do
       subjectv1.activate(@task_name)
-      v2task = subjectv2.new(@task_name)
+      v2task = subjectv2.new(@task_name, :v1_compatibility)
 
       # flags in Win32::TaskScheduler cover all possible flag values
       # flags in V1Adapter only cover enabled status
@@ -164,7 +164,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
       @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
 
       # create default task with 0 triggers
-      task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(@task_name)
+      task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(@task_name, :v1_compatibility)
       task.application_name = 'cmd.exe'
       task.parameters = '/c exit 0'
       task.save
@@ -179,12 +179,12 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     end
 
     it 'should have a compatibility value of 1' do
-      expect(subjectv2.new(@task_name).compatibility).to eq(1)
+      expect(subjectv2.new(@task_name, :v1_compatibility).compatibility).to eq(1)
     end
 
     it 'should have same properties in the V2 API' do
       subjectv1.activate(@task_name)
-      v2task = subjectv2.new(@task_name)
+      v2task = subjectv2.new(@task_name, :v1_compatibility)
 
       # flags in Win32::TaskScheduler cover all possible flag values
       # flags in V1Adapter only cover enabled status
@@ -218,12 +218,12 @@ describe "PuppetX::PuppetLabs::ScheduledTask::V1Adapter", :if => Puppet.features
     end
 
     it 'should have a compatibility value of 1' do
-      expect(subjectv2.new(@task_name).compatibility).to eq(1)
+      expect(subjectv2.new(@task_name, :v1_compatibility).compatibility).to eq(1)
     end
 
     it 'should have same properties in the V1 API' do
       arguments_after = '/c exit 255'
-      v2task = subjectv2.new(@task_name)
+      v2task = subjectv2.new(@task_name, :v1_compatibility)
       v2task.parameters = arguments_after
       v2task.save
 
