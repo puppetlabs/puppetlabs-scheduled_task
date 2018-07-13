@@ -49,7 +49,7 @@ class V1Adapter
     enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: compatibility).map do |item|
-        TaskScheduler2.task_name_from_task_path(item)
+        task_name_from_task_path(item)
     end
   end
 
@@ -95,7 +95,9 @@ class V1Adapter
   # Delete the specified task name.
   #
   def self.delete(task_name)
-    TaskScheduler2.delete(TaskScheduler2::ROOT_FOLDER + task_name)
+    task_path = TaskScheduler2::ROOT_FOLDER + task_name
+    task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
+    task_folder.DeleteTask(task_name_from_task_path(task_path), 0)
   end
 
   # Saves the current task. Tasks must be saved before they can be activated.
@@ -249,6 +251,16 @@ class V1Adapter
     service.connect()
 
     service
+  end
+
+  def self.task_name_from_task_path(task_path)
+    task_path.rpartition('\\')[2]
+  end
+
+  def self.folder_path_from_task_path(task_path)
+    path = task_path.rpartition('\\')[0]
+
+    path.empty? ? TaskScheduler2::ROOT_FOLDER : path
   end
 
   # Find the first TASK_ACTION_EXEC action

@@ -2,6 +2,7 @@
 require 'spec_helper'
 require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2'
 require 'puppet_x/puppetlabs/scheduled_task/trigger'
+require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
@@ -52,37 +53,6 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
   let(:subject_taskname) { nil }
   let(:subject) { PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2 }
 
-  describe '#delete' do
-    before(:each) do
-      @task_name = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
-    end
-
-    after(:each) do
-      begin
-        PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(@task_name)
-      rescue => _details
-        # Ignore any errors
-      end
-    end
-
-    it 'should delete a task that exists' do
-      create_test_task(@task_name)
-
-      # Can't use URI as it is empty string on some OS.  Just construct the URI
-      # using path and name
-      ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + @task_name + '\' } | Measure-Object).count'
-      expect(1).to be_same_as_powershell_command(ps_cmd)
-
-      subject.delete(@task_name)
-      expect(0).to be_same_as_powershell_command(ps_cmd)
-    end
-
-    it 'should raise an error for a task that does not exist' do
-      # 80070002 is file not found error code
-      expect{ subject.delete('task_does_not_exist') }.to raise_error(WIN32OLERuntimeError,/80070002/)
-    end
-  end
-
   describe 'create a task' do
     before(:all) do
       @task_name = create_test_task
@@ -90,7 +60,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
     end
 
     after(:all) do
-      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(@task_name)
+      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(@task_name)
     end
 
     context 'given a test task fixture' do
@@ -134,7 +104,7 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
     end
 
     after(:each) do
-      PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(@task_name)
+      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(@task_name)
     end
 
     context 'given a test task fixture' do

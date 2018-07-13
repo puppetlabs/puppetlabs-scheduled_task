@@ -129,6 +129,38 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     end
   end
 
+  describe '#delete' do
+    before(:each) do
+      @task_name = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
+    end
+
+    after(:each) do
+      begin
+        # TODO: replace with different deletion mechanism
+        subject.delete(@task_name)
+      rescue => _details
+        # Ignore any errors
+      end
+    end
+
+    it 'should delete a task that exists' do
+      create_task(@task_name, nil, [ manifest_triggers[0] ])
+
+      # Can't use URI as it is empty string on some OS.  Just construct the URI
+      # using path and name
+      ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + @task_name + '\' } | Measure-Object).count'
+      expect(1).to be_same_as_powershell_command(ps_cmd)
+
+      subject.delete(@task_name)
+      expect(0).to be_same_as_powershell_command(ps_cmd)
+    end
+
+    it 'should raise an error for a task that does not exist' do
+      # 80070002 is file not found error code
+      expect{ subject.delete('task_does_not_exist') }.to raise_error(WIN32OLERuntimeError,/80070002/)
+    end
+  end
+
   context "should be able to create trigger" do
     before(:all) do
       _, @task_name = create_task

@@ -142,15 +142,6 @@ module TaskScheduler2
                                        definition.Principal.LogonType)
   end
 
-  # Delete the specified task name.
-  #
-  def self.delete(task_path)
-    raise TypeError unless task_path.is_a?(String)
-    task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
-
-    task_folder.DeleteTask(task_name_from_task_path(task_path),0)
-  end
-
   # Private methods
   def self.task_service
     service = WIN32OLE.new('Schedule.Service')
