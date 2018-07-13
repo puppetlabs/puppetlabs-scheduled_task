@@ -101,41 +101,8 @@ module TaskScheduler2
     TASK_INSTANCES_STOP_EXISTING  = 3
   end
 
-  RESERVED_FOR_FUTURE_USE = 0
-
   def self.task_name_from_task_path(task_path)
     task_path.rpartition('\\')[2]
-  end
-
-  # Returns an array of scheduled task names.
-  # By default EVERYTHING is enumerated
-  # option hash
-  #    include_child_folders: recurses into child folders for tasks. Default true
-  #    include_compatibility: Only include tasks which have any of the specified compatibility levels. Default empty array (everything is permitted)
-  #
-  def self.enum_task_names(folder_path = ROOT_FOLDER, enum_options = {})
-    raise TypeError unless folder_path.is_a?(String)
-
-    options = {
-      :include_child_folders => true,
-      :include_compatibility => [],
-    }.merge(enum_options)
-
-    array = []
-
-    task_folder = task_service.GetFolder(folder_path)
-    filter_compatibility = !options[:include_compatibility].empty?
-    task_folder.GetTasks(TASK_ENUM_FLAGS::TASK_ENUM_HIDDEN).each do |task|
-      next if filter_compatibility && !options[:include_compatibility].include?(task.Definition.Settings.Compatibility)
-      array << task.Path
-    end
-    return array unless options[:include_child_folders]
-
-    task_folder.GetFolders(RESERVED_FOR_FUTURE_USE).each do |child_folder|
-      array += enum_task_names(child_folder.Path, options)
-    end
-
-    array
   end
 
   def self.task(task_path)

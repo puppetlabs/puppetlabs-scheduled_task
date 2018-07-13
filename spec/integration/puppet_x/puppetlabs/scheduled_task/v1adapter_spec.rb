@@ -2,6 +2,7 @@
 require 'spec_helper'
 
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
+require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2' # for TaskScheduler2::ROOT_FOLDER
 require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
@@ -95,6 +96,36 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
         expect(task_object.trigger(0)).to be_nil
       end
+    end
+  end
+
+  describe '#enum_task_names' do
+    before(:all) do
+      # Need a V1 task as a test fixture
+      _, @task_name = create_task(nil, :v1_compatibility, [ manifest_triggers[0] ])
+    end
+
+    after(:all) do
+      subject.delete(@task_name)
+    end
+
+    it 'should return all tasks by default' do
+      subject_count = subject.enum_task_names.count
+      ps_cmd = '(Get-ScheduledTask | Measure-Object).count'
+      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    end
+
+    it 'should not recurse folders if specified' do
+      subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_child_folders => false}).count
+      ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
+      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    end
+
+    it 'should only return compatible tasks if specified' do
+      compatibility = [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
+      subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => compatibility}).count
+      ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
+      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
     end
   end
 

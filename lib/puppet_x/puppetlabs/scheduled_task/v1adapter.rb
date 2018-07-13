@@ -46,11 +46,44 @@ class V1Adapter
   # Returns an array of scheduled task names.
   #
   def self.tasks(compatibility = V2_COMPATIBILITY)
-    TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
+    enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: compatibility).map do |item|
         TaskScheduler2.task_name_from_task_path(item)
     end
+  end
+
+  RESERVED_FOR_FUTURE_USE = 0
+
+  # Returns an array of scheduled task names.
+  # By default EVERYTHING is enumerated
+  # option hash
+  #    include_child_folders: recurses into child folders for tasks. Default true
+  #    include_compatibility: Only include tasks which have any of the specified compatibility levels. Default empty array (everything is permitted)
+  #
+  def self.enum_task_names(folder_path = TaskScheduler2::ROOT_FOLDER, enum_options = {})
+    raise TypeError unless folder_path.is_a?(String)
+
+    options = {
+      :include_child_folders => true,
+      :include_compatibility => [],
+    }.merge(enum_options)
+
+    array = []
+
+    task_folder = task_service.GetFolder(folder_path)
+    filter_compatibility = !options[:include_compatibility].empty?
+    task_folder.GetTasks(TaskScheduler2::TASK_ENUM_FLAGS::TASK_ENUM_HIDDEN).each do |task|
+      next if filter_compatibility && !options[:include_compatibility].include?(task.Definition.Settings.Compatibility)
+      array << task.Path
+    end
+    return array unless options[:include_child_folders]
+
+    task_folder.GetFolders(RESERVED_FOR_FUTURE_USE).each do |child_folder|
+      array += enum_task_names(child_folder.Path, options)
+    end
+
+    array
   end
 
   # Returns whether or not the scheduled task exists.
@@ -199,6 +232,12 @@ class V1Adapter
 
   private
   # :stopdoc:
+  def self.task_service
+    service = WIN32OLE.new('Schedule.Service')
+    service.connect()
+
+    service
+  end
 
   # Find the first TASK_ACTION_EXEC action
   def default_action(create_if_missing: false)
