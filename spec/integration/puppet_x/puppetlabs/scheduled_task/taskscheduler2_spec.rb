@@ -32,7 +32,9 @@ def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TA
   _, definition = tasksched.task(task_name)
   # Set task settings
   definition.Settings.Compatibility = task_compatiblity
-  tasksched.set_principal(definition, '')
+  definition.Principal.UserId = 'SYSTEM'
+  definition.Principal.LogonType = tasksched::TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
+  definition.Principal.RunLevel = tasksched::TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
   definition.Settings.Enabled = false
   # Create a trigger
   trigger = definition.Triggers.Create(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)

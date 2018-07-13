@@ -151,22 +151,6 @@ module TaskScheduler2
     task_folder.DeleteTask(task_name_from_task_path(task_path),0)
   end
 
-  # General Properties
-  def self.set_principal(definition, user)
-    if (user.nil? || user == "")
-      # Setup for the local system account
-      definition.Principal.UserId = 'SYSTEM'
-      definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
-      definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
-      return true
-    else
-      definition.Principal.UserId = user
-      definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_PASSWORD
-      definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
-      return true
-    end
-  end
-
   # Private methods
   def self.task_service
     service = WIN32OLE.new('Schedule.Service')

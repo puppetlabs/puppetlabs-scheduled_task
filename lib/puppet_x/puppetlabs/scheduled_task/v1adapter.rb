@@ -120,7 +120,19 @@ class V1Adapter
   #
   def set_account_information(user, password)
     @task_password = password
-    TaskScheduler2.set_principal(@definition, user)
+
+    if (user.nil? || user == "")
+      # Setup for the local system account
+      @definition.Principal.UserId = 'SYSTEM'
+      @definition.Principal.LogonType = TaskScheduler2::TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
+      @definition.Principal.RunLevel = TaskScheduler2::TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
+    else
+      @definition.Principal.UserId = user
+      @definition.Principal.LogonType = TaskScheduler2::TASK_LOGON_TYPE::TASK_LOGON_PASSWORD
+      @definition.Principal.RunLevel = TaskScheduler2::TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
+    end
+
+    true
   end
 
   # Returns the user associated with the task or nil if no user has yet
