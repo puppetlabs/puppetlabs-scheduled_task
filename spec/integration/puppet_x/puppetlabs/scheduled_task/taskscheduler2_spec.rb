@@ -113,47 +113,44 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
   describe 'create a task' do
     before(:all) do
       @task_name = create_test_task
+      _, @task_definition = ST::TaskScheduler2.task(@task_name)
     end
 
     after(:all) do
       PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(@task_name)
     end
 
-    let(:task_return) { subject.task(@task_name) }
-    let(:task_object) { task_return[0] }
-    let(:task_definition) { task_return[1] }
-
     context 'given a test task fixture' do
       it 'should be disabled' do
-        expect(task_definition.Settings.Enabled).to eq(false)
+        expect(@task_definition.Settings.Enabled).to eq(false)
       end
 
       it 'should be V2 compatible' do
-        expect(task_definition.Settings.Compatibility).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+        expect(@task_definition.Settings.Compatibility).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
       end
 
       it 'should have a single trigger' do
-        expect(task_definition.Triggers.count).to eq(1)
+        expect(@task_definition.Triggers.count).to eq(1)
       end
 
       it 'should have a trigger of type TimeTrigger' do
-        expect(task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
+        expect(@task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
       end
 
       it 'should have a single action' do
-        expect(task_definition.Actions.Count).to eq(1)
+        expect(@task_definition.Actions.Count).to eq(1)
       end
 
       it 'should have an action of type Execution' do
-        expect(task_definition.Actions.Item(1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+        expect(@task_definition.Actions.Item(1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
       end
 
       it 'should have the specified action path' do
-        expect(task_definition.Actions.Item(1).Path).to eq('cmd.exe')
+        expect(@task_definition.Actions.Item(1).Path).to eq('cmd.exe')
       end
 
       it 'should have the specified action arguments' do
-        expect(task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
+        expect(@task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
       end
     end
   end
