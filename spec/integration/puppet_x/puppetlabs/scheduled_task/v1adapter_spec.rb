@@ -61,6 +61,18 @@ def manifest_triggers
   ]
 end
 
+def create_task(task_name = nil, task_compatiblity = nil, triggers = [])
+  task_name = 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
+
+  task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(task_name, task_compatiblity)
+  task.application_name = 'cmd.exe'
+  task.parameters = '/c exit 0'
+  triggers.each { |trigger| task.append_trigger(trigger) }
+  task.save
+
+  return task, task_name
+end
+
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
 describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
@@ -88,12 +100,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   context "should be able to create trigger" do
     before(:all) do
-      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-
-      task = subject.new(@task_name)
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.save
+      _, @task_name = create_task
     end
 
     after(:all) do
@@ -137,12 +144,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   context "When managing a task" do
     before(:each) do
-      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-      task = subject.new(@task_name)
-      task.append_trigger(manifest_triggers[0])
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.save
+      _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
     end
 
     after(:each) do
@@ -340,13 +342,8 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
 
   context "When created by the V2 API" do
     before(:all) do
-      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-
       # create default task with 0 triggers
-      task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(@task_name, :v1_compatibility)
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.save
+      _, @task_name = create_task(nil, :v1_compatibility)
     end
 
     after(:all) do
