@@ -100,11 +100,30 @@ class V1Adapter
     task_folder.DeleteTask(task_name_from_task_path(task_path), 0)
   end
 
-  # Saves the current task. Tasks must be saved before they can be activated.
-  # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
+  # Creates or Updates an existing task with the supplied task definition
+  # Tasks must be saved before they can be activated.
   #
+  # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
   def save
-    saved = TaskScheduler2.save(@task || @full_task_path, @definition, @task_password)
+    task_path = @task ? @task.Path : @full_task_path
+
+    task_folder = self.class.task_service.GetFolder(self.class.folder_path_from_task_path(task_path))
+    task_user = nil
+    task_password = nil
+
+    case @definition.Principal.LogonType
+      when TaskScheduler2::TASK_LOGON_TYPE::TASK_LOGON_PASSWORD,
+        TaskScheduler2::TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
+        task_user = @definition.Principal.UserId
+        task_password = @password
+    end
+
+    saved = task_folder.RegisterTaskDefinition(
+      self.class.task_name_from_task_path(task_path),
+      @definition,
+      TaskScheduler2::TASK_CREATION::TASK_CREATE_OR_UPDATE,
+      task_user, task_password, @definition.Principal.LogonType)
+
     @task ||= saved
   end
 

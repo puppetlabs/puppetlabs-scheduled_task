@@ -122,26 +122,6 @@ module TaskScheduler2
     return nil, service.NewTask(0)
   end
 
-  # Creates or Updates an existing task with the supplied task definition
-  # If task_object is a string then this is a new task and the supplied object is the new task's full path
-  # Otherwise we expect a Win32OLE Task object to be passed through
-  def self.save(task_object, definition, password = nil)
-    task_path = task_object.is_a?(String) ? task_object : task_object.Path
-
-    task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
-    task_user = nil
-    task_password = nil
-
-    case definition.Principal.LogonType
-      when TASK_LOGON_TYPE::TASK_LOGON_PASSWORD, TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
-        task_user = definition.Principal.UserId
-        task_password = password
-    end
-    task_folder.RegisterTaskDefinition(task_name_from_task_path(task_path),
-                                       definition, TASK_CREATION::TASK_CREATE_OR_UPDATE, task_user, task_password,
-                                       definition.Principal.LogonType)
-  end
-
   # Private methods
   def self.task_service
     service = WIN32OLE.new('Schedule.Service')

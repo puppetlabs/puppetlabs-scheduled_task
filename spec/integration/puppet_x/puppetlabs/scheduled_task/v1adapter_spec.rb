@@ -5,6 +5,8 @@ require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft
 require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2' # for TaskScheduler2::ROOT_FOLDER
 require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
+ST = PuppetX::PuppetLabs::ScheduledTask
+
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
     full_cmd = "powershell.exe -NoLogo -NoProfile -NonInteractive -Command \"#{cmd}\""
@@ -126,6 +128,75 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
       subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => compatibility}).count
       ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    end
+  end
+
+  describe 'create a task' do
+    before(:all) do
+      _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
+      _, @task_definition = ST::TaskScheduler2.task(@task_name)
+    end
+
+    after(:all) do
+      subject.delete(@task_name)
+    end
+
+    context 'given a test task fixture' do
+      it 'should be enabled by default' do
+        expect(@task_definition.Settings.Enabled).to eq(true)
+      end
+
+      it 'should be V2 compatible' do
+        expect(@task_definition.Settings.Compatibility).to eq(ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+      end
+
+      it 'should have a single trigger' do
+        expect(@task_definition.Triggers.count).to eq(1)
+      end
+
+      it 'should have a trigger of type TimeTrigger' do
+        expect(@task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
+      end
+
+      it 'should have a single action' do
+        expect(@task_definition.Actions.Count).to eq(1)
+      end
+
+      it 'should have an action of type Execution' do
+        expect(@task_definition.Actions.Item(1).Type).to eq(ST::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+      end
+
+      it 'should have the specified action path' do
+        expect(@task_definition.Actions.Item(1).Path).to eq('cmd.exe')
+      end
+
+      it 'should have the specified action arguments' do
+        expect(@task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
+      end
+    end
+  end
+
+  describe 'modify a task' do
+    before(:each) do
+      @task, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
+    end
+
+    after(:each) do
+      subject.delete(@task_name)
+    end
+
+    context 'given a test task fixture' do
+      it 'should change the action path' do
+        # Can't use URI as it is empty string on some OS.  Just construct the URI
+        # using path and name
+        ps_cmd = '(Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Execute'
+
+        expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
+
+        @task.application_name = 'notepad.exe'
+        @task.save
+        expect('notepad.exe').to be_same_as_powershell_command(ps_cmd)
+      end
     end
   end
 
