@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
+require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
 require 'puppet_x/puppetlabs/scheduled_task/v2adapter'
 
 describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if => Puppet.features.microsoft_windows? do

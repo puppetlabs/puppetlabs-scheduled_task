@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
+require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
 require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 # These integration tests confirm that the tasks created in a V1 scheduled task APi are visible
