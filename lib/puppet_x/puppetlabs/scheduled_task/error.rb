@@ -11,6 +11,14 @@ module TaskScheduler2
       -(-hresult & MAX_32_BIT_VALUE)
     end
 
+    def self.is_com_error_type(win32OLERuntimeError, hresult)
+      # to_s(16) does not include 0x prefix
+      # assume actual hex for error is what message contains - i.e. 80070002
+      return true if win32OLERuntimeError.message =~ /#{hresult.to_s(16)}/
+      # if not, look for 2s complement (negative value) - i.e. -2147024894
+      win32OLERuntimeError.message =~ /#{to_signed_value(hresult)}/m
+    end
+
     # #define FACILITY_WIN32                   7
     # #define __HRESULT_FROM_WIN32(x) ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 

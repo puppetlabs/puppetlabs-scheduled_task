@@ -103,20 +103,6 @@ module TaskScheduler2
 
   RESERVED_FOR_FUTURE_USE = 0
 
-  def self.is_com_error_type(win32OLERuntimeError, hresult)
-    # to_s(16) does not include 0x prefix
-    # assume actual hex for error is what message contains - i.e. 80070002
-    return true if win32OLERuntimeError.message =~ /#{hresult.to_s(16)}/
-    # if not, look for 2s complement (negative value) - i.e. -2147024894
-    win32OLERuntimeError.message =~ /#{Error.to_signed_value(hresult)}/m
-  end
-
-  def self.folder_path_from_task_path(task_path)
-    path = task_path.rpartition('\\')[0]
-
-    path.empty? ? ROOT_FOLDER : path
-  end
-
   def self.task_name_from_task_path(task_path)
     task_path.rpartition('\\')[2]
   end
@@ -154,28 +140,19 @@ module TaskScheduler2
 
   def self.task(task_path)
     raise TypeError unless task_path.is_a?(String)
+    service = task_service
     begin
-      task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
+      task_folder = service.GetFolder(folder_path_from_task_path(task_path))
       # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
-      return task_folder.GetTask(task_name_from_task_path(task_path))
+      _task = task_folder.GetTask(task_name_from_task_path(task_path))
+      return _task, task_definition(_task)
     rescue WIN32OLERuntimeError => e
-      unless is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
+      unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
       end
     end
 
-    nil
-  end
-
-  def self.new_task_definition
-    task_service.NewTask(0)
-  end
-
-  def self.task_definition(task)
-    definition = task_service.NewTask(0)
-    definition.XmlText = task.XML
-
-    definition
+    return nil, service.NewTask(0)
   end
 
   # Creates or Updates an existing task with the supplied task definition
@@ -208,10 +185,6 @@ module TaskScheduler2
   end
 
   # General Properties
-  def self.principal(definition)
-    definition.Principal
-  end
-
   def self.set_principal(definition, user)
     if (user.nil? || user == "")
       # Setup for the local system account
@@ -227,76 +200,6 @@ module TaskScheduler2
     end
   end
 
-  # Returns the compatibility level of the task.
-  #
-  def self.compatibility(definition)
-    definition.Settings.Compatibility
-  end
-
-  # Sets the compatibility with the task.
-  # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381846(v=vs.85).aspx
-  #
-  def self.set_compatibility(definition, value)
-    definition.Settings.Compatibility = value
-  end
-
-  # Task Actions
-  # Returns the number of actions associated with the active task.
-  #
-  def self.action_count(definition)
-    definition.Actions.count
-  end
-
-  def self.action(definition, index)
-    result = nil
-
-    begin
-      result = definition.Actions.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless is_com_error_type(err, Error::E_INVALIDARG)
-      result = nil
-    end
-
-    result
-  end
-
-  def self.create_action(definition, action_type)
-    definition.Actions.Create(action_type)
-  end
-
-  # Task Triggers
-  def self.trigger_count(definition)
-    definition.Triggers.count
-  end
-
-  # Returns a Win32OLE Trigger Object for the trigger at the given index for the
-  # supplied definition.
-  #
-  # Returns nil if the index does not exist
-  #
-  # Note - This is a 1 based array (not zero)
-  #
-  def self.trigger(definition, index)
-    result = nil
-
-    begin
-      result = definition.Triggers.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless is_com_error_type(err, Error::E_INVALIDARG)
-      result = nil
-    end
-
-    result
-  end
-
-  # Deletes the trigger at the specified index.
-  #
-  def self.delete_trigger(definition, index)
-    definition.Triggers.Remove(index)
-
-    index
-  end
-
   # Private methods
   def self.task_service
     service = WIN32OLE.new('Schedule.Service')
@@ -305,6 +208,21 @@ module TaskScheduler2
     service
   end
   private_class_method :task_service
+
+  def self.task_definition(task)
+    definition = task_service.NewTask(0)
+    definition.XmlText = task.XML
+
+    definition
+  end
+  private_class_method :task_definition
+
+  def self.folder_path_from_task_path(task_path)
+    path = task_path.rpartition('\\')[0]
+
+    path.empty? ? ROOT_FOLDER : path
+  end
+  private_class_method :folder_path_from_task_path
 end
 
 end

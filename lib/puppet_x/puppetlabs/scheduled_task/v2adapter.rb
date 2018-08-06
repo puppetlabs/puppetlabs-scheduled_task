@@ -16,10 +16,8 @@ class V2Adapter
     raise TypeError unless task_name.is_a?(String)
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
-    @task = TaskScheduler2.task(@full_task_path)
-    @definition = @task.nil? ?
-      TaskScheduler2.new_task_definition :
-      TaskScheduler2.task_definition(@task)
+    # definition populated when task exists, otherwise new
+    @task, @definition = TaskScheduler2.task(@full_task_path)
     @task_password = nil
 
     set_account_information('',nil)
@@ -59,8 +57,8 @@ class V2Adapter
   # The .job file itself is typically stored in the C:\WINDOWS\Tasks folder.
   #
   def save
-    task_object = @task.nil? ? @full_task_path : @task
-    TaskScheduler2.save(task_object, @definition, @task_password)
+    saved = TaskScheduler2.save(@task || @full_task_path, @definition, @task_password)
+    @task ||= saved
   end
 
   # Sets the +user+ and +password+ for the given task. If the user and
@@ -84,7 +82,7 @@ class V2Adapter
   # been associated with the task.
   #
   def account_information
-    principal = TaskScheduler2.principal(@definition)
+    principal = @definition.Principal
     principal.nil? ? nil : principal.UserId
   end
 
@@ -135,18 +133,19 @@ class V2Adapter
     dir
   end
 
-  # Returns the number of triggers associated with the active task.
-  #
-  def trigger_count
-    TaskScheduler2.trigger_count(@definition)
-  end
-
   def compatibility
-    TaskScheduler2.compatibility(@definition)
+    @definition.Settings.Compatibility
   end
 
   def compatibility=(value)
-    TaskScheduler2.set_compatibility(@definition, value)
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381846(v=vs.85).aspx
+    @definition.Settings.Compatibility = value
+  end
+
+  # Returns the number of triggers associated with the active task.
+  #
+  def trigger_count
+    @definition.Triggers.count
   end
 
   # Deletes the trigger at the specified index.
@@ -154,7 +153,10 @@ class V2Adapter
   def delete_trigger(index)
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
-    TaskScheduler2.delete_trigger(@definition, index + 1)
+    index += 1
+    @definition.Triggers.Remove(index)
+
+    index
   end
 
   # Returns a hash that describes the trigger at the given index for the
@@ -163,7 +165,7 @@ class V2Adapter
   def trigger(index)
     # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
     # Need to increment by one to maintain the same behavior
-    trigger_object = TaskScheduler2.trigger(@definition, index + 1)
+    trigger_object = trigger_at(index + 1)
     trigger_object.nil? || Trigger::V2::TYPE_MANIFEST_MAP[trigger_object.Type].nil? ?
       nil :
       Trigger::V2.to_manifest_hash(trigger_object)
@@ -189,17 +191,38 @@ class V2Adapter
   # Find the first TASK_ACTION_EXEC action
   def default_action(create_if_missing: false)
     action = nil
-    (1..TaskScheduler2.action_count(@definition)).each do |i|
-      index_action = TaskScheduler2.action(@definition, i)
+    (1..@definition.Actions.count).each do |i|
+      index_action = action_at(i)
       action = index_action if index_action.Type == TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC
       break if action
     end
 
     if action.nil? && create_if_missing
-      action = TaskScheduler2.create_action(@definition, TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+      action = @definition.Actions.Create(TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
     end
 
     action
+  end
+
+  def action_at(index)
+    @definition.Actions.Item(index)
+  rescue WIN32OLERuntimeError => err
+    raise unless TaskScheduler2::Error.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    nil
+  end
+
+  # Returns a Win32OLE Trigger Object for the trigger at the given index for the
+  # supplied definition.
+  #
+  # Returns nil if the index does not exist
+  #
+  # Note - This is a 1 based array (not zero)
+  #
+  def trigger_at(index)
+    @definition.Triggers.Item(index)
+  rescue WIN32OLERuntimeError => err
+    raise unless TaskScheduler2::Error.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    nil
   end
 end
 

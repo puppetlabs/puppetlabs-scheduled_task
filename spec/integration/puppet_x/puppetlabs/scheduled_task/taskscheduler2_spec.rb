@@ -29,16 +29,16 @@ ST = PuppetX::PuppetLabs::ScheduledTask
 def create_test_task(task_name = nil, task_compatiblity = ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
   tasksched = ST::TaskScheduler2
   task_name = tasksched::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
-  definition = tasksched.new_task_definition
+  _, definition = tasksched.task(task_name)
   # Set task settings
-  tasksched.set_compatibility(definition, task_compatiblity)
+  definition.Settings.Compatibility = task_compatiblity
   tasksched.set_principal(definition, '')
   definition.Settings.Enabled = false
   # Create a trigger
   trigger = definition.Triggers.Create(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
   trigger.StartBoundary = '2017-09-11T14:02:00'
   # Create an action
-  new_action = tasksched.create_action(definition, tasksched::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+  new_action = definition.Actions.Create(tasksched::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
   new_action.Path = 'cmd.exe'
   new_action.Arguments = '/c exit 0'
   tasksched.save(task_name, definition)
@@ -119,8 +119,9 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2.delete(@task_name)
     end
 
-    let(:task_object) { subject.task(@task_name) }
-    let(:task_definition) { subject.task_definition(task_object) }
+    let(:task_return) { subject.task(@task_name) }
+    let(:task_object) { task_return[0] }
+    let(:task_definition) { task_return[1] }
 
     context 'given a test task fixture' do
       it 'should be disabled' do
@@ -128,31 +129,31 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
       end
 
       it 'should be V2 compatible' do
-        expect(subject.compatibility(task_definition)).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+        expect(task_definition.Settings.Compatibility).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
       end
 
       it 'should have a single trigger' do
-        expect(subject.trigger_count(task_definition)).to eq(1)
+        expect(task_definition.Triggers.count).to eq(1)
       end
 
       it 'should have a trigger of type TimeTrigger' do
-        expect(subject.trigger(task_definition, 1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
+        expect(task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
       end
 
       it 'should have a single action' do
-        expect(subject.action_count(task_definition)).to eq(1)
+        expect(task_definition.Actions.Count).to eq(1)
       end
 
       it 'should have an action of type Execution' do
-        expect(subject.action(task_definition, 1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+        expect(task_definition.Actions.Item(1).Type).to eq(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
       end
 
       it 'should have the specified action path' do
-        expect(subject.action(task_definition, 1).Path).to eq('cmd.exe')
+        expect(task_definition.Actions.Item(1).Path).to eq('cmd.exe')
       end
 
       it 'should have the specified action arguments' do
-        expect(subject.action(task_definition, 1).Arguments).to eq('/c exit 0')
+        expect(task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
       end
     end
   end
@@ -172,11 +173,10 @@ describe "PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2", :if => Puppet.fea
         # using path and name
         ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Execute'
 
-        task_object = subject.task(@task_name)
-        task_definition = subject.task_definition(task_object)
+        task_object, task_definition = subject.task(@task_name)
         expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
 
-        subject.action(task_definition, 1).Path = 'notepad.exe'
+        task_definition.Actions.Item(1).Path = 'notepad.exe'
         subject.save(task_object, task_definition)
         expect('notepad.exe').to be_same_as_powershell_command(ps_cmd)
       end
