@@ -1,6 +1,4 @@
-# This class is used to manage V1 compatible tasks using the Task Scheduler V2 API
-# It is designed to be a binary compatible API to puppet/util/windows/taskscheduler.rb but
-# will only surface the features used by the Puppet scheduledtask provider
+# This class is used to manage tasks using the Task Scheduler V2 API
 #
 require_relative './taskscheduler2'
 require_relative './trigger'
@@ -15,7 +13,7 @@ class V1Adapter
   # An existing task named task_name will be returned if one exists,
   # otherwise a new task is created by that name (but not yet saved to the system).
   #
-  def initialize(task_name)
+  def initialize(task_name, compatibility_level = nil)
     raise TypeError unless task_name.is_a?(String)
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
@@ -23,19 +21,34 @@ class V1Adapter
     @task, @definition = TaskScheduler2.task(@full_task_path)
     @task_password = nil
 
-    self.compatibility = TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+    if compatibility_level == :v1_compatibility
+      self.compatibility = TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+    end
+
     set_account_information('',nil)
   end
 
+  V1_COMPATIBILITY = [
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+  ].freeze
+
+  V2_COMPATIBILITY = [
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_4,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_3,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_2,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_1,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
+    TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
+  ].freeze
+
   # Returns an array of scheduled task names.
   #
-  def self.tasks
+  def self.tasks(compatibility = V2_COMPATIBILITY)
     TaskScheduler2.enum_task_names(TaskScheduler2::ROOT_FOLDER,
       include_child_folders: false,
-      include_compatibility: [
-        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
-        TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
-      ]).map do |item|
+      include_compatibility: compatibility).map do |item|
         TaskScheduler2.task_name_from_task_path(item)
     end
   end
