@@ -32,8 +32,8 @@ def manifest_triggers
   defaults = {
     'minutes_interval'        => 0,
     'minutes_duration'        => 0,
-    'start_date'              => PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_date(now),
-    'start_time'              => PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_time(now),
+    'start_date'              => ST::Trigger::Manifest.format_date(now),
+    'start_time'              => ST::Trigger::Manifest.format_time(now),
     'enabled'                 => true,
   }
 
@@ -67,7 +67,7 @@ end
 def create_task(task_name = nil, task_compatiblity = nil, triggers = [])
   task_name = 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
 
-  task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(task_name, task_compatiblity)
+  task = ST::V1Adapter.new(task_name, task_compatiblity)
   task.application_name = 'cmd.exe'
   task.parameters = '/c exit 0'
   triggers.each { |trigger| task.append_trigger(trigger) }
@@ -79,10 +79,10 @@ end
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
 describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
-  subject = PuppetX::PuppetLabs::ScheduledTask::V1Adapter
+  subject = ST::V1Adapter
 
   context "should ignore unknown Trigger types" do
-    v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
+    v2 = ST::Trigger::V2
     [
       { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
       { :ole_type => 'IRegistrationTrigger', :Type => v2::Type::TASK_TRIGGER_REGISTRATION, },
@@ -118,14 +118,14 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     end
 
     it 'should not recurse folders if specified' do
-      subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_child_folders => false}).count
+      subject_count = subject.enum_task_names(ST::TaskScheduler2::ROOT_FOLDER, { :include_child_folders => false}).count
       ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'should only return compatible tasks if specified' do
-      compatibility = [PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
-      subject_count = subject.enum_task_names(PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => compatibility}).count
+      compatibility = [ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
+      subject_count = subject.enum_task_names(ST::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => compatibility}).count
       ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
     end
@@ -202,7 +202,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   describe '#delete' do
     before(:each) do
-      @task_name = PuppetX::PuppetLabs::ScheduledTask::TaskScheduler2::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
+      @task_name = ST::TaskScheduler2::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
     end
 
     after(:each) do
@@ -344,7 +344,7 @@ end
 
 # originally V1 API support, only used in this spec file now
 def to_manifest_hash(v1trigger)
-  trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger
+  trigger = ST::Trigger
 
   v1_type_map =
   {
@@ -402,8 +402,8 @@ def to_manifest_hash(v1trigger)
     0
   )
 
-  manifest_hash['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_date(local_trigger_date)
-  manifest_hash['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_time(local_trigger_date)
+  manifest_hash['start_date'] = ST::Trigger::Manifest.format_date(local_trigger_date)
+  manifest_hash['start_time'] = ST::Trigger::Manifest.format_time(local_trigger_date)
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   manifest_hash['enabled']    = v1trigger['flags'] & 0x4 == 0 # TASK_TRIGGER_FLAG_DISABLED
   manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
@@ -414,7 +414,7 @@ end
 
 describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
-  let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::V1Adapter }
+  let(:subjectv2) { ST::V1Adapter }
 
   now = Time.now
   default_once_trigger =
@@ -481,7 +481,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
     end
 
     after(:all) do
-      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(@task_name) if PuppetX::PuppetLabs::ScheduledTask::V1Adapter.exists?(@task_name)
+      ST::V1Adapter.delete(@task_name) if ST::V1Adapter.exists?(@task_name)
     end
 
     it 'should be visible by the V2 API' do
