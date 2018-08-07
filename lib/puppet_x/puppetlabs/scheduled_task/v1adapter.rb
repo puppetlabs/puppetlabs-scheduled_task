@@ -8,6 +8,9 @@ module PuppetLabs
 module ScheduledTask
 
 class V1Adapter
+  # The name of the root folder for tasks
+  ROOT_FOLDER = '\\'.freeze
+
   public
   # Returns a new TaskScheduler object.
   # An existing task named task_name will be returned if one exists,
@@ -16,7 +19,7 @@ class V1Adapter
   def initialize(task_name, compatibility_level = nil)
     raise TypeError unless task_name.is_a?(String)
 
-    @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
+    @full_task_path = ROOT_FOLDER + task_name
     # definition populated when task exists, otherwise new
     @task, @definition = self.class.task(@full_task_path)
     @task_password = nil
@@ -46,7 +49,7 @@ class V1Adapter
   # Returns an array of scheduled task names.
   #
   def self.tasks(compatibility = V2_COMPATIBILITY)
-    enum_task_names(TaskScheduler2::ROOT_FOLDER,
+    enum_task_names(ROOT_FOLDER,
       include_child_folders: false,
       include_compatibility: compatibility).map do |item|
         task_name_from_task_path(item)
@@ -61,7 +64,7 @@ class V1Adapter
   #    include_child_folders: recurses into child folders for tasks. Default true
   #    include_compatibility: Only include tasks which have any of the specified compatibility levels. Default empty array (everything is permitted)
   #
-  def self.enum_task_names(folder_path = TaskScheduler2::ROOT_FOLDER, enum_options = {})
+  def self.enum_task_names(folder_path = ROOT_FOLDER, enum_options = {})
     raise TypeError unless folder_path.is_a?(String)
 
     options = {
@@ -95,7 +98,7 @@ class V1Adapter
   # Delete the specified task name.
   #
   def self.delete(task_name)
-    task_path = TaskScheduler2::ROOT_FOLDER + task_name
+    task_path = ROOT_FOLDER + task_name
     task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
     task_folder.DeleteTask(task_name_from_task_path(task_path), 0)
   end
@@ -279,7 +282,7 @@ class V1Adapter
   def self.folder_path_from_task_path(task_path)
     path = task_path.rpartition('\\')[0]
 
-    path.empty? ? TaskScheduler2::ROOT_FOLDER : path
+    path.empty? ? ROOT_FOLDER : path
   end
 
   def self.task(task_path)

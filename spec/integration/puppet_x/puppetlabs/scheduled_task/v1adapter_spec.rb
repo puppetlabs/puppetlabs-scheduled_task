@@ -118,14 +118,14 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     end
 
     it 'should not recurse folders if specified' do
-      subject_count = subject.enum_task_names(ST::TaskScheduler2::ROOT_FOLDER, { :include_child_folders => false}).count
+      subject_count = subject.enum_task_names(subject::ROOT_FOLDER, { :include_child_folders => false}).count
       ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'should only return compatible tasks if specified' do
       compatibility = [ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
-      subject_count = subject.enum_task_names(ST::TaskScheduler2::ROOT_FOLDER, { :include_compatibility => compatibility}).count
+      subject_count = subject.enum_task_names(subject::ROOT_FOLDER, { :include_compatibility => compatibility}).count
       ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
     end
@@ -138,7 +138,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
       service = WIN32OLE.new('Schedule.Service')
       service.connect()
       @task_definition = service
-        .GetFolder(ST::TaskScheduler2::ROOT_FOLDER)
+        .GetFolder(subject::ROOT_FOLDER)
         .GetTask(@task_name)
         .Definition
     end
@@ -208,7 +208,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   describe '#delete' do
     before(:each) do
-      @task_name = ST::TaskScheduler2::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
+      @task_name = subject::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
     end
 
     after(:each) do

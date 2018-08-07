@@ -9,8 +9,6 @@ module PuppetLabs
 module ScheduledTask
 
 module TaskScheduler2
-  # The name of the root folder for tasks
-  ROOT_FOLDER = '\\'.freeze
 
   # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_enum_flags
   class TASK_ENUM_FLAGS
