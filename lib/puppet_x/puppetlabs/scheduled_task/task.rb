@@ -383,7 +383,7 @@ class Task
       task_folder = service.GetFolder(folder_path_from_task_path(task_path))
       # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
       _task = task_folder.GetTask(task_name_from_task_path(task_path))
-      return _task, task_definition(_task)
+      return _task, _task.Definition
     rescue WIN32OLERuntimeError => e
       unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
@@ -391,13 +391,6 @@ class Task
     end
 
     return nil, service.NewTask(0)
-  end
-
-  def self.task_definition(task)
-    definition = task_service.NewTask(0)
-    definition.XmlText = task.XML
-
-    definition
   end
 
   # Find the first TASK_ACTION_EXEC action
