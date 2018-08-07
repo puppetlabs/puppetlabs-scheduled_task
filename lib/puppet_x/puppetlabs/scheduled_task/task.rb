@@ -9,7 +9,7 @@ module PuppetX
 module PuppetLabs
 module ScheduledTask
 
-class V1Adapter
+class Task
   # The name of the root folder for tasks
   ROOT_FOLDER = '\\'.freeze
 

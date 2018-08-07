@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
+require 'puppet_x/puppetlabs/scheduled_task/task'
 
 ST = PuppetX::PuppetLabs::ScheduledTask
 
@@ -66,7 +66,7 @@ end
 def create_task(task_name = nil, task_compatiblity = nil, triggers = [])
   task_name = 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
 
-  task = ST::V1Adapter.new(task_name, task_compatiblity)
+  task = ST::Task.new(task_name, task_compatiblity)
   task.application_name = 'cmd.exe'
   task.parameters = '/c exit 0'
   triggers.each { |trigger| task.append_trigger(trigger) }
@@ -78,7 +78,7 @@ end
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
 describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
-  subject = ST::V1Adapter
+  subject = ST::Task
 
   context "should ignore unknown Trigger types" do
     v2 = ST::Trigger::V2
@@ -419,7 +419,7 @@ end
 
 describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
-  let(:subjectv2) { ST::V1Adapter }
+  let(:subjectv2) { ST::Task }
 
   now = Time.now
   default_once_trigger =
@@ -468,7 +468,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       v2task = subjectv2.new(@task_name, :v1_compatibility)
 
       # flags in Win32::TaskScheduler cover all possible flag values
-      # flags in V1Adapter only cover enabled status
+      # flags in Task only cover enabled status
       v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
       expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
@@ -486,7 +486,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
     end
 
     after(:all) do
-      ST::V1Adapter.delete(@task_name) if ST::V1Adapter.exists?(@task_name)
+      ST::Task.delete(@task_name) if ST::Task.exists?(@task_name)
     end
 
     it 'should be visible by the V2 API' do
@@ -502,7 +502,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       v2task = subjectv2.new(@task_name, :v1_compatibility)
 
       # flags in Win32::TaskScheduler cover all possible flag values
-      # flags in V1Adapter only cover enabled status
+      # flags in Task only cover enabled status
       v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
       expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
@@ -545,7 +545,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       subjectv1.activate(@task_name)
 
       # flags in Win32::TaskScheduler cover all possible flag values
-      # flags in V1Adapter only cover enabled status
+      # flags in Task only cover enabled status
       v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
       expect(!v1_disabled).to eq(v2task.enabled)
       expect(subjectv1.parameters).to eq(arguments_after)
