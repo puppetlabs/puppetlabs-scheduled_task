@@ -134,7 +134,13 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
   describe 'create a task' do
     before(:all) do
       _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
-      _, @task_definition = ST::TaskScheduler2.task(@task_name)
+      # find the task by name and examine its properties through COM
+      service = WIN32OLE.new('Schedule.Service')
+      service.connect()
+      @task_definition = service
+        .GetFolder(ST::TaskScheduler2::ROOT_FOLDER)
+        .GetTask(@task_name)
+        .Definition
     end
 
     after(:all) do

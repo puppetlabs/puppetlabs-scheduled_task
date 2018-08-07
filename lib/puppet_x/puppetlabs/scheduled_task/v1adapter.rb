@@ -18,7 +18,7 @@ class V1Adapter
 
     @full_task_path = TaskScheduler2::ROOT_FOLDER + task_name
     # definition populated when task exists, otherwise new
-    @task, @definition = TaskScheduler2.task(@full_task_path)
+    @task, @definition = self.class.task(@full_task_path)
     @task_password = nil
 
     if compatibility_level == :v1_compatibility
@@ -280,6 +280,30 @@ class V1Adapter
     path = task_path.rpartition('\\')[0]
 
     path.empty? ? TaskScheduler2::ROOT_FOLDER : path
+  end
+
+  def self.task(task_path)
+    raise TypeError unless task_path.is_a?(String)
+    service = task_service
+    begin
+      task_folder = service.GetFolder(folder_path_from_task_path(task_path))
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
+      _task = task_folder.GetTask(task_name_from_task_path(task_path))
+      return _task, task_definition(_task)
+    rescue WIN32OLERuntimeError => e
+      unless TaskScheduler2::Error.is_com_error_type(e, TaskScheduler2::Error::ERROR_FILE_NOT_FOUND)
+        raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
+      end
+    end
+
+    return nil, service.NewTask(0)
+  end
+
+  def self.task_definition(task)
+    definition = task_service.NewTask(0)
+    definition.XmlText = task.XML
+
+    definition
   end
 
   # Find the first TASK_ACTION_EXEC action

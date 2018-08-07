@@ -100,51 +100,6 @@ module TaskScheduler2
     TASK_INSTANCES_IGNORE_NEW     = 2
     TASK_INSTANCES_STOP_EXISTING  = 3
   end
-
-  def self.task_name_from_task_path(task_path)
-    task_path.rpartition('\\')[2]
-  end
-
-  def self.task(task_path)
-    raise TypeError unless task_path.is_a?(String)
-    service = task_service
-    begin
-      task_folder = service.GetFolder(folder_path_from_task_path(task_path))
-      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
-      _task = task_folder.GetTask(task_name_from_task_path(task_path))
-      return _task, task_definition(_task)
-    rescue WIN32OLERuntimeError => e
-      unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
-        raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
-      end
-    end
-
-    return nil, service.NewTask(0)
-  end
-
-  # Private methods
-  def self.task_service
-    service = WIN32OLE.new('Schedule.Service')
-    service.connect()
-
-    service
-  end
-  private_class_method :task_service
-
-  def self.task_definition(task)
-    definition = task_service.NewTask(0)
-    definition.XmlText = task.XML
-
-    definition
-  end
-  private_class_method :task_definition
-
-  def self.folder_path_from_task_path(task_path)
-    path = task_path.rpartition('\\')[0]
-
-    path.empty? ? ROOT_FOLDER : path
-  end
-  private_class_method :folder_path_from_task_path
 end
 
 end
