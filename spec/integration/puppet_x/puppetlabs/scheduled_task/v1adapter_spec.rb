@@ -2,7 +2,6 @@
 require 'spec_helper'
 
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/taskscheduler2' # for TaskScheduler2::ROOT_FOLDER
 require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
 
 ST = PuppetX::PuppetLabs::ScheduledTask
@@ -124,7 +123,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     end
 
     it 'should only return compatible tasks if specified' do
-      compatibility = [ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
+      compatibility = [subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
       subject_count = subject.enum_task_names(subject::ROOT_FOLDER, { :include_compatibility => compatibility}).count
       ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
       expect(subject_count).to be_same_as_powershell_command(ps_cmd)
@@ -153,7 +152,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
       end
 
       it 'should be V2 compatible' do
-        expect(@task_definition.Settings.Compatibility).to eq(ST::TaskScheduler2::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+        expect(@task_definition.Settings.Compatibility).to eq(subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
       end
 
       it 'should have a single trigger' do
@@ -169,7 +168,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
       end
 
       it 'should have an action of type Execution' do
-        expect(@task_definition.Actions.Item(1).Type).to eq(ST::TaskScheduler2::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+        expect(@task_definition.Actions.Item(1).Type).to eq(subject::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
       end
 
       it 'should have the specified action path' do
