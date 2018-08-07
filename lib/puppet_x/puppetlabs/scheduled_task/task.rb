@@ -385,7 +385,7 @@ class Task
       _task = task_folder.GetTask(task_name_from_task_path(task_path))
       return _task, task_definition(_task)
     rescue WIN32OLERuntimeError => e
-      unless TaskScheduler2::Error.is_com_error_type(e, TaskScheduler2::Error::ERROR_FILE_NOT_FOUND)
+      unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new( _("GetTask failed with: %{error}") % { error: e }, e )
       end
     end
@@ -419,7 +419,7 @@ class Task
   def action_at(index)
     @definition.Actions.Item(index)
   rescue WIN32OLERuntimeError => err
-    raise unless TaskScheduler2::Error.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    raise unless Error.is_com_error_type(err, Error::E_INVALIDARG)
     nil
   end
 
@@ -433,7 +433,7 @@ class Task
   def trigger_at(index)
     @definition.Triggers.Item(index)
   rescue WIN32OLERuntimeError => err
-    raise unless TaskScheduler2::Error.is_com_error_type(err, TaskScheduler2::Error::E_INVALIDARG)
+    raise unless Error.is_com_error_type(err, Error::E_INVALIDARG)
     nil
   end
 end
