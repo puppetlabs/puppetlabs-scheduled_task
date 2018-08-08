@@ -2,7 +2,6 @@ module PuppetX
 module PuppetLabs
 module ScheduledTask
 
-module TaskScheduler2
   module Error
     # from C:\Program Files (x86)\Windows Kits\8.1\Include\shared\winerror.h
     MAX_32_BIT_VALUE                      = 0xFFFFFFFF
@@ -183,7 +182,6 @@ module TaskScheduler2
     # to perform this operation.
     PLA_E_TASKSCHED_CHANNEL_NOT_ENABLED   = 0x80300111 # -2144337647
   end
-end
 
 end
 end

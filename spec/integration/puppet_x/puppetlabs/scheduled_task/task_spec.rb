@@ -2,7 +2,9 @@
 require 'spec_helper'
 
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/v1adapter'
+require 'puppet_x/puppetlabs/scheduled_task/task'
+
+ST = PuppetX::PuppetLabs::ScheduledTask
 
 RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
   define_method :run_ps do |cmd|
@@ -29,8 +31,8 @@ def manifest_triggers
   defaults = {
     'minutes_interval'        => 0,
     'minutes_duration'        => 0,
-    'start_date'              => PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_date(now),
-    'start_time'              => PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_time(now),
+    'start_date'              => ST::Trigger::Manifest.format_date(now),
+    'start_time'              => ST::Trigger::Manifest.format_time(now),
     'enabled'                 => true,
   }
 
@@ -61,13 +63,25 @@ def manifest_triggers
   ]
 end
 
+def create_task(task_name = nil, task_compatiblity = nil, triggers = [])
+  task_name = 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
+
+  task = ST::Task.new(task_name, task_compatiblity)
+  task.application_name = 'cmd.exe'
+  task.parameters = '/c exit 0'
+  triggers.each { |trigger| task.append_trigger(trigger) }
+  task.save
+
+  return task, task_name
+end
+
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
 describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
-  subject = PuppetX::PuppetLabs::ScheduledTask::V1Adapter
+  subject = ST::Task
 
   context "should ignore unknown Trigger types" do
-    v2 = PuppetX::PuppetLabs::ScheduledTask::Trigger::V2
+    v2 = ST::Trigger::V2
     [
       { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
       { :ole_type => 'IRegistrationTrigger', :Type => v2::Type::TASK_TRIGGER_REGISTRATION, },
@@ -86,14 +100,146 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     end
   end
 
+  describe '#enum_task_names' do
+    before(:all) do
+      # Need a V1 task as a test fixture
+      _, @task_name = create_task(nil, :v1_compatibility, [ manifest_triggers[0] ])
+    end
+
+    after(:all) do
+      subject.delete(@task_name)
+    end
+
+    it 'should return all tasks by default' do
+      subject_count = subject.enum_task_names.count
+      ps_cmd = '(Get-ScheduledTask | Measure-Object).count'
+      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    end
+
+    it 'should not recurse folders if specified' do
+      subject_count = subject.enum_task_names(subject::ROOT_FOLDER, { :include_child_folders => false}).count
+      ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
+      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    end
+
+    it 'should only return compatible tasks if specified' do
+      compatibility = [subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
+      subject_count = subject.enum_task_names(subject::ROOT_FOLDER, { :include_compatibility => compatibility}).count
+      ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
+      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    end
+  end
+
+  describe 'create a task' do
+    before(:all) do
+      _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
+      # find the task by name and examine its properties through COM
+      service = WIN32OLE.new('Schedule.Service')
+      service.connect()
+      @task_definition = service
+        .GetFolder(subject::ROOT_FOLDER)
+        .GetTask(@task_name)
+        .Definition
+    end
+
+    after(:all) do
+      subject.delete(@task_name)
+    end
+
+    context 'given a test task fixture' do
+      it 'should be enabled by default' do
+        expect(@task_definition.Settings.Enabled).to eq(true)
+      end
+
+      it 'should be V2 compatible' do
+        expect(@task_definition.Settings.Compatibility).to eq(subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+      end
+
+      it 'should have a single trigger' do
+        expect(@task_definition.Triggers.count).to eq(1)
+      end
+
+      it 'should have a trigger of type TimeTrigger' do
+        expect(@task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
+      end
+
+      it 'should have a single action' do
+        expect(@task_definition.Actions.Count).to eq(1)
+      end
+
+      it 'should have an action of type Execution' do
+        expect(@task_definition.Actions.Item(1).Type).to eq(subject::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+      end
+
+      it 'should have the specified action path' do
+        expect(@task_definition.Actions.Item(1).Path).to eq('cmd.exe')
+      end
+
+      it 'should have the specified action arguments' do
+        expect(@task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
+      end
+    end
+  end
+
+  describe 'modify a task' do
+    before(:each) do
+      @task, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
+    end
+
+    after(:each) do
+      subject.delete(@task_name)
+    end
+
+    context 'given a test task fixture' do
+      it 'should change the action path' do
+        # Can't use URI as it is empty string on some OS.  Just construct the URI
+        # using path and name
+        ps_cmd = '(Get-ScheduledTask | ? { $_.TaskName -eq \'' + @task_name + '\' }).Actions[0].Execute'
+
+        expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
+
+        @task.application_name = 'notepad.exe'
+        @task.save
+        expect('notepad.exe').to be_same_as_powershell_command(ps_cmd)
+      end
+    end
+  end
+
+  describe '#delete' do
+    before(:each) do
+      @task_name = subject::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
+    end
+
+    after(:each) do
+      begin
+        # TODO: replace with different deletion mechanism
+        subject.delete(@task_name)
+      rescue => _details
+        # Ignore any errors
+      end
+    end
+
+    it 'should delete a task that exists' do
+      create_task(@task_name, nil, [ manifest_triggers[0] ])
+
+      # Can't use URI as it is empty string on some OS.  Just construct the URI
+      # using path and name
+      ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + @task_name + '\' } | Measure-Object).count'
+      expect(1).to be_same_as_powershell_command(ps_cmd)
+
+      subject.delete(@task_name)
+      expect(0).to be_same_as_powershell_command(ps_cmd)
+    end
+
+    it 'should raise an error for a task that does not exist' do
+      # 80070002 is file not found error code
+      expect{ subject.delete('task_does_not_exist') }.to raise_error(WIN32OLERuntimeError,/80070002/)
+    end
+  end
+
   context "should be able to create trigger" do
     before(:all) do
-      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-
-      task = subject.new(@task_name)
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.save
+      _, @task_name = create_task
     end
 
     after(:all) do
@@ -137,12 +283,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   context "When managing a task" do
     before(:each) do
-      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-      task = subject.new(@task_name)
-      task.append_trigger(manifest_triggers[0])
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.save
+      _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
     end
 
     after(:each) do
@@ -208,7 +349,7 @@ end
 
 # originally V1 API support, only used in this spec file now
 def to_manifest_hash(v1trigger)
-  trigger = PuppetX::PuppetLabs::ScheduledTask::Trigger
+  trigger = ST::Trigger
 
   v1_type_map =
   {
@@ -266,8 +407,8 @@ def to_manifest_hash(v1trigger)
     0
   )
 
-  manifest_hash['start_date'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_date(local_trigger_date)
-  manifest_hash['start_time'] = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.format_time(local_trigger_date)
+  manifest_hash['start_date'] = ST::Trigger::Manifest.format_date(local_trigger_date)
+  manifest_hash['start_time'] = ST::Trigger::Manifest.format_time(local_trigger_date)
   # https://msdn.microsoft.com/en-us/library/windows/desktop/aa383618(v=vs.85).aspx
   manifest_hash['enabled']    = v1trigger['flags'] & 0x4 == 0 # TASK_TRIGGER_FLAG_DISABLED
   manifest_hash['minutes_interval'] = v1trigger['minutes_interval'] ||= 0
@@ -278,7 +419,7 @@ end
 
 describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
   let(:subjectv1) { Win32::TaskScheduler.new() }
-  let(:subjectv2) { PuppetX::PuppetLabs::ScheduledTask::V1Adapter }
+  let(:subjectv2) { ST::Task }
 
   now = Time.now
   default_once_trigger =
@@ -327,7 +468,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       v2task = subjectv2.new(@task_name, :v1_compatibility)
 
       # flags in Win32::TaskScheduler cover all possible flag values
-      # flags in V1Adapter only cover enabled status
+      # flags in Task only cover enabled status
       v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
       expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
@@ -340,17 +481,12 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
 
   context "When created by the V2 API" do
     before(:all) do
-      @task_name = 'puppet_task_' + SecureRandom.uuid.to_s
-
       # create default task with 0 triggers
-      task = PuppetX::PuppetLabs::ScheduledTask::V1Adapter.new(@task_name, :v1_compatibility)
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.save
+      _, @task_name = create_task(nil, :v1_compatibility)
     end
 
     after(:all) do
-      PuppetX::PuppetLabs::ScheduledTask::V1Adapter.delete(@task_name) if PuppetX::PuppetLabs::ScheduledTask::V1Adapter.exists?(@task_name)
+      ST::Task.delete(@task_name) if ST::Task.exists?(@task_name)
     end
 
     it 'should be visible by the V2 API' do
@@ -366,7 +502,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       v2task = subjectv2.new(@task_name, :v1_compatibility)
 
       # flags in Win32::TaskScheduler cover all possible flag values
-      # flags in V1Adapter only cover enabled status
+      # flags in Task only cover enabled status
       v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
       expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
@@ -409,7 +545,7 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       subjectv1.activate(@task_name)
 
       # flags in Win32::TaskScheduler cover all possible flag values
-      # flags in V1Adapter only cover enabled status
+      # flags in Task only cover enabled status
       v1_disabled = (subjectv1.flags & Win32::TaskScheduler::TASK_FLAG_DISABLED) == Win32::TaskScheduler::TASK_FLAG_DISABLED
       expect(!v1_disabled).to eq(v2task.enabled)
       expect(subjectv1.parameters).to eq(arguments_after)
