@@ -12,10 +12,9 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   has_feature :compatibility
 
-  Task = PuppetX::PuppetLabs::ScheduledTask::Task
-
   def self.instances
-    Task.tasks(Task::V2_COMPATIBILITY).collect do |task_name|
+    task = PuppetX::PuppetLabs::ScheduledTask::Task
+    task.tasks(task::V2_COMPATIBILITY).collect do |task_name|
       new(
         :provider => :taskscheduler_api2,
         :name     => task_name
@@ -24,12 +23,12 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def exists?
-    Task.exists? resource[:name]
+    PuppetX::PuppetLabs::ScheduledTask::Task.exists? resource[:name]
   end
 
   def task
     @task ||=
-      Task.new(resource[:name])
+      PuppetX::PuppetLabs::ScheduledTask::Task.new(resource[:name])
   end
 
   def enabled
@@ -162,7 +161,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def create
     @triggers   = nil
-    @task = Task.new(resource[:name])
+    @task = PuppetX::PuppetLabs::ScheduledTask::Task.new(resource[:name])
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility].each do |prop|
@@ -171,7 +170,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def destroy
-    Task.delete(resource[:name])
+    PuppetX::PuppetLabs::ScheduledTask::Task.delete(resource[:name])
   end
 
   def flush
