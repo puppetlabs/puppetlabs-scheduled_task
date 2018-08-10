@@ -58,12 +58,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   end
 
   def trigger
-    @triggers ||= task.trigger_count.times.map do |i|
-      manifest_hash = task.trigger(i)
-      # nil trigger definitions are unsupported ITrigger types
-      next if manifest_hash.nil?
-      manifest_hash.merge({ 'index' => i })
-    end.compact
+    @triggers ||= task.triggers.compact # remove nils for unsupported trigger types
   end
 
   def user_insync?(current, should)

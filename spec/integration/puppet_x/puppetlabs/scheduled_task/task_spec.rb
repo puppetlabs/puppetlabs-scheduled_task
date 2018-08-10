@@ -93,9 +93,12 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
         task_object = subject.new('foo')
         # guarantee task not saved to system
         task_object.stubs(:save)
-        task_object.expects(:trigger_at).with(1).returns(stub(trigger_details))
+        # need a single trigger object on internal definition object to retrieve the
+        triggers = stub({ :count => 1 })
+        triggers.expects(:Item).with(1).returns(stub(trigger_details))
+        task_object.instance_variable_set("@definition", stub({ :Triggers => triggers }))
 
-        expect(task_object.trigger(0)).to be_nil
+        expect(task_object.triggers[0]).to be_nil
       end
     end
   end
@@ -258,7 +261,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     manifest_triggers.each do |manifest_hash|
       after(:each) do
         task = subject.new(@task_name)
-        1.upto(task.trigger_count).each { |i| task.delete_trigger(0) }
+        task.clear_triggers
         task.save
       end
 
@@ -275,8 +278,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
         task = subject.new(@task_name)
 
         # trigger specific validation
-        expect(task.trigger_count).to eq(1)
-        expect(task.trigger(0)).to eq(manifest_hash)
+        expect(task.triggers).to match_array([manifest_hash.merge('index' => 0)])
       end
     end
   end
@@ -473,9 +475,9 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
       expect(v2task.application_name).to eq(subjectv1.application_name)
-      expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
+      expect(v2task.triggers.count).to eq(subjectv1.trigger_count)
       v1manifest_hash = to_manifest_hash(subjectv1.trigger(0))
-      expect(v2task.trigger(0)).to eq(v1manifest_hash)
+      expect(v2task.triggers).to match_array([v1manifest_hash.merge('index' => 0)])
     end
   end
 
@@ -507,8 +509,8 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       expect(v2task.enabled).to eq(!v1_disabled)
       expect(v2task.parameters).to eq(subjectv1.parameters)
       expect(v2task.application_name).to eq(subjectv1.application_name)
-      expect(v2task.trigger_count).to eq(subjectv1.trigger_count)
-      # on triggers to actually compare for this test
+      expect(v2task.triggers.count).to eq(subjectv1.trigger_count)
+      # no triggers to actually compare for this test
     end
   end
 
@@ -550,9 +552,9 @@ describe "When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       expect(!v1_disabled).to eq(v2task.enabled)
       expect(subjectv1.parameters).to eq(arguments_after)
       expect(subjectv1.application_name).to eq(v2task.application_name)
-      expect(subjectv1.trigger_count).to eq(v2task.trigger_count)
-      v1manifest_hash = to_manifest_hash(subjectv1.trigger(0))
-      expect(v1manifest_hash).to eq(v2task.trigger(0))
+      expect(subjectv1.trigger_count).to eq(v2task.triggers.count)
+      v1manifest_hash = to_manifest_hash(subjectv1.trigger(0)).merge('index' => 0)
+      expect(v2task.triggers).to match_array([v1manifest_hash.merge('index' => 0)])
     end
   end
 end
