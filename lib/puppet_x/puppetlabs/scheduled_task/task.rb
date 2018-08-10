@@ -318,12 +318,7 @@ class Task
   # types. Returns nil for each unknown trigger types in the collection.
   #
   def triggers
-    @definition.Triggers.count.times.map do |i|
-      # nil trigger definitions are unsupported ITrigger types
-      (manifest_hash = trigger(i)) ?
-        manifest_hash.merge!({ 'index' => i }) :
-        nil
-    end
+    @definition.Triggers.count.times.map { |i| trigger(i) }
   end
 
   # Deletes the trigger at the specified index.
@@ -437,8 +432,9 @@ class Task
     # Need to increment by one to maintain the same behavior
     trigger_object = trigger_at(index + 1)
     trigger_object.nil? || Trigger::V2::TYPE_MANIFEST_MAP[trigger_object.Type].nil? ?
+      # nil trigger definitions are unsupported ITrigger types
       nil :
-      Trigger::V2.to_manifest_hash(trigger_object)
+      Trigger::V2.to_manifest_hash(trigger_object).merge!({ 'index' => index })
   end
 end
 
