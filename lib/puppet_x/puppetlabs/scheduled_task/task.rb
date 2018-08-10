@@ -113,13 +113,13 @@ class Task
     @full_task_path = ROOT_FOLDER + task_name
     # definition populated when task exists, otherwise new
     @task, @definition = self.class.task(@full_task_path)
-    @task_password = nil
+    task_userid = @definition.Principal.UserId || ''
 
     if compatibility_level == :v1_compatibility
       self.compatibility = TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
     end
 
-    set_account_information('',nil)
+    set_account_information(task_userid,nil)
   end
 
   V1_COMPATIBILITY = [
@@ -209,7 +209,7 @@ class Task
       when TASK_LOGON_TYPE::TASK_LOGON_PASSWORD,
         TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
         task_user = @definition.Principal.UserId
-        task_password = @password
+        task_password = @task_password
     end
 
     saved = task_folder.RegisterTaskDefinition(
