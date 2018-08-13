@@ -155,7 +155,15 @@ Puppet::Type.newtype(:scheduled_task) do
           * `which_occurrence` **(Required)** --- The occurrence of the chosen weekday
             when the task should run. Must be one of `first`, `second`, `third`,
             `fourth`, or `fifth`.
-
+      * For `logon` triggers:
+          * `user_id` --- The `user_id` specifies _which_ user this task will trigger
+            for when they logon. If unspecified, or if specified as `undef` or an empty
+            string, the task will trigger whenever **any** user logs on. This property
+            can be specified in one of the following formats:
+            * Local User: `"Administrator"`
+            * Domain User: `"MyDomain\\MyUser"`
+            * SID: `"S-15-..."`
+            * Any User: `''` or `undef`
 
       Examples:
 

@@ -78,7 +78,8 @@ module Trigger
        'which_occurrence',
        'day_of_week',
        'minutes_interval',
-       'minutes_duration'
+       'minutes_duration',
+       'user_id',
      ].freeze
 
      ValidScheduleKeys = [
@@ -86,7 +87,8 @@ module Trigger
       'daily',
       'weekly',
       'monthly',
-      'boot'
+      'boot',
+      'logon',
      ].freeze
 
     # https://msdn.microsoft.com/en-us/library/system.datetime.fromoadate(v=vs.110).aspx
@@ -254,6 +256,21 @@ module Trigger
         start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
         raise ArgumentError.new("start_date must be on or after #{format_date(MINIMUM_TRIGGER_DATE)}") unless start_date >= MINIMUM_TRIGGER_DATE
         manifest_hash['start_date'] = format_date(start_date)
+      end
+
+      if manifest_hash['user_id']
+        raise RuntimeError.new('user_id can only be verified on a Windows Operating System') unless Puppet.features.microsoft_windows?
+        # If the user specifies undef in the manifest, coerce that into an empty string;
+        # This is what scheduled tasks expects to receive for 'all users'
+        user_id = manifest_hash['user_id'] == :undef ? '' : manifest_hash['user_id']
+        # If the user cannot be resolved, the task will fail to save with a vague error
+        raise ArgumentError.new("Invalid user, specified user must exist: #{user_id}") unless Puppet::Util::Windows::SID.name_to_sid(user_id)
+        # To keep the internal comparison consistent but human readable, convert from
+        # the user id specified in the manifest to the canonical representation of that
+        # account's SID on the system. If the specified user_id is null/empty, leave it
+        # that way so the task runs whenever _any_ user logs on.
+        user_id = Puppet::Util::Windows::SID.sid_to_name(Puppet::Util::Windows::SID.name_to_sid(user_id)) unless user_id == ''
+        manifest_hash['user_id'] = user_id
       end
 
       manifest_hash
@@ -512,11 +529,11 @@ module Trigger
 
     EVENT_BASED_TRIGGER_MAP = {
       Type::TASK_TRIGGER_BOOT                 => 'boot',
+      Type::TASK_TRIGGER_LOGON                => 'logon',
       # The triggers below are not yet supported.
       # Type::TASK_TRIGGER_EVENT                => 'event',
       # Type::TASK_TRIGGER_IDLE                 => 'idle',
       # Type::TASK_TRIGGER_REGISTRATION         => 'task_registered',
-      # Type::TASK_TRIGGER_LOGON                => 'logon',
       # Type::TASK_TRIGGER_SESSION_STATE_CHANGE => 'session_state_change',
     }.freeze
 
@@ -582,6 +599,13 @@ module Trigger
           manifest_hash.merge!({
             'schedule' => 'boot'
           })
+        when Type::TASK_TRIGGER_LOGON
+          # Resolve the UserID unless it is an empty string, which represents all users.
+          user_id = iTrigger.UserId == '' ? '' : Puppet::Util::Windows::SID.sid_to_name(Puppet::Util::Windows::SID.name_to_sid(iTrigger.UserId))
+          manifest_hash.merge!({
+            'schedule' => 'logon',
+            'user_id'  => user_id
+          })
       end
 
       manifest_hash
@@ -636,6 +660,9 @@ module Trigger
           iTrigger.MonthsOfYear = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
           # HACK: convert V1 week value to names, then back to V2 bitmask
           iTrigger.WeeksOfMonth = WeeksOfMonth.names_to_bitmask(manifest_hash['which_occurrence'])
+
+        when Type::TASK_TRIGGER_LOGON
+          iTrigger.UserId = manifest_hash['user_id']
       end
 
       nil

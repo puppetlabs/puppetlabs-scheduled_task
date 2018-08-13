@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+- `logon` trigger support ([MODULES-6267](https://tickets.puppetlabs.com/browse/MODULES-7129))
+
 ## [0.3.0] - 2018-05-25
 
 ### Added
