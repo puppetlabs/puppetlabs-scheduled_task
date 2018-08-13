@@ -4,6 +4,7 @@ Gemfile.lock
 Gemfile.local
 vendor/
 .vendor/
+spec/
 spec/fixtures/manifests/
 spec/fixtures/modules/
 .vagrant/

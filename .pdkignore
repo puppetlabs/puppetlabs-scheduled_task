@@ -15,6 +15,7 @@
 /junit/
 /log/
 /pkg/
+/spec/
 /spec/fixtures/manifests/
 /spec/fixtures/modules/
 /tmp/
