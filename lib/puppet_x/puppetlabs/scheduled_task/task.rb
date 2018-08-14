@@ -314,10 +314,11 @@ class Task
     @definition.Settings.Compatibility = value
   end
 
-  # Returns the number of triggers associated with the active task.
+  # Returns a set of trigger hashes with their indexes, for supported trigger
+  # types. Returns nil for each unknown trigger types in the collection.
   #
-  def trigger_count
-    @definition.Triggers.count
+  def triggers
+    @definition.Triggers.count.times.map { |i| trigger(i) }
   end
 
   # Deletes the trigger at the specified index.
@@ -331,16 +332,9 @@ class Task
     index
   end
 
-  # Returns a hash that describes the trigger at the given index for the
-  # current task.
-  #
-  def trigger(index)
-    # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
-    # Need to increment by one to maintain the same behavior
-    trigger_object = trigger_at(index + 1)
-    trigger_object.nil? || Trigger::V2::TYPE_MANIFEST_MAP[trigger_object.Type].nil? ?
-      nil :
-      Trigger::V2.to_manifest_hash(trigger_object)
+  # Deletes all triggers
+  def clear_triggers
+    @definition.Triggers.Clear()
   end
 
   # Appends a new trigger for the currently active task.
@@ -428,6 +422,19 @@ class Task
   rescue WIN32OLERuntimeError => err
     raise unless Error.is_com_error_type(err, Error::E_INVALIDARG)
     nil
+  end
+
+  # Returns a hash that describes the trigger at the given index for the
+  # current task.
+  #
+  def trigger(index)
+    # The older V1 API uses a starting index of zero, wherease the V2 API uses one.
+    # Need to increment by one to maintain the same behavior
+    trigger_object = trigger_at(index + 1)
+    trigger_object.nil? || Trigger::V2::TYPE_MANIFEST_MAP[trigger_object.Type].nil? ?
+      # nil trigger definitions are unsupported ITrigger types
+      nil :
+      Trigger::V2.to_manifest_hash(trigger_object).merge!({ 'index' => index })
   end
 end
 

@@ -36,12 +36,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
 
     describe 'the triggers for a task' do
       describe 'with only one trigger' do
-        before :each do
-          @mock_task.expects(:trigger_count).returns(1)
-        end
-
         it 'should handle a single daily trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:triggers).returns([{
             'start_date'       => '2011-9-12',
             'start_time'       => '13:20',
             'schedule'         => 'daily',
@@ -49,7 +45,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'minutes_interval' => 0,
             'minutes_duration' => 0,
             'enabled'          => true,
-          })
+            'index'            => 0,
+          }])
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -64,7 +61,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single daily with repeat trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:triggers).returns([{
             'start_date'       => '2011-9-12',
             'start_time'       => '13:20',
             'schedule'         => 'daily',
@@ -72,7 +69,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'minutes_interval' => 60,
             'minutes_duration' => 180,
             'enabled'          => true,
-          })
+            'index'            => 0,
+          }])
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -87,7 +85,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single weekly trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:triggers).returns([{
             'start_date'       => '2011-9-12',
             'start_time'       => '13:20',
             'schedule'         => 'weekly',
@@ -96,7 +94,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'minutes_interval' => 0,
             'minutes_duration' => 0,
             'enabled'          => true,
-          })
+            'index'            => 0,
+          }])
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -112,7 +111,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single monthly date-based trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:triggers).returns([{
             'start_date'       => '2011-9-12',
             'start_time'       => '13:20',
             'schedule'         => 'monthly',
@@ -121,7 +120,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'minutes_interval' => 0,
             'minutes_duration' => 0,
             'enabled'          => true,
-          })
+            'index'            => 0,
+          }])
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -137,7 +137,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single monthly day-of-week-based trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:triggers).returns([{
             'start_date'       => '2011-9-12',
             'start_time'       => '13:20',
             'schedule'         => 'monthly',
@@ -145,7 +145,8 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'which_occurrence' => 'first',
             'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
             'enabled'          => true,
-          })
+            'index'            => 0,
+          }])
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -160,7 +161,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
         end
 
         it 'should handle a single one-time trigger' do
-          @mock_task.expects(:trigger).with(0).returns({
+          @mock_task.expects(:triggers).returns([{
             'start_date'       => '2011-9-12',
             'start_time'       => '13:20',
             'schedule'         => 'once',
@@ -168,7 +169,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
             'minutes_duration' => 0,
             'enabled'          => true,
             'index'            => 0,
-          })
+          }])
 
           expect(resource.provider.trigger).to eq([{
             'start_date'       => '2011-9-12',
@@ -183,16 +184,16 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'should handle multiple triggers' do
-        @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:triggers).returns([{
           'start_date'       => '2011-10-13',
           'start_time'       => '14:21',
           'schedule'         => 'once',
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'enabled'          => true,
-        })
-        @mock_task.expects(:trigger).with(1).returns({
+          'index'            => 0,
+        },
+        {
           'start_date'       => '2012-11-14',
           'start_time'       => '15:22',
           'schedule'         => 'once',
@@ -200,15 +201,16 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
           'minutes_duration' => 0,
           'enabled'          => true,
           'index'            => 1,
-        })
-        @mock_task.expects(:trigger).with(2).returns({
+        },
+        {
           'start_date'       => '2013-12-15',
           'start_time'       => '16:23',
           'schedule'         => 'once',
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'enabled'          => true,
-        })
+          'index'            => 2,
+        }])
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -242,31 +244,33 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'should handle multiple triggers with repeat triggers' do
-        @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:triggers).returns([{
           'start_date'       => '2011-10-13',
           'start_time'       => '14:21',
           'schedule'         => 'once',
           'minutes_interval' => 15,
           'minutes_duration' => 60,
           'enabled'          => true,
-        })
-        @mock_task.expects(:trigger).with(1).returns({
+          'index'            => 0,
+        },
+        {
           'start_date'       => '2012-11-14',
           'start_time'       => '15:22',
           'schedule'         => 'once',
           'minutes_interval' => 30,
           'minutes_duration' => 120,
           'enabled'          => true,
-        })
-        @mock_task.expects(:trigger).with(2).returns({
+          'index'            => 1,
+        },
+        {
           'start_date'       => '2013-12-15',
           'start_time'       => '16:23',
           'schedule'         => 'once',
           'minutes_interval' => 60,
           'minutes_duration' => 240,
           'enabled'          => true,
-        })
+          'index'            => 2,
+        }])
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -300,25 +304,25 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'should skip triggers Win32::TaskScheduler cannot handle' do
-        @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:triggers).returns([{
           'start_date'       => '2011-10-13',
           'start_time'       => '14:21',
           'schedule'         => 'once',
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'enabled'          => true,
-        })
-        @mock_task.expects(:trigger).with(1).returns(nil)
-
-        @mock_task.expects(:trigger).with(2).returns({
+          'index'            => 0,
+        },
+        nil,
+        {
           'start_date'       => '2013-12-15',
           'start_time'       => '16:23',
           'schedule'         => 'once',
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'enabled'          => true,
-        })
+          'index'            => 2,
+        }])
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -343,25 +347,25 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'should skip trigger types Puppet does not handle' do
-        @mock_task.expects(:trigger_count).returns(3)
-        @mock_task.expects(:trigger).with(0).returns({
+        @mock_task.expects(:triggers).returns([{
           'start_date'       => '2011-10-13',
           'start_time'       => '14:21',
           'schedule'         => 'once',
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'enabled'          => true,
-        })
-        @mock_task.expects(:trigger).with(1).returns(nil)
-
-        @mock_task.expects(:trigger).with(2).returns({
+          'index'            => 0,
+        },
+        nil,
+        {
           'start_date'       => '2013-12-15',
           'start_time'       => '16:23',
           'schedule'         => 'once',
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'enabled'          => true,
-        })
+          'index'            => 2,
+        }])
 
         expect(resource.provider.trigger).to match_array([
           {
@@ -1235,7 +1239,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       @mock_task.stubs(:set_account_information)
       @mock_task.stubs(:enabled)
       @mock_task.stubs(:enabled=)
-      @mock_task.stubs(:trigger_count).returns(0)
+      @mock_task.stubs(:triggers).returns([])
       @mock_task.stubs(:append_trigger)
       if resource.provider.is_a?(Puppet::Type::Scheduled_task::ProviderTaskscheduler_api2)
         # allow compatibility to set given newer provider allows it
@@ -1310,7 +1314,7 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'by clearing the cached task object' do
-        @new_mock_task.stubs(:trigger_count).returns(0)
+        @new_mock_task.stubs(:triggers).returns([])
 
         expect(resource.provider.task).to eq(@mock_task)
         expect(resource.provider.task).to eq(@mock_task)
@@ -1321,15 +1325,12 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
 
       it 'by clearing the cached list of triggers for the task' do
-        @mock_task.stubs(:trigger_count).returns(1)
-
         manifest = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest
-        default_once = manifest.default_trigger_for('once')
-        @mock_task.stubs(:trigger).with(0).returns(default_once)
+        default_once = manifest.default_trigger_for('once').merge({'index' => 0})
+        @mock_task.stubs(:triggers).returns([default_once])
 
-        @new_mock_task.stubs(:trigger_count).returns(1)
-        default_daily = manifest.default_trigger_for('daily')
-        @new_mock_task.stubs(:trigger).with(0).returns(default_daily)
+        default_daily = manifest.default_trigger_for('daily').merge({'index' => 0})
+        @new_mock_task.stubs(:triggers).returns([default_daily])
 
         converted_once = default_once.merge({'index' => 0})
         expect(resource.provider.trigger).to eq([converted_once])
