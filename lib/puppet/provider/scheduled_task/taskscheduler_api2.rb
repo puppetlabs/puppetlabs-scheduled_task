@@ -22,6 +22,19 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
   end
 
+  def self.prefetch(resources)
+    tasks = instances || []
+    resources.keys.each do |task_name|
+      if provider = tasks.find { |t| t.name == task_name }
+        if !resources[task_name]['trigger'].nil?
+          resources[task_name]['trigger'] = provider.trigger.merge(resources[task_name]['trigger'])
+          require 'pry'; binding.pry
+        end
+        resources[task_name].provider = provider
+      end
+    end
+  end
+
   def exists?
     PuppetX::PuppetLabs::ScheduledTask::Task.exists? resource[:name]
   end
