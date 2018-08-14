@@ -18,3 +18,24 @@ end
 def windows_agents
   agents.select { |agent| agent['platform'].include?('windows') }
 end
+
+def add_test_user(host)
+  username = "test_user_#{rand(999).to_i}"
+  password = "password!@#123"
+
+  command_string = "net user /add #{username} #{password}"
+
+  on(host, command_string) do |r|
+    raise r.stderr unless r.stderr.empty?
+  end
+
+  [username, password]
+end
+
+def remove_test_user(host, username)
+  command_string = "net user /delete #{username}"
+
+  on(host, command_string) do |r|
+    raise r.stderr unless r.stderr.empty?
+  end
+end
