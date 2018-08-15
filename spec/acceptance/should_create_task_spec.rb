@@ -97,10 +97,9 @@ describe "Should create a scheduled task", :node => host do
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    result = on(host, query_cmd)
-
-    # Verify the task is running under the correct user
-    result.stdout.match?(@username)
+    on(host, query_cmd) do | result |
+      assert_match(@username, result.stdout)
+    end
   end
 
   it "Should create a task with a username and password: win32_taskscheduler" do
@@ -123,10 +122,9 @@ describe "Should create a scheduled task", :node => host do
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    result = on(host, query_cmd)
-
-    # Verify the task is running under the correct user
-    result.stdout.match?(@username)
+    on(host, query_cmd) do | result |
+      assert_match(@username, result.stdout)
+    end
   end
 
   it "Should update a task's credentials: win32_taskscheduler" do
@@ -151,8 +149,9 @@ describe "Should create a scheduled task", :node => host do
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
     result = on(host, query_cmd)
 
-    # Verify the task is running under the correct user
-    result.stdout.match?(@username)
+    on(host, query_cmd) do | result |
+      assert_match(@username, result.stdout)
+    end
 
     pp = <<-MANIFEST
     scheduled_task {'#{@taskname}':
@@ -174,10 +173,10 @@ describe "Should create a scheduled task", :node => host do
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    result = on(host, query_cmd)
 
-    # Verify the task is running under the correct user
-    result.stdout.match?(@username2)
+    on(host, query_cmd) do | result |
+      assert_match(@username2, result.stdout)
+    end
   end
 
   it "Should update a task's credentials: taskscheduler_api2" do
@@ -199,10 +198,10 @@ describe "Should create a scheduled task", :node => host do
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    result = on(host, query_cmd)
 
-    # Verify the task is running under the correct user
-    result.stdout.match?(@username)
+    on(host, query_cmd) do | result |
+      assert_match(@username, result.stdout)
+    end
 
     pp = <<-MANIFEST
     scheduled_task {'#{@taskname}':
@@ -222,9 +221,9 @@ describe "Should create a scheduled task", :node => host do
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    result = on(host, query_cmd)
 
-    # Verify the task is running under the correct user
-    result.stdout.match?(@username2)
+    on(host, query_cmd) do | result |
+      assert_match(@username2, result.stdout)
+    end
   end
 end
