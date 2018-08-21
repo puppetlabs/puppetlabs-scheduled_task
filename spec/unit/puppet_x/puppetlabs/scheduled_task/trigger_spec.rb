@@ -122,6 +122,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
 
     [
       {'schedule' => 'boot'},
+      {'schedule' => 'logon'},
     ].each do |event_manifest|
 
       describe 'when validating event based triggers' do
@@ -134,6 +135,26 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
           validated = subject.class.canonicalize_and_validate(event_manifest)
           expect(validated).not_to have_key('start_date')
         end
+      end
+    end
+
+    describe 'when validating user_id for logon triggers', :if => Puppet.features.microsoft_windows? do
+      it 'should return an empty string for user_id if passed an empty string or undef symbol' do
+        [
+          {'schedule' => 'logon', 'user_id' => ''},
+          {'schedule' => 'logon', 'user_id' => :undef}
+        ].each do |logon_manifest|
+          validated = subject.class.canonicalize_and_validate(logon_manifest)
+          expect(validated['user_id']).to eq('')
+        end
+      end
+      it 'should not error if passed a resolvable user_id' do
+        logon_manifest = {'schedule' => 'logon', 'user_id' => 'S-1-5-18'} # Local System Well Known SID
+        expect {subject.class.canonicalize_and_validate(logon_manifest)}.not_to raise_error
+      end
+      it 'should error if passed an unresolvable user_id' do
+        logon_manifest = {'schedule' => 'logon', 'user_id' => 'Unresolvable UserName'}
+        expect {subject.class.canonicalize_and_validate(logon_manifest)}.to raise_error(ArgumentError)
       end
     end
 
@@ -943,6 +964,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
 
     [
       { :ole_type => 'IBootTrigger', :Type => v2::Type::TASK_TRIGGER_BOOT, },
+      { :ole_type => 'ILogonTrigger', :Type => v2::Type::TASK_TRIGGER_LOGON, },
     ].each do |trigger_details|
       it "should convert an #{trigger_details[:ole_type]} instance" do
         # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
@@ -954,7 +976,6 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::V2 do
     [
       { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
       { :ole_type => 'IRegistrationTrigger', :Type => v2::Type::TASK_TRIGGER_REGISTRATION, },
-      { :ole_type => 'ILogonTrigger', :Type => v2::Type::TASK_TRIGGER_LOGON, },
       { :ole_type => 'ISessionStateChangeTrigger', :Type => v2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE, },
       { :ole_type => 'IEventTrigger', :Type => v2::Type::TASK_TRIGGER_EVENT, },
     ].each do |trigger_details|

@@ -164,6 +164,21 @@ scheduled_task { 'Disk Cleanup On Restart':
 ~~~
 * Note: Duration properties like `minutes_duration` and `minutes_interval` must have `compatibility => 2` or higher specified for `boot` triggers. Windows does not support those options at the "Windows XP or Windows Server 2003 computer" compatibility level which is the default when compatibility is left unspecified.
 
+If you want a task to run at logon, use the `logon` trigger:
+
+~~~puppet
+scheduled_task { 'example_notepad':
+  compatibility => 2,
+  command       => 'C:\\Windows\\System32\\notepad.exe',
+  trigger       => [{
+    schedule         => 'logon',
+    minutes_interval => '30',
+    start_time       => '15:20',
+    user_id          => 'MyDomain\\SomeUser'
+  }],
+}
+~~~
+
 ## Reference
 
 ### Provider
@@ -256,7 +271,7 @@ A trigger can contain the following keys:
 For all triggers:
 
 * `schedule` (Required) — What kind of trigger this is.
-  Valid values are `daily`, `weekly`, `monthly`, `once`, or `boot`.
+  Valid values are `daily`, `weekly`, `monthly`, `once`, `boot`, or `logon`.
   Each kind of trigger is configured with a different set of keys; see the sections below (once triggers only need a start time/date.)
 * `start_time` (Required except for `boot`) — The time of day when the trigger should first become active.
   Several time formats will work, but we suggest 24-hour time formatted as HH:MM.
@@ -287,6 +302,15 @@ For all triggers:
   * `day_of_week` (Required) — Which day of the week the task should run, as an array with only one element.
     Each day must be one of `mon`, `tues`, `wed`, `thurs`, `fri`, `sat`, `sun`, or `all`.
   * `which_occurrence` (Required) — The occurrence of the chosen weekday when the task should run. Must be one of `first`, `second`, `third`, `fourth`, or `last`.
+* For `logon` triggers:
+  * `user_id` --- The `user_id` specifies _which_ user this task will trigger
+    for when they logon. If unspecified, or if specified as `undef` or an empty
+    string, the task will trigger whenever **any** user logs on. This property
+    can be specified in one of the following formats:
+    * Local User: `"Administrator"`
+    * Domain User: `"MyDomain\\MyUser"`
+    * SID: `"S-15-..."`
+    * Any User: `''` or `undef`
 
 ##### `user`
 
