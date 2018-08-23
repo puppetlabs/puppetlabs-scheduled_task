@@ -167,34 +167,63 @@ Puppet::Type.newtype(:scheduled_task) do
 
       Examples:
 
-          # Run at 8am on the 1st and 15th days of the month in January, March,
-          # May, July, September, and November, starting after August 31st, 2011.
+          # Run once on January 1, 2018, at 11:20PM
           trigger => {
-            schedule   => monthly,
-            start_date => '2011-08-31',   # Defaults to current date
-            start_time => '08:00',        # Must be specified
-            months     => [1,3,5,7,9,11], # Defaults to all
-            on         => [1, 15],        # Must be specified
+            schedule   => 'once',
+            start_time => '23:20',     # Defines the time the task should run; required.
+            start_date => '2018-01-01' # Defaults to the current date; not required.
           }
 
-          # Run at 8am on the first Monday of the month for January, March, and May,
-          # starting after August 31st, 2011.
+          # Run daily at 11:20PM
           trigger => {
-            schedule         => monthly,
-            start_date       => '2011-08-31', # Defaults to current date
-            start_time       => '08:00',      # Must be specified
-            months           => [1,3,5],      # Defaults to all
-            which_occurrence => first,        # Must be specified
-            day_of_week      => [mon],        # Must be specified
+            schedule   => 'daily',
+            start_time => '23:20'
           }
 
-          # Run daily repeating every 30 minutes between 9am and 5pm (480 minutes) starting after August 31st, 2011.
+          # Run every day at 7:00AM and once per hour until 7:00PM
           trigger => {
-            schedule         => daily,
-            start_date       => '2011-08-31', # Defaults to current date
-            start_time       => '8:00',       # Must be specified
-            minutes_interval => 30,
-            minutes_duration => 480,
+            'schedule'         => 'daily',
+            'start_time'       => '07:00',
+            'minutes_duration' => '720',   # Specifies the length of time, in minutes, the task is active
+            'minutes_interval' => '60'     # Causes the task to run every hour
+          }
+
+          # Run every weekday at 7:00AM and once per hour until 7:00PM
+          # Will NOT run on Saturday/Sunday
+          trigger => {
+            'schedule'         => 'weekly',
+            'start_time'       => '07:00',
+            'day_of_week'      => ['mon', 'tues', 'wed', 'thu', 'fri'], # Note the absence of Sunday and Monday
+            'minutes_interval' => '60',
+            'minutes_duration' => '720'
+          }
+
+          # Run on the first of every month at 7:00AM
+          trigger => {
+            'schedule'   => 'monthly',
+            'start_time' => '07:00',
+            'on'         => [1]        # Run every month on the first day of the month.
+          }
+
+          # Run on the first _Saturday_ of every month at 7:00AM
+          trigger => {
+            'schedule'        => 'monthly',
+            'start_time'      => '07:00',
+            'day_of_week'     => 'sat',     # Specify the day of the week to trigger on
+            'which_occurence' => 'first'    # Specify which occurance to trigger on, up to fifth
+          }
+
+          # Run on boot, then once per hour for 12 hours
+          trigger => {
+            'schedule'         => 'boot',
+            'minutes_interval' => '60',   # This setting in can only be used with compatibility 2 or higher
+            'minutes_duration' => '720'   # This setting in can only be used with compatibility 2 or higher
+          }
+
+          # Run whenever MyDomain\\SomeUser logs onto the computer
+          trigger => {
+            schedule => 'logon',
+            user_id  => 'MyDomain\\SomeUser'
           }
 
     EOT

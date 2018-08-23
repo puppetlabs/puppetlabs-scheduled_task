@@ -42,7 +42,7 @@ In this first example we schedule a cleanup script to run this one time.
 ~~~ puppet
 scheduled_task { 'Disk Cleanup': # Unique name for the scheduled task
   command   => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled   => 'true',           # This is the default, but including it is good practice. Flip to 'false' to disable the task.
   trigger   => [{
     schedule   => 'once',        # Defines the trigger type; required.
@@ -59,11 +59,11 @@ Note that we removed the `start_date` from the trigger - it isn't required and, 
 ~~~ puppet
 scheduled_task { 'Disk Cleanup Nightly':
   command   => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled   => 'true',
   trigger   => [{
-    schedule         => 'daily',
-    start_time       => '23:20'
+    schedule   => 'daily',
+    start_time => '23:20'
   }],
 }
 ~~~
@@ -75,7 +75,7 @@ Using the cleanup script again, this scheduled task begins at the same time ever
 scheduled_task { 'Disk Cleanup Daily Repeating':
   ensure    => 'present',
   command   => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled   => 'true',
   trigger   => [{
     'schedule'         => 'daily',
@@ -94,7 +94,7 @@ We can instead use a weekly trigger to fix this:
 scheduled_task { 'Disk Cleanup Weekly Repeating':
   ensure    => 'present',
   command   => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled   => 'true',
   trigger   => [{
     'schedule'         => 'weekly',
@@ -114,12 +114,12 @@ The following example sets the scheduled task to run at 0700 on the first day of
 scheduled_task { 'Disk Cleanup Monthly First Day':
   ensure    => 'present',
   command   => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled   => 'true',
   trigger   => [{
-    'schedule'         => 'monthly',
-    'start_time'       => '07:00',
-    'on'               => [1]        # Run every month on the first day of the month.
+    'schedule'   => 'monthly',
+    'start_time' => '07:00',
+    'on'         => [1]        # Run every month on the first day of the month.
   }],
   user      => 'system',
 }
@@ -133,13 +133,13 @@ We can specify the trigger to run on the task on the _first saturday_ of the mon
 scheduled_task { 'Disk Cleanup Monthly First Saturday':
   ensure    => 'present',
   command   => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled   => 'true',
   trigger   => [{
-    'schedule'       => 'monthly',
-    'start_time'     => '07:00',
-    'day_of_week'    => 'sat',     # Specify the day of the week to trigger on
-    'which_occurence => 'first'    # Specify which occurance to trigger on, up to fifth
+    'schedule'        => 'monthly',
+    'start_time'      => '07:00',
+    'day_of_week'     => 'sat',     # Specify the day of the week to trigger on
+    'which_occurence' => 'first'    # Specify which occurance to trigger on, up to fifth
   }],
   user      => 'system',
 }
@@ -152,7 +152,7 @@ scheduled_task { 'Disk Cleanup On Restart':
   ensure        => 'present',
   compatibility => 2,
   command       => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
-  arguments     => '-File "C:\\Scripts\\Clear-DiskSpace.ps1",
+  arguments     => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
   enabled       => 'true',
   trigger       => [{
     'schedule'  => 'boot',
@@ -171,10 +171,8 @@ scheduled_task { 'example_notepad':
   compatibility => 2,
   command       => 'C:\\Windows\\System32\\notepad.exe',
   trigger       => [{
-    schedule         => 'logon',
-    minutes_interval => '30',
-    start_time       => '15:20',
-    user_id          => 'MyDomain\\SomeUser'
+    schedule => 'logon',
+    user_id  => 'MyDomain\\SomeUser'
   }],
 }
 ~~~
