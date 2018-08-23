@@ -5,7 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+## [0.4.0] - 2018-08-23
+
+### Added
+
 - `logon` trigger support ([MODULES-6267](https://tickets.puppetlabs.com/browse/MODULES-7129))
+- Enabled localization ([PUP-9053](https://tickets.puppetlabs.com/browse/PUP-9053))
+
+### Fixed
+
+- Ensure setting a user for a task is possible ([MODULES-7240](https://tickets.puppetlabs.com/browse/MODULES-7240))
 
 ## [0.3.0] - 2018-05-25
 
@@ -50,6 +59,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Updated README with examples for the new provider ([MODULES-6264](https://tickets.puppetlabs.com/browse/MODULES-6264))
 - Updated acceptance tests for the new provider ([MODULES-6362](https://tickets.puppetlabs.com/browse/MODULES-6362))
 
-[Unreleased]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.3.0...0.4.0
+[0.3.0]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/10cb19e08bc6b198e25a633aec5ce4157ae4d283...0.1.0
