@@ -12,13 +12,16 @@
 5. [Limitations - OS compatibility, etc.](#limitations)
 6. [Development - Guide for contributing to the module](#development)
 
+<a id="description"></a>
 ## Description
 
 This module adds a new [scheduled_task](https://puppet.com/docs/puppet/latest/types/scheduled_task.html) provider capable of using the more modern Version 2 Windows API for task management.
 The legacy API does not receive improvements or new features, meaning that if you want to take advantage of improvements to scheduled tasks on Windows you need to use the V2 API.
 
+<a id="setup"></a>
 ## Setup
 
+<a id="beginning-with-scheduled_task"></a>
 ### Beginning with scheduled_task
 
 The scheduled_task module adapts the Puppet [scheduled_task](https://puppet.com/docs/puppet/latest/types/scheduled_task.html) resource to run using a modern API.
@@ -34,6 +37,7 @@ scheduled_task { 'Run Notepad':
 }
 ~~~
 
+<a id="usage"></a>
 ## Usage
 
 Scheduled tasks are commonly used to kick off a script either once or on a regular cadence.
@@ -177,6 +181,7 @@ scheduled_task { 'example_notepad':
 }
 ~~~
 
+<a id="reference"></a>
 ## Reference
 
 ### Provider
@@ -322,10 +327,12 @@ Running as an unprivileged user will result in 'access denied' errors.
 
 The full path of the directory in which to start the command.
 
+<a id="limitations"></a>
 ## Limitations
 
 * Only supported on Windows Server 2008 and above, and Windows 7 and above.
 
+<a id="development"></a>
 ## Development
 
-Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. We can't access the huge number of platforms and myriad hardware, software, and deployment configurations that Puppet is intended to serve, therefore want to keep it as easy as possible to contribute changes so that our modules work in your environment. There are a few guidelines that we need contributors to follow so that we can have a chance of keeping on top of things. For guidelines on how to contribute, see our [module contribution guide.](https://docs.puppet.com/forge/contributing.html)
+Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. We can't access the huge number of platforms and myriad hardware, software, and deployment configurations that Puppet is intended to serve, therefore want to keep it as easy as possible to contribute changes so that our modules work in your environment. There are a few guidelines that we need contributors to follow so that we can have a chance of keeping on top of things. For guidelines on how to contribute, see our [module contribution guide](https://docs.puppet.com/forge/contributing.html).
