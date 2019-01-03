@@ -27,7 +27,10 @@ Gemfile:
 spec/default_facts.yml:
   unmanaged: true
 
-# The Scheduled_task module doesn't support parallel_spec
+# WARN: The puppetlabs/scheduled_task module doesn't support parallel_spec
+# PDK Convert will keep adding the default matrix cells instead of replacing them with the below
+# After running `pdk convert` you will have to remove the extra cells and keep the ones listed below
+# This is raised in https://github.com/puppetlabs/pdk-templates/issues/132
 appveyor.yml:
   matrix:
     - RUBY_VERSION: 24-x64
