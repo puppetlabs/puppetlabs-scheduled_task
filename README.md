@@ -4,8 +4,6 @@
 
 1. [Description](#description)
 2. [Setup - The basics of getting started with scheduled_task](#setup)
-    * [What scheduled_task affects](#what-scheduled_task-affects)
-    * [Setup requirements](#setup-requirements)
     * [Beginning with scheduled_task](#beginning-with-scheduled_task)
 3. [Usage - Configuration options and additional functionality](#usage)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
