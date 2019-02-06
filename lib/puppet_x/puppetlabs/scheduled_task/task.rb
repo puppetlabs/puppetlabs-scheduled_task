@@ -354,10 +354,12 @@ class Task
   private
   # :stopdoc:
   def self.task_service
-    service = WIN32OLE.new('Schedule.Service')
-    service.connect()
+    return @service unless @service.nil?
 
-    service
+    @service = WIN32OLE.new('Schedule.Service')
+    @service.connect()
+
+    @service
   end
 
   def self.task_name_from_task_path(task_path)
