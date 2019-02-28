@@ -390,7 +390,7 @@ class Task
   end
 
   # Find the first TASK_ACTION_EXEC action
-  def default_action(create_if_missing: false)
+  def default_action(options = {})
     action = nil
     (1..@definition.Actions.count).each do |i|
       index_action = action_at(i)
@@ -398,7 +398,7 @@ class Task
       break if action
     end
 
-    if action.nil? && create_if_missing
+    if action.nil? && options.fetch(:create_if_missing, false)
       action = @definition.Actions.Create(TASK_ACTION_TYPE::TASK_ACTION_EXEC)
     end
 
