@@ -1,7 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_windows? do
+describe Puppet::Type.type(:scheduled_task) do
+  before :each do
+    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+  end
+
 
   it 'should use name as the namevar' do
     expect(described_class.new(

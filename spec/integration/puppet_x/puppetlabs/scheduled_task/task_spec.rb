@@ -77,10 +77,10 @@ end
 
 # These integration tests use V2 API tasks and make sure they save
 # and read back correctly
-describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.microsoft_windows? do
+describe "When directly calling Scheduled Tasks API v2" do
   subject = ST::Task
 
-  context "should ignore unknown Trigger types" do
+  context "should ignore unknown Trigger types", :if => Puppet.features.microsoft_windows? do
     v2 = ST::Trigger::V2
     [
       { :ole_type => 'IIdleTrigger', :Type => v2::Type::TASK_TRIGGER_IDLE, },
@@ -103,13 +103,20 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
   end
 
   describe '#enum_task_names' do
+    before :each do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    end  
+
     before(:all) do
       # Need a V1 task as a test fixture
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       _, @task_name = create_task(nil, :v1_compatibility, [ manifest_triggers[0] ])
     end
 
     after(:all) do
-      subject.delete(@task_name)
+      if Puppet.features.microsoft_windows?
+        subject.delete(@task_name)
+      end
     end
 
     it 'should return all tasks by default' do
@@ -133,7 +140,12 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
   end
 
   describe 'create a task' do
+    before :each do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    end  
+
     before(:all) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
       # find the task by name and examine its properties through COM
       service = WIN32OLE.new('Schedule.Service')
@@ -145,7 +157,9 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
     end
 
     after(:all) do
-      subject.delete(@task_name)
+      if Puppet.features.microsoft_windows?
+        subject.delete(@task_name)
+      end
     end
 
     context 'given a test task fixture' do
@@ -185,10 +199,12 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   describe 'modify a task' do
     before(:each) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       @task, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
     end
 
     after(:each) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?      
       subject.delete(@task_name)
     end
 
@@ -209,6 +225,7 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   describe '#delete' do
     before(:each) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       @task_name = subject::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s
     end
 
@@ -240,12 +257,19 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
   end
 
   context "should be able to create trigger" do
+    before :each do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    end  
+
     before(:all) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       _, @task_name = create_task
     end
 
     after(:all) do
-      subject.delete(@task_name) if subject.exists?(@task_name)
+      if Puppet.features.microsoft_windows?
+        subject.delete(@task_name) if subject.exists?(@task_name)
+      end
     end
 
     it "and return the same application_name and properties as those originally set" do
@@ -284,10 +308,12 @@ describe "When directly calling Scheduled Tasks API v2", :if => Puppet.features.
 
   context "When managing a task" do
     before(:each) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
     end
 
     after(:each) do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       subject.delete(@task_name) if subject.exists?(@task_name)
     end
 

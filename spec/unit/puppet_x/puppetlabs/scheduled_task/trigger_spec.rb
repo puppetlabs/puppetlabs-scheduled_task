@@ -138,7 +138,11 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest do
       end
     end
 
-    describe 'when validating user_id for logon triggers', :if => Puppet.features.microsoft_windows? do
+    describe 'when validating user_id for logon triggers' do
+      before :each do
+        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+      end
+
       it 'should return an empty string for user_id if passed an empty string or undef symbol' do
         [
           {'schedule' => 'logon', 'user_id' => ''},
