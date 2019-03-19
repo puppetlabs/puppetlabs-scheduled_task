@@ -4,7 +4,11 @@ require 'spec_helper'
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
 require 'puppet_x/puppetlabs/scheduled_task/task'
 
-describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2), :if => Puppet.features.microsoft_windows? do
+describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2) do
+  before :each do
+    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+  end
+
   it 'should be the default provider' do
     expect(Puppet::Type.type(:scheduled_task).defaultprovider).to eq(subject.class)
   end
@@ -19,8 +23,9 @@ task_providers.each do |task_provider|
 
 task2 = PuppetX::PuppetLabs::ScheduledTask::Task
 
-describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Puppet.features.microsoft_windows? do
+describe Puppet::Type.type(:scheduled_task).provider(task_provider) do
   before :each do
+    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
     Puppet::Type.type(:scheduled_task).stubs(:defaultprovider).returns(described_class)
   end
 
@@ -477,7 +482,11 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe '#user_insync?', :if => Puppet.features.microsoft_windows? do
+  describe '#user_insync?' do
+    before :each do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    end
+
     let(:resource) { described_class.new(:name => 'foobar', :command => 'C:\Windows\System32\notepad.exe') }
 
     it 'should consider the user as in sync if the name matches' do
@@ -1164,8 +1173,9 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
       end
     end
 
-    describe '#user=', :if => Puppet.features.microsoft_windows? do
+    describe '#user=' do
       before :each do
+        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
         @mock_task = stub
         @mock_task.responds_like_instance_of(task2)
         task2.stubs(:new).returns(@mock_task)
@@ -1344,7 +1354,10 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider), :if => Pupp
     end
   end
 
-  describe "Win32::TaskScheduler", :if => Puppet.features.microsoft_windows? do
+  describe "Win32::TaskScheduler" do
+    before :each do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    end
 
     let(:name) { SecureRandom.uuid }
 
