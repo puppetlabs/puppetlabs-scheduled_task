@@ -13,11 +13,22 @@ Gemfile:
           - mswin
           - mingw
           - x64_mingw
+      - gem: 'puppet_litmus'
+        platforms:
+          - ruby
+          - mswin
+          - mingw
+          - x64_mingw
+        condition: "ENV['PUPPET_GEM_VERSION'].nil? or ENV['PUPPET_GEM_VERSION'] !~ %r{ 5}"
       - gem: beaker-testmode_switcher
         version: '~> 0.4'
       - gem: master_manipulator
       - gem: puppet-blacksmith
         version: '~> 3.4'
+
+Rakefile:
+  requires:
+  use_litmus_tasks: true
 
 # For the moment don't do any rubocop checks.
 .rubocop.yml:
