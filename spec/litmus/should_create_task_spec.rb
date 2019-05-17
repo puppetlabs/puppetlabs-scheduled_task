@@ -98,7 +98,7 @@ describe "Should create a scheduled task" do
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
     run_shell(query_cmd) do | result |
-      assert_match(@username, result.stdout)
+      expect(result.stdout).to match(/#{@username}/)
     end
   end
 
@@ -123,7 +123,7 @@ describe "Should create a scheduled task" do
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
     run_shell(query_cmd) do | result |
-      assert_match(@username, result.stdout)
+      expect(result.stdout).to match(/#{@username}/)
     end
   end
 
@@ -150,7 +150,7 @@ describe "Should create a scheduled task" do
     result = run_shell(query_cmd)
 
     run_shell(query_cmd) do | result |
-      assert_match(@username, result.stdout)
+      expect(result.stdout).to match(/#{@username}/)
     end
 
     pp = <<-MANIFEST
@@ -175,7 +175,7 @@ describe "Should create a scheduled task" do
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
 
     run_shell(query_cmd) do | result |
-      assert_match(@username2, result.stdout)
+      expect(result.stdout).to match(/#{@username2}/)
     end
   end
 
@@ -200,7 +200,7 @@ describe "Should create a scheduled task" do
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
 
     run_shell(query_cmd) do | result |
-      assert_match(@username, result.stdout)
+      expect(result.stdout).to match(/#{@username}/)
     end
 
     pp = <<-MANIFEST
@@ -223,7 +223,7 @@ describe "Should create a scheduled task" do
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
 
     run_shell(query_cmd) do | result |
-      assert_match(@username2, result.stdout)
+      expect(result.stdout).to match(/#{@username2}/)
     end
   end
 end
