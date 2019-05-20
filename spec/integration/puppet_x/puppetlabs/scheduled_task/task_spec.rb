@@ -105,7 +105,7 @@ describe "When directly calling Scheduled Tasks API v2" do
   describe '#enum_task_names' do
     before :each do
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-    end  
+    end
 
     before(:all) do
       # Need a V1 task as a test fixture
@@ -140,61 +140,90 @@ describe "When directly calling Scheduled Tasks API v2" do
   end
 
   describe 'create a task' do
-    before :each do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-    end  
 
-    before(:all) do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
-      # find the task by name and examine its properties through COM
-      service = WIN32OLE.new('Schedule.Service')
-      service.connect()
-      @task_definition = service
-        .GetFolder(subject::ROOT_FOLDER)
-        .GetTask(@task_name)
-        .Definition
-    end
+    context 'in the root folder' do
+      before :each do
+        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+      end
 
-    after(:all) do
-      if Puppet.features.microsoft_windows?
-        subject.delete(@task_name)
+      before(:all) do
+        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+        _, @task_name = create_task(nil, nil, [ manifest_triggers[0] ])
+        # find the task by name and examine its properties through COM
+        service = WIN32OLE.new('Schedule.Service')
+        service.connect()
+        @task_definition = service
+          .GetFolder(subject::ROOT_FOLDER)
+          .GetTask(@task_name)
+          .Definition
+      end
+
+      after(:all) do
+        if Puppet.features.microsoft_windows?
+          subject.delete(@task_name)
+        end
+      end
+
+      context 'given a test task fixture' do
+        it 'should be enabled by default' do
+          expect(@task_definition.Settings.Enabled).to eq(true)
+        end
+
+        it 'should be V2 compatible' do
+          expect(@task_definition.Settings.Compatibility).to eq(subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+        end
+
+        it 'should have a single trigger' do
+          expect(@task_definition.Triggers.count).to eq(1)
+        end
+
+        it 'should have a trigger of type TimeTrigger' do
+          expect(@task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
+        end
+
+        it 'should have a single action' do
+          expect(@task_definition.Actions.Count).to eq(1)
+        end
+
+        it 'should have an action of type Execution' do
+          expect(@task_definition.Actions.Item(1).Type).to eq(subject::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
+        end
+
+        it 'should have the specified action path' do
+          expect(@task_definition.Actions.Item(1).Path).to eq('cmd.exe')
+        end
+
+        it 'should have the specified action arguments' do
+          expect(@task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
+        end
       end
     end
 
-    context 'given a test task fixture' do
-      it 'should be enabled by default' do
-        expect(@task_definition.Settings.Enabled).to eq(true)
+    context 'in a subfolder' do
+      before :each do
+        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       end
 
-      it 'should be V2 compatible' do
-        expect(@task_definition.Settings.Compatibility).to eq(subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+      before(:all) do
+        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+        task_path = SecureRandom.uuid.to_s + '\puppet_task_' + SecureRandom.uuid.to_s
+        _, @task_name = create_task(task_path, nil, [ manifest_triggers[0] ])
       end
 
-      it 'should have a single trigger' do
-        expect(@task_definition.Triggers.count).to eq(1)
+      after(:all) do
+        if Puppet.features.microsoft_windows?
+          subject.delete(@task_name)
+        end
       end
 
-      it 'should have a trigger of type TimeTrigger' do
-        expect(@task_definition.Triggers.Item(1).Type).to eq(ST::Trigger::V2::Type::TASK_TRIGGER_TIME)
-      end
-
-      it 'should have a single action' do
-        expect(@task_definition.Actions.Count).to eq(1)
-      end
-
-      it 'should have an action of type Execution' do
-        expect(@task_definition.Actions.Item(1).Type).to eq(subject::TASK_ACTION_TYPE::TASK_ACTION_EXEC)
-      end
-
-      it 'should have the specified action path' do
-        expect(@task_definition.Actions.Item(1).Path).to eq('cmd.exe')
-      end
-
-      it 'should have the specified action arguments' do
-        expect(@task_definition.Actions.Item(1).Arguments).to eq('/c exit 0')
+      context 'given a test task fixture' do
+        it 'should create a folder and place the ' do
+          ps_cmd = "(Get-ScheduledTask -TaskPath \\#{@task_name.partition('\\')[0]}\\).TaskName"
+          expect(@task_name.partition('\\')[2]).to be_same_as_powershell_command(ps_cmd)
+        end
       end
     end
+
   end
 
   describe 'modify a task' do
@@ -204,7 +233,7 @@ describe "When directly calling Scheduled Tasks API v2" do
     end
 
     after(:each) do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?      
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       subject.delete(@task_name)
     end
 
@@ -259,7 +288,7 @@ describe "When directly calling Scheduled Tasks API v2" do
   context "should be able to create trigger" do
     before :each do
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-    end  
+    end
 
     before(:all) do
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?

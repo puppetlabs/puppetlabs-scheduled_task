@@ -198,6 +198,9 @@ All attributes except `name`, `command`, and `trigger` are optional; see the des
 
 The name assigned to the scheduled task.
 This will uniquely identify the task on the system.
+If specifying a scheduled task inside of subfolder(s), specify the path from root, such as `subfolder/mytaskname`.
+This will create the scheduled task `mytaskname` in the container named `subfolder`.
+You can only specify a taskname inside of subfolders if the compatibility is set to 2 or higher and when using the taskscheduler2_api provider.
 
 ##### `ensure`
 

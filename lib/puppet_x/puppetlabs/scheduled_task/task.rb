@@ -141,9 +141,9 @@ class Task
   #
   def self.tasks(compatibility = V2_COMPATIBILITY)
     enum_task_names(ROOT_FOLDER,
-      include_child_folders: false,
+      include_child_folders: true,
       include_compatibility: compatibility).map do |item|
-        task_name_from_task_path(item)
+        item.partition('\\')[2]
     end
   end
 
@@ -181,9 +181,16 @@ class Task
   end
 
   # Returns whether or not the scheduled task exists.
-  def self.exists?(job_name)
-    # task name comparison is case insensitive
-    tasks.any? { |name| name.casecmp(job_name) == 0 }
+  def self.exists?(task_path)
+    raise TypeError unless task_path.is_a?(String)
+    begin
+      task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
+      _task = task_folder.GetTask(task_name_from_task_path(task_path))
+    rescue 
+      return false
+    end
+    true
   end
 
   # Delete the specified task name.
@@ -201,6 +208,7 @@ class Task
   def save
     task_path = @task ? @task.Path : @full_task_path
 
+    self.class.create_folder(self.class.folder_path_from_task_path(task_path))
     task_folder = self.class.task_service.GetFolder(self.class.folder_path_from_task_path(task_path))
     task_user = nil
     task_password = nil
@@ -370,6 +378,19 @@ class Task
     path = task_path.rpartition('\\')[0]
 
     path.empty? ? ROOT_FOLDER : path
+  end
+
+  # create_folder returns "S_OK" if created or an HRESULT error code.
+  # It will create the full path specified, not just a the last child.
+  def self.create_folder(path)
+    begin
+      task_service.GetFolder(path)
+    rescue WIN32OLERuntimeError => e
+      unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
+        raise Puppet::Error.new( _("GetFolder failed with: %{error}") % { error: e }, e )
+      end
+      task_service.GetFolder(ROOT_FOLDER).CreateFolder(path)
+    end
   end
 
   def self.task(task_path)

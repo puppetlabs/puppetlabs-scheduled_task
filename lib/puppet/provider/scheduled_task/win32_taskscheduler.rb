@@ -196,4 +196,10 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
     true
   end
+
+  def validate_name
+    if @resource[:name].match?(/\\/)
+      raise Puppet::ResourceError, "#{@resource[:name]} specifies a path including subfolders which are not supported by the version of the Task Scheduler API used by this provider. Use the taskscheduler_api2 provider instead."
+    end
+  end
 end
