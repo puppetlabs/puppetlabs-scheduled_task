@@ -207,4 +207,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
     true
   end
+
+  def validate_name
+    if @resource[:name].match?(/\\/) && @resource[:compatibility] < 2
+      raise Puppet::ResourceError, "#{@resource[:name]} specifies a path including subfolders and a compatibility of #{@resource[:compatibility]} - tasks in subfolders are only supported on version 2 and later of the API. Specify a compatibility of 2 or higher or do not specify a subfolder path."
+    end
+  end
 end

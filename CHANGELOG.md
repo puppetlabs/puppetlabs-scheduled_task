@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
+### Added
+
+- Ability to specify scheduled tasks in subfolders by prepending the folder path to the task name ([MODULES-7203](https://tickets.puppetlabs.com/browse/.MODULES-7203)).
+
 ## [1.0.1] - 2019-03-07
 
 ### Fixed

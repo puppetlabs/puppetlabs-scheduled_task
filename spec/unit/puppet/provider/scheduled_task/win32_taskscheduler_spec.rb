@@ -987,6 +987,40 @@ describe Puppet::Type.type(:scheduled_task).provider(task_provider) do
     end
   end
 
+  describe '#validate_name' do
+
+    context 'when the compatibility is 1' do
+      let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'subfolder\Test Task', :command => 'C:\Windows\System32\notepad.exe') }
+
+      it 'should raise an error if the compatibility is less than 2 or the provider is win32_taskscheduler' do
+        case task_provider
+        when :win32_taskscheduler
+          expect{resource.validate}.to raise_error(
+            Puppet::ResourceError,
+            /Use the taskscheduler_api2 provider instead./
+          )
+        when :taskscheduler_api2
+          expect{resource.validate}.to raise_error(
+            Puppet::ResourceError,
+            /Specify a compatibility of 2 or higher or do not specify a subfolder path./
+          )
+        end
+      end
+    end
+
+    context 'when compatibility is 2' do
+      before :each do
+        skip('Only check against taskscheduler_api2') unless task_provider == :taskscheduler_api2
+      end
+
+      let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'subfolder\Test Task', :compatibility => 2, :command => 'C:\Windows\System32\notepad.exe') }
+
+      it 'should not raise an error if the compatibility is >= 2 and the provider is taskscheduler_api2' do
+        expect{resource.validate}.not_to raise_error
+      end
+    end
+  end
+
   describe '#flush' do
     let(:resource) do
       Puppet::Type.type(:scheduled_task).new(

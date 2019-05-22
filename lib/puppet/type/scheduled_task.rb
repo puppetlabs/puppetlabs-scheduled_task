@@ -22,8 +22,13 @@ Puppet::Type.newtype(:scheduled_task) do
   end
 
   newparam(:name) do
-    desc "The name assigned to the scheduled task.  This will uniquely
-      identify the task on the system."
+    desc "The name assigned to the scheduled task. This will uniquely
+      identify the task on the system. If specifying a scheduled task
+      inside of subfolder(s), specify the path from root, such as
+      `subfolder/mytaskname`. This will create the scheduled task
+      `mytaskname` in the container named `subfolder`. You can only
+      specify a taskname inside of subfolders if the compatibility is
+      set to 2 or higher and when using the taskscheduler2_api provider."
 
     isnamevar
   end
@@ -243,5 +248,9 @@ Puppet::Type.newtype(:scheduled_task) do
     def is_to_s(current_value=@is)
       super(current_value)
     end
+  end
+
+  validate do
+    provider.validate_name if provider.respond_to?(:validate_name)
   end
 end
