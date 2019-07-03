@@ -12,3 +12,17 @@
 RSpec/PredicateMatcher:
   Exclude:
     - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
+GetText/DecorateFunctionMessage:
+  Enabled: false
+GetText/DecorateString:
+  Enabled: false
+Style/ClassAndModuleCamelCase:
+  Enabled: false
+Style/ClassAndModuleChildren:
+  Enabled: false
+RSpec/BeforeAfterAll:
+  Enabled: false
+RSpec/MultipleDescribes:
+  Enabled: false
+RSpec/NamedSubject:
+  Enabled: false

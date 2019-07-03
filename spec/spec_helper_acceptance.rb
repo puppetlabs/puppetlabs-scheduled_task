@@ -6,7 +6,7 @@ include PuppetLitmus
 
 def add_test_user
   username = "test_user_#{rand(999).to_i}"
-  password = "password!@#123"
+  password = 'password!@#123'
 
   command_string = "net user /add #{username} #{password}"
 

@@ -32,8 +32,8 @@ Rakefile:
 
 # For the moment don't do any rubocop checks.
 .rubocop.yml:
-  include_todos: true
-  selected_profile: off
+  default_configs:
+    inherit_from: .rubocop_todo.yml
 
 spec/default_facts.yml:
   unmanaged: true
