@@ -1,8 +1,6 @@
 require 'spec_helper_acceptance'
 
-host = find_only_one("default")
-
-describe "Should destroy a scheduled task", :node => host do
+describe "Should destroy a scheduled task" do
 
   before(:all) do
     @taskname = "pl#{rand(999999).to_i}"
@@ -20,13 +18,13 @@ describe "Should destroy a scheduled task", :node => host do
       provider => 'taskscheduler_api2'
     }
     MANIFEST
-    execute_manifest(pp, :catch_failures => true)
+    apply_manifest(pp, :catch_failures => true)
   end
 
   it 'Should destroy the task' do
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    on(host, query_cmd)
+    run_shell(query_cmd)
 
     pp = <<-MANIFEST
     scheduled_task {'#{@taskname}':
@@ -35,10 +33,10 @@ describe "Should destroy a scheduled task", :node => host do
     }
     MANIFEST
 
-    execute_manifest(pp, :catch_failures => true)
+    apply_manifest(pp, :catch_failures => true)
 
     query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    query_out = on(host, query_cmd, :accept_all_exit_codes => true).output
-    expect(query_out).to match(/ERROR: The system cannot find the .+ specified/)
+    query_out = run_shell(query_cmd, :expect_failures => true)
+    expect(query_out.to_s).to match(/ERROR: The system cannot find the file specified/)
   end
 end
