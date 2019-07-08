@@ -1,44 +1,74 @@
-require 'beaker-pe'
-require 'beaker-puppet'
-require 'beaker-rspec'
-require 'beaker/puppet_install_helper'
-require 'beaker/module_install_helper'
-require 'beaker/testmode_switcher'
-require 'beaker/testmode_switcher/dsl'
+# frozen_string_literal: true
 
-run_puppet_install_helper
-configure_type_defaults_on(hosts)
+require 'serverspec'
+require 'puppet_litmus'
+include PuppetLitmus
 
-install_module_dependencies_on(hosts)
-
-test_name "Installing Puppet Modules" do
-  proj_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
-  hosts.each do |host|
-    install_dev_puppet_module_on(host, source: proj_root, module_name: 'scheduled_task')
-  end
-end
-
-def windows_agents
-  agents.select { |agent| agent['platform'].include?('windows') }
-end
-
-def add_test_user(host)
+def add_test_user
   username = "test_user_#{rand(999).to_i}"
   password = "password!@#123"
 
   command_string = "net user /add #{username} #{password}"
 
-  on(host, command_string) do |r|
+  run_shell(command_string) do |r|
     raise r.stderr unless r.stderr.empty?
   end
 
   [username, password]
 end
 
-def remove_test_user(host, username)
+def remove_test_user(username)
   command_string = "net user /delete #{username}"
 
-  on(host, command_string) do |r|
+  run_shell(command_string) do |r|
     raise r.stderr unless r.stderr.empty?
+  end
+end
+
+if ENV['TARGET_HOST'].nil? || ENV['TARGET_HOST'] == 'localhost'
+  puts 'Running tests against this machine !'
+  if Gem.win_platform?
+    set :backend, :cmd
+  else
+    set :backend, :exec
+  end
+else
+  # load inventory
+  inventory_hash = inventory_hash_from_inventory_file
+  node_config = config_from_node(inventory_hash, ENV['TARGET_HOST'])
+
+  if target_in_group(inventory_hash, ENV['TARGET_HOST'], 'ssh_nodes')
+    set :backend, :ssh
+    options = Net::SSH::Config.for(host)
+    options[:user] = node_config.dig('ssh', 'user') unless node_config.dig('ssh', 'user').nil?
+    options[:port] = node_config.dig('ssh', 'port') unless node_config.dig('ssh', 'port').nil?
+    options[:password] = node_config.dig('ssh', 'password') unless node_config.dig('ssh', 'password').nil?
+    options[:verify_host_key] = Net::SSH::Verifiers::Null.new unless node_config.dig('ssh', 'host-key-check').nil?
+    host = if ENV['TARGET_HOST'].include?(':')
+             ENV['TARGET_HOST'].split(':').first
+           else
+             ENV['TARGET_HOST']
+           end
+    set :host,        options[:host_name] || host
+    set :ssh_options, options
+    set :request_pty, true
+  elsif target_in_group(inventory_hash, ENV['TARGET_HOST'], 'winrm_nodes')
+    require 'winrm'
+
+    set :backend, :winrm
+    set :os, family: 'windows'
+    user = node_config.dig('winrm', 'user') unless node_config.dig('winrm', 'user').nil?
+    pass = node_config.dig('winrm', 'password') unless node_config.dig('winrm', 'password').nil?
+    endpoint = "http://#{ENV['TARGET_HOST']}:5985/wsman"
+
+    opts = {
+      user: user,
+      password: pass,
+      endpoint: endpoint,
+      operation_timeout: 300,
+    }
+
+    winrm = WinRM::Connection.new opts
+    Specinfra.configuration.winrm = winrm
   end
 end
