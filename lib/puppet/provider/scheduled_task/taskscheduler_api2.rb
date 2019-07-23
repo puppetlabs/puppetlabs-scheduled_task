@@ -170,7 +170,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   def flush
     return if resource[:ensure] == :absent
 
-    raise('Parameter command is required.') unless resource[:command]
+    self.fail('Parameter command is required.') unless resource[:command]
     # HACK: even though the user may actually be insync?, for task changes to
     # fully propagate, it is necessary to explicitly set the user for the task,
     # even when it is SYSTEM (and has a nil password)

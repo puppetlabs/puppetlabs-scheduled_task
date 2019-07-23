@@ -138,9 +138,7 @@ describe Puppet::Type.type(:scheduled_task) do
 
   describe 'when setting the trigger' do
     it 'delegates to the provider to validate the trigger' do
-      let(:my_instance) { instance_double(described_class.defaultprovider) }
-      allow(described_class.defaultprovider).to receive(:new).and_return(my_instance)
-      allow(described_class.defaultprovider).to receive(:validate_trigger).and_return(true)
+      described_class.defaultprovider.any_instance.expects(:validate_trigger).returns(true)
 
       described_class.new(
         name: 'Test Task',

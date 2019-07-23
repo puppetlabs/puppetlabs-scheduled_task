@@ -201,16 +201,16 @@ class Win32::TaskScheduler
     # rubocop:enable Lint/HandleExceptions
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)
-    new_work_item(work_item, trigger)
+    new_work_item(work_item, trigger) if work_item && trigger
   end
 
   # Returns an array of scheduled task names.
   #
   def enum
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     array = []
 
-    @pITS.UseInstance(COM::EnumWorkItems, :Enum) do |pi_enum|
+    @pits.UseInstance(COM::EnumWorkItems, :Enum) do |pi_enum|
       FFI::MemoryPointer.new(:pointer) do |names_array_ptr_ptr|
         FFI::MemoryPointer.new(:win32_ulong) do |fetched_count_ptr|
           # awkward usage, if number requested is available, returns S_OK (0), or if less were returned returns S_FALSE (1)
@@ -240,11 +240,11 @@ class Win32::TaskScheduler
   # Activate the specified task.
   #
   def activate(task)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise TypeError unless task.is_a?(String)
 
     FFI::MemoryPointer.new(:pointer) do |ptr|
-      @pITS.Activate(wide_string(task), IID_ITask, ptr)
+      @pits.Activate(wide_string(task), IID_ITask, ptr)
 
       reset_current_task
       @pitask = COM::Task.new(ptr.read_pointer)
@@ -256,10 +256,10 @@ class Win32::TaskScheduler
   # Delete the specified task name.
   #
   def delete(task)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise TypeError unless task.is_a?(String)
 
-    @pITS.Delete(wide_string(task))
+    @pits.Delete(wide_string(task))
 
     true
   end
@@ -308,10 +308,10 @@ class Win32::TaskScheduler
   # Set the host on which the various TaskScheduler methods will execute.
   #
   def machine=(host)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise TypeError unless host.is_a?(String)
 
-    @pITS.SetTargetComputer(wide_string(host))
+    @pits.SetTargetComputer(wide_string(host))
 
     host
   end
@@ -335,7 +335,7 @@ class Win32::TaskScheduler
   # properly registered and visible through the MMC snap-in / schtasks.exe
   #
   def set_account_information(user, password)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     bool = false
@@ -367,7 +367,7 @@ class Win32::TaskScheduler
   # been associated with the task.
   #
   def account_information
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     # default under certain failures
@@ -392,7 +392,7 @@ class Win32::TaskScheduler
   # Returns the name of the application associated with the task.
   #
   def application_name
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     app = nil
@@ -411,7 +411,7 @@ class Win32::TaskScheduler
   # Sets the application name associated with the task.
   #
   def application_name=(app)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless app.is_a?(String)
 
@@ -427,7 +427,7 @@ class Win32::TaskScheduler
   # Returns the command line parameters for the task.
   #
   def parameters
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     param = nil
@@ -448,7 +448,7 @@ class Win32::TaskScheduler
   # line parameters set it to an empty string.
   #
   def parameters=(param)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless param.is_a?(String)
 
@@ -464,7 +464,7 @@ class Win32::TaskScheduler
   # Returns the working directory for the task.
   #
   def working_directory
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     dir = nil
@@ -483,7 +483,7 @@ class Win32::TaskScheduler
   # Sets the working directory for the task.
   #
   def working_directory=(dir)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless dir.is_a?(String)
 
@@ -501,7 +501,7 @@ class Win32::TaskScheduler
   # and 'unknown'.
   #
   def priority
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     priority_name = ''
@@ -534,7 +534,7 @@ class Win32::TaskScheduler
   # priority constant value.
   #
   def priority=(priority)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless priority.is_a?(Numeric)
 
@@ -549,7 +549,7 @@ class Win32::TaskScheduler
   #
   def new_work_item(task, trigger)
     raise TypeError unless trigger.is_a?(Hash)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
 
     # I'm working around github issue #1 here.
     enum.each do |name|
@@ -559,7 +559,7 @@ class Win32::TaskScheduler
     end
 
     FFI::MemoryPointer.new(:pointer) do |ptr|
-      @pITS.NewWorkItem(wide_string(task), CLSID_CTask, IID_ITask, ptr)
+      @pits.NewWorkItem(wide_string(task), CLSID_CTask, IID_ITask, ptr)
 
       reset_current_task
       @pitask = COM::Task.new(ptr.read_pointer)
@@ -590,7 +590,7 @@ class Win32::TaskScheduler
   # Returns the number of triggers associated with the active task.
   #
   def trigger_count
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     count = 0
@@ -606,7 +606,7 @@ class Win32::TaskScheduler
   # Deletes the trigger at the specified index.
   #
   def delete_trigger(index)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     @pitask.DeleteTrigger(index)
@@ -617,7 +617,7 @@ class Win32::TaskScheduler
   # current task.
   #
   def trigger(index)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     trigger = {}
@@ -635,7 +635,7 @@ class Win32::TaskScheduler
   # Sets the trigger for the currently active task.
   #
   def trigger=(trigger)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless trigger.is_a?(Hash)
 
@@ -655,7 +655,7 @@ class Win32::TaskScheduler
   # Adds a trigger at the specified index.
   #
   def add_trigger(index, trigger)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless trigger.is_a?(Hash)
 
@@ -683,7 +683,7 @@ class Win32::TaskScheduler
   # Sets an OR'd value of flags that modify the behavior of the work item.
   #
   def flags=(flags)
-    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pITS.nil?
+    raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
 
     @pitask.SetFlags(flags)
