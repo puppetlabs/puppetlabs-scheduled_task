@@ -70,6 +70,12 @@ end
 describe 'When directly calling Scheduled Tasks API v2' do
   subject = ST::Task
 
+  after :each do
+    if Puppet.features.microsoft_windows?
+      subject.delete(task_name) if defined?(task_name) && subject.exists?(task_name)
+    end
+  end
+
   context 'should ignore unknown Trigger types', if: Puppet.features.microsoft_windows? do
     v2 = ST::Trigger::V2
     [
@@ -93,18 +99,10 @@ describe 'When directly calling Scheduled Tasks API v2' do
   end
 
   describe '#enum_task_names' do
-    before(:all) do
-      # Need a V1 task as a test fixture
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      _, name = create_task(nil, :v1_compatibility, [manifest_triggers[0]])
-      let(:task_name) { name }
-    end
-
-    after(:all) do
-      if Puppet.features.microsoft_windows?
-        subject.delete(task_name)
-      end
-    end
+    # Need a V1 task as a test fixture
+    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    _, name = create_task(nil, :v1_compatibility, [manifest_triggers[0]])
+    let(:task_name) { name }
 
     it 'returns all tasks by default' do
       subject_count = subject.enum_task_names.count
@@ -130,28 +128,20 @@ describe 'When directly calling Scheduled Tasks API v2' do
     context 'in the root folder' do
       before :each do
         skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+        create_task(task_name, nil, [manifest_triggers[0]])
       end
 
-      before(:all) do
-        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-        _, name = create_task(nil, :v1_compatibility, [manifest_triggers[0]])
-        let(:task_name) { name }
-        let(:task_definition) do
-          service
-            .GetFolder(subject::ROOT_FOLDER)
-            .GetTask(task_name)
-            .Definition
-        end
-
-        # find the task by name and examine its properties through COM
-        service = WIN32OLE.new('Schedule.Service')
-        service.connect
-      end
-
-      after(:all) do
-        if Puppet.features.microsoft_windows?
-          subject.delete(task_name)
-        end
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+      name = 'puppet_task_' + SecureRandom.uuid.to_s
+      # find the task by name and examine its properties through COM
+      service = WIN32OLE.new('Schedule.Service')
+      service.connect
+      let(:task_name) { name }
+      let(:task_definition) do
+        service
+          .GetFolder(subject::ROOT_FOLDER)
+          .GetTask(name)
+          .Definition
       end
 
       context 'given a test task fixture' do
@@ -160,7 +150,7 @@ describe 'When directly calling Scheduled Tasks API v2' do
         end
 
         it 'is V2 compatible' do
-          expect(ask_definition.Settings.Compatibility).to eq(subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
+          expect(task_definition.Settings.Compatibility).to eq(subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2)
         end
 
         it 'has a single trigger' do
@@ -194,18 +184,10 @@ describe 'When directly calling Scheduled Tasks API v2' do
         skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       end
 
-      before(:all) do
-        skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-        task_path = SecureRandom.uuid.to_s + '\puppet_task_' + SecureRandom.uuid.to_s
-        _, name = create_task(task_path, nil, [manifest_triggers[0]])
-        let(:task_name) { name }
-      end
-
-      after(:all) do
-        if Puppet.features.microsoft_windows?
-          subject.delete(task_name)
-        end
-      end
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+      task_path = SecureRandom.uuid.to_s + '\puppet_task_' + SecureRandom.uuid.to_s
+      _, name = create_task(task_path, nil, [manifest_triggers[0]])
+      let(:task_name) { name }
 
       context 'given a test task fixture' do
         it 'creates a folder and place the' do
@@ -217,17 +199,10 @@ describe 'When directly calling Scheduled Tasks API v2' do
   end
 
   describe 'modify a task' do
-    before(:each) do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      t, name = create_task(nil, nil, [manifest_triggers[0]])
-      let!(:task_name) { name }
-      let!(:task) { t }
-    end
-
-    after(:each) do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      subject.delete(task_name)
-    end
+    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    t, tn = create_task(nil, nil, [manifest_triggers[0]])
+    let(:task_name) { tn }
+    let(:task) { t }
 
     context 'given a test task fixture' do
       it 'changes the action path' do
@@ -235,11 +210,11 @@ describe 'When directly calling Scheduled Tasks API v2' do
         # using path and name
         ps_cmd = '(Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].Execute'
 
-        'cmd.exe'.to be_same_as_powershell_command(ps_cmd)
+        expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
 
         task.application_name = 'notepad.exe'
         task.save
-        'notepad.exe'.to be_same_as_powershell_command(ps_cmd)
+        expect('notepad.exe').to be_same_as_powershell_command(ps_cmd)
       end
     end
   end
@@ -251,26 +226,16 @@ describe 'When directly calling Scheduled Tasks API v2' do
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
     end
 
-    after(:each) do
-      begin
-        # TODO: replace with different deletion mechanism
-        subject.delete(task_name)
-      rescue => _details
-        # Ignore any errors
-        nil
-      end
-    end
-
     it 'deletes a task that exists' do
       create_task(task_name, nil, [manifest_triggers[0]])
 
       # Can't use URI as it is empty string on some OS.  Just construct the URI
       # using path and name
       ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + task_name + '\' } | Measure-Object).count'
-      1.to be_same_as_powershell_command(ps_cmd)
+      expect(1).to be_same_as_powershell_command(ps_cmd)
 
       subject.delete(task_name)
-      0.to be_same_as_powershell_command(ps_cmd)
+      expect(0).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'raises an error for a task that does not exist' do
@@ -282,19 +247,12 @@ describe 'When directly calling Scheduled Tasks API v2' do
   context 'should be able to create trigger' do
     before :each do
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+      create_task(task_name)
     end
 
-    before(:all) do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      _, name = create_task
-      let(:task_name) { name }
-    end
-
-    after(:all) do
-      if Puppet.features.microsoft_windows?
-        subject.delete(task_name) if subject.exists?(task_name)
-      end
-    end
+    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    name = 'puppet_task_' + SecureRandom.uuid.to_s
+    let(:task_name) { name }
 
     it 'and return the same application_name and properties as those originally set' do
       expect(subject).to be_exists(task_name)
@@ -331,16 +289,12 @@ describe 'When directly calling Scheduled Tasks API v2' do
   end
 
   context 'When managing a task' do
-    before(:each) do
+    before :each do
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      _, name = create_task(nil, nil, [manifest_triggers[0]])
-      let!(:task_name) { name }
+      create_task(task_name, nil, [manifest_triggers[0]])
     end
-
-    after(:each) do
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      subject.delete(task_name) if subject.exists?(task_name)
-    end
+    name = 'puppet_task_' + SecureRandom.uuid.to_s
+    let(:task_name) { name }
 
     it 'is able to determine if the task exists or not' do
       bad_task_name = SecureRandom.uuid.to_s
@@ -356,17 +310,18 @@ describe 'When directly calling Scheduled Tasks API v2' do
       task.append_trigger(new_trigger)
       task.save
       ps_cmd = '([string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Triggers.StartBoundary) -split \'T\')[0]'
-      '2112-12-12'.to be_same_as_powershell_command(ps_cmd)
+      expect('2112-12-12').to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'is able to update a command' do
+      new_application_name = 'notepad.exe'
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].Execute)'
       task = subject.new(task_name)
 
-      'cmd.exe'.to be_same_as_powershell_command(ps_cmd)
+      expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
       task.application_name = new_application_name
       task.save
-      'notepad.exe'.to be_same_as_powershell_command(ps_cmd)
+      expect(new_application_name).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'is able to update command parameters' do
@@ -374,10 +329,10 @@ describe 'When directly calling Scheduled Tasks API v2' do
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].Arguments)'
       task = subject.new(task_name)
 
-      '/c exit 0'.to be_same_as_powershell_command(ps_cmd)
+      expect('/c exit 0').to be_same_as_powershell_command(ps_cmd)
       task.parameters = new_parameters
       task.save
-      new_parameters.to be_same_as_powershell_command(ps_cmd)
+      expect(new_parameters).to be_same_as_powershell_command(ps_cmd)
     end
 
     it 'is able to update the working directory' do
@@ -385,10 +340,10 @@ describe 'When directly calling Scheduled Tasks API v2' do
       ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].WorkingDirectory)'
       task = subject.new(task_name)
 
-      ''.to be_same_as_powershell_command(ps_cmd)
+      expect('').to be_same_as_powershell_command(ps_cmd)
       task.working_directory = new_working_directory
       task.save
-      new_working_directory.to be_same_as_powershell_command(ps_cmd)
+      expect(new_working_directory).to be_same_as_powershell_command(ps_cmd)
     end
   end
 end
@@ -488,21 +443,21 @@ describe 'When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
       # 'once' has no specific settings, so 'type' should be omitted
     }
 
+  before :each do
+    task = Win32::TaskScheduler.new(task_name, default_once_trigger)
+    task.application_name = 'cmd.exe'
+    task.parameters = '/c exit 0'
+    task.flags = Win32::TaskScheduler::TASK_FLAG_DISABLED
+    task.save
+  end
+
+  after :each do
+    subjectv1.delete(task_name) if subjectv1.exists?(task_name)
+    subjectv2.delete(task_name) if subjectv2.exists?(task_name)
+  end
+
   context 'When created by the legacy V1 COM API' do
     let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
-
-    before(:all) do
-      task = Win32::TaskScheduler.new(task_name, default_once_trigger)
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.flags = Win32::TaskScheduler::TASK_FLAG_DISABLED
-      task.save
-    end
-
-    after(:all) do
-      obj = Win32::TaskScheduler.new
-      obj.delete(task_name) if obj.exists?(task_name)
-    end
 
     it 'is visible by the V2 API' do
       expect(subjectv2.exists?(task_name)).to be true
@@ -529,14 +484,7 @@ describe 'When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
   end
 
   context 'When created by the V2 API' do
-    before(:all) do
-      _, name = create_task(nil, :v1_compatibility)
-      let(:task_name) { name }
-    end
-
-    after(:all) do
-      ST::Task.delete(task_name) if ST::Task.exists?(task_name)
-    end
+    let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
 
     it 'is visible by the V2 API' do
       expect(subjectv2.exists?(task_name)).to be true
@@ -562,20 +510,7 @@ describe 'When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled 
   end
 
   context 'When modifiying a legacy V1 COM API task using the V2 API' do
-    let!(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
-
-    before(:all) do
-      task = Win32::TaskScheduler.new(task_name, default_once_trigger)
-      task.application_name = 'cmd.exe'
-      task.parameters = '/c exit 0'
-      task.flags = Win32::TaskScheduler::TASK_FLAG_DISABLED
-      task.save
-    end
-
-    after(:all) do
-      obj = Win32::TaskScheduler.new
-      obj.delete(task_name) if obj.exists?(task_name)
-    end
+    let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
 
     it 'is visible by the V2 API' do
       expect(subjectv2.exists?(task_name)).to be true

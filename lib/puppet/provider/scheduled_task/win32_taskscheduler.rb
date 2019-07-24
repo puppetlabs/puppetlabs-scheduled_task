@@ -131,7 +131,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   end
 
   def user=(value)
-    self.fail("Invalid user: #{value}") unless Puppet::Util::Windows::SID.name_to_sid(value)
+    fail("Invalid user: #{value}") unless Puppet::Util::Windows::SID.name_to_sid(value)
 
     if !value.to_s.casecmp('system').zero?
       task.set_account_information(value, resource[:password])
@@ -158,7 +158,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def flush
     return if resource[:ensure] == :absent
-    self.fail('Parameter command is required.') unless resource[:command]
+    fail('Parameter command is required.') unless resource[:command]
     # HACK: even though the user may actually be insync?, for task changes to
     # fully propagate, it is necessary to explicitly set the user for the task,
     # even when it is SYSTEM (and has a nil password)
@@ -186,7 +186,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
     [value].flatten.each do |t|
       ['index', 'enabled'].each do |key|
         if t.key?(key)
-          raise "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
+          fail "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
         end
       end
       PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(t)

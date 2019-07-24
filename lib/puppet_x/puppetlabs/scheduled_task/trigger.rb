@@ -143,6 +143,13 @@ module PuppetX
             }.merge(default_trigger_settings_for(schedule))
           end
 
+          def self.time_valid?(time)
+            Time.parse("2016-5-1 #{time}")
+            true
+          rescue
+            false
+          end
+
           # canonicalize given manifest hash
           # throws errors if hash structure is invalid
           # does not throw errors when invalid types are specified
@@ -166,11 +173,7 @@ module PuppetX
               raise ArgumentError, "Must specify '#{field}' when defining a trigger"
             end
 
-            start_time_valid = begin Time.parse("2016-5-1 #{manifest_hash['start_time']}"); begin
-                                                                                              true
-                                                                                            rescue
-                                                                                              false
-                                                                                            end; end
+            start_time_valid = time_valid?(manifest_hash['start_time'])
             raise ArgumentError, "Invalid start_time value: #{manifest_hash['start_time']}" unless start_time_valid
             # The start_time must be canonicalized to match the format that the rest of the code expects
             manifest_hash['start_time'] = format_time(Time.parse(manifest_hash['start_time'])) unless manifest_hash['start_time'].nil?
@@ -197,11 +200,11 @@ module PuppetX
             end
 
             if manifest_hash.key?('every')
-              every = begin begin
-                              Integer(manifest_hash['every'])
-                            rescue
-                              nil
-                            end end
+              every = begin
+                        Integer(manifest_hash['every'])
+                      rescue
+                        nil
+                      end
               raise ArgumentError, "Invalid every value: #{manifest_hash['every']}" if every.nil?
               manifest_hash['every'] = every
             end

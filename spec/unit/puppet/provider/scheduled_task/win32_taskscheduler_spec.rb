@@ -31,7 +31,7 @@ task_providers.each do |task_provider|
     describe 'when retrieving' do
       let!(:mock_task) { stub }
       let(:resource) { Puppet::Type.type(:scheduled_task).new(name: 'Test Task', command: 'C:\Windows\System32\notepad.exe') }
-      
+
       before :each do
         mock_task.responds_like_instance_of(task2)
         described_class.any_instance.stubs(:task).returns(mock_task)
@@ -413,7 +413,7 @@ task_providers.each do |task_provider|
     describe '#exists?' do
       let!(:mock_task) { stub }
       let(:resource) { Puppet::Type.type(:scheduled_task).new(name: 'Test Task', command: 'C:\Windows\System32\notepad.exe') }
-      
+
       before :each do
         mock_task.responds_like_instance_of(task2)
         described_class.any_instance.stubs(:task).returns(mock_task)
@@ -1239,7 +1239,7 @@ task_providers.each do |task_provider|
         )
       end
       let(:mock_task) { stub }
-      
+
       before :each do
         mock_task.responds_like_instance_of(task2)
         mock_task.stubs(:application_name=)
@@ -1326,7 +1326,7 @@ task_providers.each do |task_provider|
           new_mock_task.stubs(:triggers).returns([])
 
           expect(resource.provider.task).to eq(mock_task)
-          
+
           resource.provider.create
 
           # require 'pry'
@@ -1370,7 +1370,7 @@ task_providers.each do |task_provider|
         end
 
         it 'for a ONCE schedule' do
-          task = Win32::TaskScheduler.new(name, {'trigger_type' => :TASK_TIME_TRIGGER_ONCE})
+          task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
           expect(task.trigger(0)['start_year']).to eq(now.year)
           expect(task.trigger(0)['start_month']).to eq(now.month)
           expect(task.trigger(0)['start_day']).to eq(now.day)
@@ -1426,7 +1426,7 @@ task_providers.each do |task_provider|
       end
 
       describe 'enforces maximum lengths' do
-        let(:task) { Win32::TaskScheduler.new(name, {'trigger_type' => :TASK_TIME_TRIGGER_ONCE}) }
+        let(:task) { Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE) }
 
         it 'on account user name' do
           expect {
@@ -1484,7 +1484,7 @@ task_providers.each do |task_provider|
           task_name = name + "\u16A0\u16C7\u16BB" # ᚠᛇᚻ
 
           begin
-            task = Win32::TaskScheduler.new(task_name, {'trigger_type' => :TASK_TIME_TRIGGER_ONCE})
+            task = Win32::TaskScheduler.new(task_name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
             task.save
 
             expect(Puppet::FileSystem.exist?("C:\\Windows\\Tasks\\#{task_name}.job")).to be_truthy
@@ -1498,7 +1498,7 @@ task_providers.each do |task_provider|
           task_name = name + 'abc' # name is a guid, but might not have alpha chars
 
           begin
-            task = Win32::TaskScheduler.new(task_name.upcase, {'trigger_type' => :TASK_TIME_TRIGGER_ONCE})
+            task = Win32::TaskScheduler.new(task_name.upcase, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
             task.save
 
             expect(task.exists?(task_name.downcase)).to be_truthy
@@ -1511,7 +1511,7 @@ task_providers.each do |task_provider|
       describe 'does not corrupt tasks' do
         it 'when setting maximum length values for all settings' do
           begin
-            task = Win32::TaskScheduler.new(name, {'trigger_type' => :TASK_TIME_TRIGGER_ONCE})
+            task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
 
             application_name = 'a' * Win32::TaskScheduler::MAX_PATH
             parameters = 'b' * Win32::TaskScheduler::MAX_PARAMETERS_LENGTH
@@ -1546,7 +1546,7 @@ task_providers.each do |task_provider|
         it 'by preventing a save() not preceded by a set_account_information()' do
           begin
             # creates a default new task with SYSTEM user
-            task = Win32::TaskScheduler.new(name, {'trigger_type' => :TASK_TIME_TRIGGER_ONCE})
+            task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
             # save automatically resets the current task
             task.save
 

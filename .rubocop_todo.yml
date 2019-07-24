@@ -26,3 +26,10 @@ RSpec/MultipleDescribes:
   Enabled: false
 RSpec/NamedSubject:
   Enabled: false
+Style/SignalException:
+  Enabled: false
+RSpec/AnyInstance:
+  Enabled: false
+RSpec/ExpectActual:
+  Exclude:
+    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'

@@ -383,7 +383,7 @@ module PuppetX
         def self.create_folder(path)
           task_service.GetFolder(path)
         rescue WIN32OLERuntimeError => e
-          unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
+          unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
             raise Puppet::Error.new(_('GetFolder failed with: %{error}') % { error: e }, e)
           end
           task_service.GetFolder(ROOT_FOLDER).CreateFolder(path)
@@ -398,7 +398,7 @@ module PuppetX
             task = task_folder.GetTask(task_name_from_task_path(task_path))
             return task, task.Definition
           rescue WIN32OLERuntimeError => e
-            unless Error.is_com_error_type(e, Error::ERROR_FILE_NOT_FOUND)
+            unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
               raise Puppet::Error.new(_('GetTask failed with: %{error}') % { error: e }, e)
             end
           end
@@ -425,7 +425,7 @@ module PuppetX
         def action_at(index)
           @definition.Actions.Item(index)
         rescue WIN32OLERuntimeError => err
-          raise unless Error.is_com_error_type(err, Error::E_INVALIDARG)
+          raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
           nil
         end
 
@@ -439,7 +439,7 @@ module PuppetX
         def trigger_at(index)
           @definition.Triggers.Item(index)
         rescue WIN32OLERuntimeError => err
-          raise unless Error.is_com_error_type(err, Error::E_INVALIDARG)
+          raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
           nil
         end
 
