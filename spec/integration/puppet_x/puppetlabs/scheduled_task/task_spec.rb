@@ -99,28 +99,32 @@ describe 'When directly calling Scheduled Tasks API v2' do
   end
 
   describe '#enum_task_names' do
-    # Need a V1 task as a test fixture
-    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-    _, name = create_task(nil, :v1_compatibility, [manifest_triggers[0]])
-    let(:task_name) { name }
-
-    it 'returns all tasks by default' do
-      subject_count = subject.enum_task_names.count
-      ps_cmd = '(Get-ScheduledTask | Measure-Object).count'
-      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+    before :each do
+      # Need a V1 task as a test fixture
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+      create_task(task_name, :v1_compatibility, [manifest_triggers[0]])
     end
+    context 'with new task' do
+      let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
 
-    it 'does not recurse folders if specified' do
-      subject_count = subject.enum_task_names(subject::ROOT_FOLDER, include_child_folders: false).count
-      ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
-      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
-    end
+      it 'returns all tasks by default' do
+        subject_count = subject.enum_task_names.count
+        ps_cmd = '(Get-ScheduledTask | Measure-Object).count'
+        expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+      end
 
-    it 'onlies return compatible tasks if specified' do
-      compatibility = [subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
-      subject_count = subject.enum_task_names(subject::ROOT_FOLDER, include_compatibility: compatibility).count
-      ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
-      expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+      it 'does not recurse folders if specified' do
+        subject_count = subject.enum_task_names(subject::ROOT_FOLDER, include_child_folders: false).count
+        ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
+        expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+      end
+
+      it 'onlies return compatible tasks if specified' do
+        compatibility = [subject::TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1]
+        subject_count = subject.enum_task_names(subject::ROOT_FOLDER, include_compatibility: compatibility).count
+        ps_cmd = '(Get-ScheduledTask | ? { [Int]$_.Settings.Compatibility -eq 1 } | Measure-Object).count'
+        expect(subject_count).to be_same_as_powershell_command(ps_cmd)
+      end
     end
   end
 
@@ -131,17 +135,18 @@ describe 'When directly calling Scheduled Tasks API v2' do
         create_task(task_name, nil, [manifest_triggers[0]])
       end
 
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      name = 'puppet_task_' + SecureRandom.uuid.to_s
-      # find the task by name and examine its properties through COM
-      service = WIN32OLE.new('Schedule.Service')
-      service.connect
-      let(:task_name) { name }
-      let(:task_definition) do
-        service
-          .GetFolder(subject::ROOT_FOLDER)
-          .GetTask(name)
-          .Definition
+      if Puppet.features.microsoft_windows?
+        name = 'puppet_task_' + SecureRandom.uuid.to_s
+        # find the task by name and examine its properties through COM
+        service = WIN32OLE.new('Schedule.Service')
+        service.connect
+        let(:task_name) { name }
+        let(:task_definition) do
+          service
+            .GetFolder(subject::ROOT_FOLDER)
+            .GetTask(name)
+            .Definition
+        end
       end
 
       context 'given a test task fixture' do
@@ -184,10 +189,11 @@ describe 'When directly calling Scheduled Tasks API v2' do
         skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
       end
 
-      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      task_path = SecureRandom.uuid.to_s + '\puppet_task_' + SecureRandom.uuid.to_s
-      _, name = create_task(task_path, nil, [manifest_triggers[0]])
-      let(:task_name) { name }
+      if Puppet.features.microsoft_windows?
+        task_path = SecureRandom.uuid.to_s + '\puppet_task_' + SecureRandom.uuid.to_s
+        _, name = create_task(task_path, nil, [manifest_triggers[0]])
+        let(:task_name) { name }
+      end
 
       context 'given a test task fixture' do
         it 'creates a folder and place the' do
@@ -199,10 +205,15 @@ describe 'When directly calling Scheduled Tasks API v2' do
   end
 
   describe 'modify a task' do
-    skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-    t, tn = create_task(nil, nil, [manifest_triggers[0]])
-    let(:task_name) { tn }
-    let(:task) { t }
+    if Puppet.features.microsoft_windows?
+      t, tn = create_task(nil, nil, [manifest_triggers[0]])
+      let(:task_name) { tn }
+      let(:task) { t }
+    end
+
+    before :each do
+      skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
+    end
 
     context 'given a test task fixture' do
       it 'changes the action path' do
@@ -265,9 +276,11 @@ describe 'When directly calling Scheduled Tasks API v2' do
 
     manifest_triggers.each do |manifest_hash|
       after(:each) do
-        task = subject.new(task_name)
-        task.clear_triggers
-        task.save
+        if Puppet.features.microsoft_windows?
+          task = subject.new(task_name)
+          task.clear_triggers
+          task.save
+        end
       end
 
       it "#{manifest_hash['schedule']} and return the same properties as those set" do

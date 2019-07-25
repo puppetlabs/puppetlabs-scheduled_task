@@ -1,7 +1,5 @@
 require 'spec_helper_acceptance'
 
-host = ENV['TARGET_HOST']
-
 describe 'Should create a scheduled task' do
   username, password = add_test_user
   username2, password2 = add_test_user
@@ -12,12 +10,8 @@ describe 'Should create a scheduled task' do
   let!(:taskname) { "pl#{rand(999_999).to_i}" }
 
   after(:all) do
-    remove_test_user(host, username)
-    remove_test_user(host, username2)
-  end
-
-  before(:each) do
-    @taskname = "pl#{rand(999_999).to_i}"
+    remove_test_user(username)
+    remove_test_user(username2)
   end
 
   after(:each) do
