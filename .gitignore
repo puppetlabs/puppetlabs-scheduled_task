@@ -24,5 +24,4 @@
 .DS_Store
 .project
 .envrc
-inventory.yaml
-/.vscode/
+/inventory.yaml
