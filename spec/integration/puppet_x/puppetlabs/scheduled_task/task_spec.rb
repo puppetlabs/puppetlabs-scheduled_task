@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 # rubocop:disable RSpec/ExpectActual
 require 'spec_helper'
 

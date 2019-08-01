@@ -1,4 +1,3 @@
-#! /usr/bin/env ruby
 # rubocop:disable RSpec/AnyInstance
 require 'spec_helper'
 
