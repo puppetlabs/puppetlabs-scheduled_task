@@ -1018,10 +1018,7 @@ task_providers.each do |task_provider|
             ensure: ensur,
           )
 
-          expect { resource.provider.flush }.to raise_error(
-            Puppet::Error,
-            'Parameter command is required.',
-          )
+          expect { resource.provider.flush }.to raise_error('Parameter command is required.')
         end
       end
 
