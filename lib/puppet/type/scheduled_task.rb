@@ -1,12 +1,11 @@
 Puppet::Type.newtype(:scheduled_task) do
-
   @doc = "Installs and manages Windows Scheduled Tasks.  All attributes
     except `name`, `command`, and `trigger` are optional; see the description
     of the `trigger` attribute for details on setting schedules."
 
   feature :compatibility, "The provider accepts compatibility to be
     set for the given task.",
-    :methods => [:compatibility, :compatibility=]
+          methods: [:compatibility, :compatibility=]
 
   ensurable
 
@@ -15,8 +14,8 @@ Puppet::Type.newtype(:scheduled_task) do
       affects every trigger for the task; triggers cannot be enabled or
       disabled individually."
 
-    newvalue(:true,  :event => :task_enabled)
-    newvalue(:false, :event => :task_disabled)
+    newvalue(:true,  event: :task_enabled)
+    newvalue(:false, event: :task_disabled)
 
     defaultto(:true)
   end
@@ -34,24 +33,24 @@ Puppet::Type.newtype(:scheduled_task) do
   end
 
   newproperty(:command) do
-    desc "The full path to the application to run, without any arguments."
+    desc 'The full path to the application to run, without any arguments.'
 
     validate do |value|
-      raise Puppet::Error.new(_('Must be specified using an absolute path.')) unless absolute_path?(value)
+      raise Puppet::Error, _('Must be specified using an absolute path.') unless absolute_path?(value)
     end
     munge do |value|
       # windows converts slashes to backslashes, so the *is* value
       # has backslashes. Do the same for the *should* value, so that
       # we are slash-insensitive. See #13009
-      File.expand_path(value).gsub(/\//, '\\')
+      File.expand_path(value).tr(%(\/), '\\')
     end
   end
 
   newproperty(:working_dir) do
-    desc "The full path of the directory in which to start the command."
+    desc 'The full path of the directory in which to start the command.'
 
     validate do |value|
-      raise Puppet::Error.new(_('Must be specified using an absolute path.')) unless absolute_path?(value)
+      raise Puppet::Error, _('Must be specified using an absolute path.') unless absolute_path?(value)
     end
   end
 
@@ -89,7 +88,7 @@ Puppet::Type.newtype(:scheduled_task) do
       to determine if a scheduled task is in sync or not."
   end
 
-  newproperty(:compatibility, :required_features=>:compatibility) do
+  newproperty(:compatibility, required_features: :compatibility) do
     desc "The compatibility level associated with the task. May currently be set
       to 1 for compatibility with tasks on a Windows XP or Windows Server
       2003 computer, 2 for compatibility with tasks on a Windows 2008 computer,
@@ -107,7 +106,7 @@ Puppet::Type.newtype(:scheduled_task) do
     defaultto(1)
 
     validate do |value|
-      raise Puppet::Error.new(_("must be a number")) unless value.is_a?(Integer)
+      raise Puppet::Error, _('must be a number') unless value.is_a?(Integer)
       super(value)
     end
 
@@ -115,7 +114,7 @@ Puppet::Type.newtype(:scheduled_task) do
     munge { |value| value }
   end
 
-  newproperty(:trigger, :array_matching => :all) do
+  newproperty(:trigger, array_matching: :all) do
     desc <<-'EOT'
       One or more triggers defining when the task should run. A single trigger is
       represented as a hash, and multiple triggers can be specified with an array of
@@ -241,11 +240,11 @@ Puppet::Type.newtype(:scheduled_task) do
       provider.trigger_insync?(current, @should)
     end
 
-    def should_to_s(new_value=@should)
+    def should_to_s(new_value = @should)
       super(new_value)
     end
 
-    def is_to_s(current_value=@is)
+    def to_s?(current_value = @is)
       super(current_value)
     end
   end

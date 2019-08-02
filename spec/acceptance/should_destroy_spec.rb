@@ -1,12 +1,9 @@
 require 'spec_helper_acceptance'
 
-describe "Should destroy a scheduled task" do
-
-  before(:all) do
-    @taskname = "pl#{rand(999999).to_i}"
-
+describe 'Should destroy a scheduled task', node: host do
+  before :each do
     pp = <<-MANIFEST
-    scheduled_task {'#{@taskname}':
+    scheduled_task {'#{taskname}':
       ensure      => present,
       command     => 'c:\\\\windows\\\\system32\\\\notepad.exe',
       arguments   => "foo bar baz",
@@ -18,25 +15,29 @@ describe "Should destroy a scheduled task" do
       provider => 'taskscheduler_api2'
     }
     MANIFEST
-    apply_manifest(pp, :catch_failures => true)
+    apply_manifest(pp, catch_failures: true)
   end
 
-  it 'Should destroy the task' do
-    # Verify the task exists
-    query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    run_shell(query_cmd)
+  context 'with taskname' do
+    let(:taskname) { "pl#{rand(999_999).to_i}" }
 
-    pp = <<-MANIFEST
-    scheduled_task {'#{@taskname}':
-      ensure      => absent,
-      provider    => 'taskscheduler_api2'
-    }
-    MANIFEST
+    it 'destroys the task' do
+      # Verify the task exists
+      query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+      run_shell(query_cmd)
 
-    apply_manifest(pp, :catch_failures => true)
+      pp = <<-MANIFEST
+      scheduled_task {'#{taskname}':
+        ensure      => absent,
+        provider    => 'taskscheduler_api2'
+      }
+      MANIFEST
 
-    query_cmd = "schtasks.exe /query /v /fo list /tn #{@taskname}"
-    query_out = run_shell(query_cmd, :expect_failures => true)
-    expect(query_out.to_s).to match(/ERROR: The system cannot find the file specified/)
+      apply_manifest(pp, catch_failures: true)
+
+      query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+      query_out = run_shell(query_cmd, expect_failures: true)
+      expect(query_out.to_s).to match(%r{ERROR: The system cannot find the file specified})
+    end
   end
 end
