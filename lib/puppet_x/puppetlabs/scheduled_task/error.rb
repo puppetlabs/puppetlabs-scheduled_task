@@ -1,15 +1,20 @@
+# module PuppetX
 module PuppetX
+  # module PuppetLabs
   module PuppetLabs
+    # module ScheduledTask
     module ScheduledTask
       # This module is used to manage the errors of the Task Scheduler V2 API
       module Error
         # from C:\Program Files (x86)\Windows Kits\8.1\Include\shared\winerror.h
         MAX_32_BIT_VALUE = 0xFFFFFFFF
 
+        # Returnes the signed value
         def self.to_signed_value(hresult)
           -(-hresult & MAX_32_BIT_VALUE)
         end
 
+        # Checks if an error is a COM Error
         def self.com_error_type?(win_32_ole_runtime_error, hresult)
           # to_s(16) does not include 0x prefix
           # assume actual hex for error is what message contains - i.e. 80070002

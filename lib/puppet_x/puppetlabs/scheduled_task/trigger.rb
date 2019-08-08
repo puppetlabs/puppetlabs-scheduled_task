@@ -1,6 +1,7 @@
 require 'time'
 
 # @api private
+# PuppetX::PuppetLabs::ScheduledTask module
 module PuppetX::PuppetLabs::ScheduledTask
   # This module is used to manage the triggers for the Task Scheduler V2 API
   module Trigger
@@ -29,6 +30,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         }
       end
 
+      # Converts a hash in a time format to seconds
       def self.hash_to_seconds(value)
         return 0 if value.nil?
         time = 0
@@ -43,6 +45,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         time.to_i
       end
 
+      # Converts a hash in a time format to minutes
       def self.to_minutes(value)
         return 0 if value.nil?
         return 0 unless value.is_a?(String)
@@ -54,6 +57,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       end
     end
 
+    # Converts a datetime to local time with no timezone
     def iso8601_datetime_to_local(value)
       return nil if value.nil?
       raise ArgumentError, 'value must be a String' unless value.is_a?(String)
@@ -66,6 +70,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
     # Scheduled Task manifest
     class Manifest
+      # Valid Keys
       ValidKeys = [
         'index',
         'enabled',
@@ -82,6 +87,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         'user_id',
       ].freeze
 
+      # Valid Schedule Keys
       ValidScheduleKeys = [
         'once',
         'daily',
@@ -95,15 +101,18 @@ module PuppetX::PuppetLabs::ScheduledTask
       # d must be a value between -657435.0 (1/1/1753) through 2958465.99999999 (12/31/9999 11:59:59)
       MINIMUM_TRIGGER_DATE = Time.local(1753, 1, 1)
 
+      # Formats time in a %Y-%-m-%-d format
       def self.format_date(time)
         time.strftime('%Y-%-m-%-d')
       end
 
+      # Formats time to the ISO8601 %H:%M format
       def self.format_time(time)
         # equivalent to the ISO8601 %H:%M
         time.strftime('%R')
       end
 
+      # Returns the default trigger setting for a specified schedule
       def self.default_trigger_settings_for(schedule = 'once')
         case schedule
         when 'once'
@@ -130,6 +139,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         end
       end
 
+      # Returns the default trigger for a specified schedule
       def self.default_trigger_for(schedule = 'once')
         now = Time.now
         {
@@ -141,6 +151,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         }.merge(default_trigger_settings_for(schedule))
       end
 
+      # Checks if a given string is in a valid time format
       def self.time_valid?(time)
         Time.parse("2016-5-1 #{time}")
         true
@@ -151,7 +162,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       # canonicalize given manifest hash
       # throws errors if hash structure is invalid
       # does not throw errors when invalid types are specified
-      # @returns original object with downcased keys
+      # returns original object with downcased keys
       def self.canonicalize_and_validate(manifest_hash)
         raise TypeError unless manifest_hash.is_a?(Hash)
         manifest_hash = downcase_keys(manifest_hash)
@@ -305,17 +316,32 @@ module PuppetX::PuppetLabs::ScheduledTask
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384014(v=vs.85).aspx
         # V2 IWeeklyTrigger::DaysOfWeek / IMonthlyDOWTrigger::DaysOfWeek
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381905(v=vs.85).aspx
+
+        # The task will run on Sunday.
         TASK_SUNDAY       = 0x1
+
+        # The task will run on Monday.
         TASK_MONDAY       = 0x2
+
+        # The task will run on Tuesday.
         TASK_TUESDAY      = 0x4
+
+        # The task will run on Wednesday.
         TASK_WEDNESDAY    = 0x8
+
+        # The task will run on Thursday.
         TASK_THURSDAY     = 0x10
+
+        # The task will run on Friday.
         TASK_FRIDAY       = 0x20
+
+        # The task will run on Saturday.
         TASK_SATURDAY     = 0x40
 
         # 7 bits for 7 possible days to set
         MAX_VALUE = 0b1111111
 
+        # Day name to HEX map
         DAY_CONST_MAP = {
           'sun'   => TASK_SUNDAY,
           'mon'   => TASK_MONDAY,
@@ -326,14 +352,17 @@ module PuppetX::PuppetLabs::ScheduledTask
           'sat'   => TASK_SATURDAY,
         }.freeze
 
+        # Returns day names
         def self.names
           @names ||= DAY_CONST_MAP.keys.freeze
         end
 
+        # Returns day task values
         def self.values
           @values ||= DAY_CONST_MAP.values.freeze
         end
 
+        # Converts day names to bitmask
         def self.names_to_bitmask(day_names)
           day_names = [day_names].flatten
           invalid_days = day_names - DAY_CONST_MAP.keys
@@ -342,6 +371,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           day_names.reduce(0) { |bitmask, day| bitmask | DAY_CONST_MAP[day] }
         end
 
+        # Converts bitmask to day names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
           if bitmask < 0 || bitmask > MAX_VALUE
@@ -380,6 +410,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           day_indexes.reduce(0) { |bitmask, day_index| bitmask | 1 << day_index - 1 }
         end
 
+        # Converts bitmask to index
         def self.bitmask_to_indexes(bitmask)
           bitmask = Integer(bitmask)
           if bitmask < 0 || bitmask > MAX_VALUE
@@ -393,6 +424,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           end
         end
 
+        # Returns bit index
         def self.bit_index(bitmask)
           (0..31).select do |bit_index|
             bit_to_check = 1 << bit_index
@@ -408,22 +440,47 @@ module PuppetX::PuppetLabs::ScheduledTask
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
         # V2 IMonthlyTrigger::MonthsOfYear / IMonthlyDOWTrigger::MonthsOfYear
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380736(v=vs.85).aspx
+
+        # The task will run in January.
         TASK_JANUARY      = 0x1
+
+        # The task will run in February.
         TASK_FEBRUARY     = 0x2
+
+        # The task will run in March.
         TASK_MARCH        = 0x4
+
+        # The task will run in April.
         TASK_APRIL        = 0x8
+
+        # The task will run in May.
         TASK_MAY          = 0x10
+
+        # The task will run in June.
         TASK_JUNE         = 0x20
+
+        # The task will run in July.
         TASK_JULY         = 0x40
+
+        # The task will run in August.
         TASK_AUGUST       = 0x80
+
+        # The task will run in September.
         TASK_SEPTEMBER    = 0x100
+
+        # The task will run in October.
         TASK_OCTOBER      = 0x200
+
+        # The task will run in November.
         TASK_NOVEMBER     = 0x400
+
+        # The task will run in December.
         TASK_DECEMBER     = 0x800
 
         # 12 bits for 12 possible months to set
         MAX_VALUE = 0b111111111111
 
+        # Month number to HEX map
         MONTHNUM_CONST_MAP = {
           1  => TASK_JANUARY,
           2  => TASK_FEBRUARY,
@@ -439,10 +496,12 @@ module PuppetX::PuppetLabs::ScheduledTask
           12 => TASK_DECEMBER,
         }.freeze
 
+        # Returns month indexes
         def self.indexes
           @indexes ||= MONTHNUM_CONST_MAP.keys.freeze
         end
 
+        # Converts indexes to bitmask
         def self.indexes_to_bitmask(month_indexes)
           month_indexes = [month_indexes].flatten.map do |m|
             begin
@@ -457,6 +516,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           month_indexes.reduce(0) { |bitmask, month_index| bitmask | MONTHNUM_CONST_MAP[month_index] }
         end
 
+        # Converts bitmask to indexes
         def self.bitmask_to_indexes(bitmask)
           bitmask = Integer(bitmask)
           if bitmask < 0 || bitmask > MAX_VALUE
@@ -472,15 +532,25 @@ module PuppetX::PuppetLabs::ScheduledTask
       # Gets or sets the weeks of the month during which the task runs.
       class WeeksOfMonth
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380733(v=vs.85).aspx
+        # First week of the month to HEX
         FIRST = 0x01
+
+        # Second week of the month to HEX
         SECOND  = 0x02
+
+        # Third week of the month to HEX
         THIRD   = 0x04
+
+        # Forth week of the month to HEX
         FOURTH  = 0x08
+
+        # Last week of the month to HEX
         LAST    = 0x10
 
         # 5 bits for 5 possible weeks to set
         MAX_VALUE = 0b11111
 
+        # Week of the month to HEX map
         WEEK_OF_MONTH_CONST_MAP = {
           'first'  => FIRST,
           'second' => SECOND,
@@ -489,6 +559,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           'last'   => LAST,
         }.freeze
 
+        # Converts names to bitmask
         def self.names_to_bitmask(week_names)
           week_names = [week_names].flatten
           invalid_weeks = week_names - WEEK_OF_MONTH_CONST_MAP.keys
@@ -497,6 +568,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           week_names.reduce(0) { |bitmask, day| bitmask | WEEK_OF_MONTH_CONST_MAP[day] }
         end
 
+        # Converts bitmask to names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
           if bitmask < 0 || bitmask > MAX_VALUE
@@ -511,31 +583,66 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       # Defines the type of triggers that can be used by tasks.
       class Type
-        # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_trigger_type2
+        # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_trigger_type2
+        # Triggers the task when a specific event occurs.
         TASK_TRIGGER_EVENT                 = 0
+
+        # Triggers the task at a specific time of day.
         TASK_TRIGGER_TIME                  = 1
+
+        # Triggers the task on a daily schedule. For example, the task starts at a specific time every day, every-other day, every third day, and so on.
         TASK_TRIGGER_DAILY                 = 2
+
+        # Triggers the task on a weekly schedule. For example, the task starts at 8:00 AM on a specific day every week or other week.
         TASK_TRIGGER_WEEKLY                = 3
+
+        # Triggers the task on a monthly schedule. For example, the task starts on specific days of specific months.
         TASK_TRIGGER_MONTHLY               = 4
+
+        # Triggers the task on a monthly day-of-week schedule. For example, the task starts on a specific days of the week, weeks of the month, and months of the year.
         TASK_TRIGGER_MONTHLYDOW            = 5
+
+        # Triggers the task when the computer goes into an idle state.
         TASK_TRIGGER_IDLE                  = 6
+
+        # Triggers the task when the task is registered.
         TASK_TRIGGER_REGISTRATION          = 7
+
+        # Triggers the task when the computer boots.
         TASK_TRIGGER_BOOT                  = 8
+
+        # Triggers the task when a specific user logs on.
         TASK_TRIGGER_LOGON                 = 9
+
+        # Triggers the task when a specific session state changes.
         TASK_TRIGGER_SESSION_STATE_CHANGE  = 11
+
+        # Custom trigger
         TASK_TRIGGER_CUSTOM_TRIGGER_01     = 12
       end
 
-      # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_session_state_change_type
+      # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_session_state_change_type
       class SessionStateChangeType
+        # Terminal Server console connection state change. For example, when you connect to a user session on the local computer by switching users on the computer.
         TASK_CONSOLE_CONNECT      = 1
+
+        # Terminal Server console disconnection state change. For example, when you disconnect to a user session on the local computer by switching users on the computer.
         TASK_CONSOLE_DISCONNECT   = 2
+
+        # Terminal Server remote connection state change. For example, when a user connects to a user session by using the Remote Desktop Connection program from a remote computer.
         TASK_REMOTE_CONNECT       = 3
+
+        # Terminal Server remote disconnection state change. For example, when a user disconnects from a user session while using the Remote Desktop Connection program from a remote computer.
         TASK_REMOTE_DISCONNECT    = 4
+
+        # Terminal Server session locked state change. For example, this state change causes the task to run when the computer is locked.
         TASK_SESSION_LOCK         = 7
+
+        # Terminal Server session unlocked state change. For example, this state change causes the task to run when the computer is unlocked.
         TASK_SESSION_UNLOCK       = 8
       end
 
+      # Trigger type to day map
       SCHEDULE_BASED_TRIGGER_MAP = {
         Type::TASK_TRIGGER_DAILY      => 'daily',
         Type::TASK_TRIGGER_WEEKLY     => 'weekly',
@@ -545,6 +652,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         Type::TASK_TRIGGER_TIME       => 'once',
       }.freeze
 
+      # Event based trigger map
       EVENT_BASED_TRIGGER_MAP = {
         Type::TASK_TRIGGER_BOOT                 => 'boot',
         Type::TASK_TRIGGER_LOGON                => 'logon',
@@ -555,8 +663,10 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Type::TASK_TRIGGER_SESSION_STATE_CHANGE => 'session_state_change',
       }.freeze
 
+      # Type manifest map
       TYPE_MANIFEST_MAP = SCHEDULE_BASED_TRIGGER_MAP.merge(EVENT_BASED_TRIGGER_MAP).freeze
 
+      # Returns a type based on a manifest hash
       def self.type_from_manifest_hash(manifest_hash)
         # monthly schedule defaults to TASK_TRIGGER_MONTHLY unless...
         if manifest_hash['schedule'] == 'monthly' &&
@@ -567,6 +677,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         TYPE_MANIFEST_MAP.key(manifest_hash['schedule'])
       end
 
+      # Converts trigger to manifest hash
       def self.to_manifest_hash(i_trigger)
         if TYPE_MANIFEST_MAP[i_trigger.Type].nil?
           raise ArgumentError, _('Unknown trigger type %{type}') % { type: i_trigger.ole_type.to_s }
@@ -617,6 +728,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         manifest_hash
       end
 
+      # Adds trigger to definition
       def self.append_trigger(definition, manifest_hash)
         manifest_hash = Trigger::Manifest.canonicalize_and_validate(manifest_hash)
         # create appropriate i_trigger based on 'schedule'

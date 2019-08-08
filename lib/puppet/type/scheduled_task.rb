@@ -1,7 +1,11 @@
 Puppet::Type.newtype(:scheduled_task) do
-  @doc = "Installs and manages Windows Scheduled Tasks.  All attributes
-    except `name`, `command`, and `trigger` are optional; see the description
-    of the `trigger` attribute for details on setting schedules."
+  @doc = <<-PUPPET
+    @summary
+      Installs and manages Windows Scheduled Tasks.
+    @note
+      All attributes except `name`, `command`, and `trigger` are optional; see the description
+      of the `trigger` attribute for details on setting schedules."
+    PUPPET
 
   feature :compatibility, "The provider accepts compatibility to be
     set for the given task.",
