@@ -1,102 +1,199 @@
 # This class is used to manage tasks using the Task Scheduler V2 API
 #
-# https://msdn.microsoft.com/en-us/library/windows/desktop/aa383600(v=vs.85).aspx
+# https://docs.microsoft.com/en-gb/windows/win32/taskschd/task-scheduler-2-0-interfaces
 #
 require_relative './error'
 require_relative './trigger'
 
+# PuppetX::PuppetLabs::ScheduledTask module
 module PuppetX::PuppetLabs::ScheduledTask
   # Installs and manages Windows Scheduled Tasks.
   class Task
     # The name of the root folder for tasks
     ROOT_FOLDER = '\\'.freeze
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_enum_flags
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_enum_flags
     class TASK_ENUM_FLAGS
+      # Enumerates all tasks, including tasks that are hidden.
       TASK_ENUM_HIDDEN = 0x1
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_action_type
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_action_type
     class TASK_ACTION_TYPE
+      # This action performs a command-line operation. For example, the action can run a script, launch
+      # an executable, or, if the name of a document is provided, find its associated application and
+      # launch the application with the document.
       TASK_ACTION_EXEC          = 0
+
+      # This action fires a handler. This action can only be used if the task Compatibility property is
+      # set to TASK_COMPATIBILITY_V2.
       TASK_ACTION_COM_HANDLER   = 5
+
+      # This action sends email message. This action can only be used if the task Compatibility property
+      # is set to TASK_COMPATIBILITY_V2.
       TASK_ACTION_SEND_EMAIL    = 6
+
+      # This action shows a message box. This action can only be used if the task Compatibility property
+      # is set to TASK_COMPATIBILITY_V2.
       TASK_ACTION_SHOW_MESSAGE  = 7
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_compatibility
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_compatibility
     # Win7/2008 R2                       = 3
     # Win8/Server 2012 R2 or Server 2016 = 4
     # Windows 10                         = 5 / 6
     class TASK_COMPATIBILITY
+      # The task is compatible with the AT command.
       TASK_COMPATIBILITY_AT     = 0
+
+      # The task is compatible with Task Scheduler 1.0.
       TASK_COMPATIBILITY_V1     = 1
+
+      # The task is compatible with Task Scheduler 2.0.
       TASK_COMPATIBILITY_V2     = 2
+
+      # The task is compatible with Task Scheduler 2.1.
       TASK_COMPATIBILITY_V2_1   = 3
+
+      # The task is compatible with Task Scheduler 2.2.
       TASK_COMPATIBILITY_V2_2   = 4
+
+      # The task is compatible with Task Scheduler 2.3.
       TASK_COMPATIBILITY_V2_3   = 5
+
+      # The task is compatible with Task Scheduler 2.4.
       TASK_COMPATIBILITY_V2_4   = 6
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_creation
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_creation
     class TASK_CREATION
+      # The Task Scheduler service checks the syntax of the XML that describes the task but does
+      # not register the task. This constant cannot be combined with the TASK_CREATE,
+      # TASK_UPDATE, or TASK_CREATE_OR_UPDATE values.
       TASK_VALIDATE_ONLY                 = 0x1
+
+      # The Task Scheduler service registers the task as a new task.
       TASK_CREATE                        = 0x2
+
+      # The Task Scheduler service registers the task as an updated version of an existing task.
+      # When a task with a registration trigger is updated, the task will execute after the update occurs.
       TASK_UPDATE                        = 0x4
+
       # ( TASK_CREATE | TASK_UPDATE )
       TASK_CREATE_OR_UPDATE              = 0x6
+
+      # The Task Scheduler service registers the disabled task. A disabled task cannot run until it is enabled.
+      # For more information, see Enabled Property of ITaskSettings and Enabled Property of IRegisteredTask.
       TASK_DISABLE                       = 0x8
+
+      # The Task Scheduler service is prevented from adding the allow access-control entry (ACE) for the context principal.
+      # When the ITaskFolder::RegisterTaskDefinition or ITaskFolder::RegisterTask functions are called with
+      # this flag to update a task, the Task Scheduler service does not add the ACE for the new context principal
+      # and does not remove the ACE from the old context principal.
       TASK_DONT_ADD_PRINCIPAL_ACE        = 0x10
+
+      # The Task Scheduler service creates the task, but ignores the registration triggers in the task.
+      # By ignoring the registration triggers, the task will not execute when it is registered unless a
+      # time-based trigger causes it to execute on registration.
       TASK_IGNORE_REGISTRATION_TRIGGERS  = 0x20
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_logon_type
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_logon_type
     class TASK_LOGON_TYPE
+      # The logon method is not specified. Used for non-NT credentials.
       TASK_LOGON_NONE                           = 0
+
+      # Use a password for logging on the user. The password must be supplied at registration time.
       TASK_LOGON_PASSWORD                       = 1
+
+      # The service will log the user on using Service For User (S4U), and the task will run in a non-interactive desktop.
+      # When an S4U logon is used, no password is stored by the system and there is no access to either the network or to encrypted files.
       TASK_LOGON_S4U                            = 2
+
+      # User must already be logged on. The task will be run only in an existing interactive session.
       TASK_LOGON_INTERACTIVE_TOKEN              = 3
+
+      # Group activation. The groupId field specifies the group.
       TASK_LOGON_GROUP                          = 4
+
+      # Indicates that a Local System, Local Service, or Network Service account is being used as a security context to run the task.
       TASK_LOGON_SERVICE_ACCOUNT                = 5
+
+      # Not in use; currently identical to TASK_LOGON_PASSWORD.
       TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD  = 6
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_run_flags
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_run_flags
     class TASK_RUN_FLAGS
+      # The task is run with all flags ignored.
       TASK_RUN_NO_FLAGS             = 0
+
+      # The task is run as the user who is calling the Run method.
       TASK_RUN_AS_SELF              = 0x1
+
+      # The task is run regardless of constraints such as "do not run on batteries" or "run only if idle".
       TASK_RUN_IGNORE_CONSTRAINTS   = 0x2
+
+      # The task is run using a terminal server session identifier.
       TASK_RUN_USE_SESSION_ID       = 0x4
+
+      # The task is run using a security identifier.
       TASK_RUN_USER_SID             = 0x8
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_runlevel
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_runlevel_type
     class TASK_RUNLEVEL_TYPE
+      # Tasks will be run with the least privileges.
       TASK_RUNLEVEL_LUA     = 0
+
+      # Tasks will be run with the highest privileges.
       TASK_RUNLEVEL_HIGHEST = 1
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_processtokensid
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_processtokensid_type
     class TASK_PROCESSTOKENSID_TYPE
+      # No changes will be made to the process token groups list.
       TASK_PROCESSTOKENSID_NONE           = 0
+
+      # A task SID that is derived from the task name will be added to the process token groups list,
+      # and the token default discretionary access control list (DACL) will be modified to allow only
+      # the task SID and local system full control and the account SID read control.
       TASK_PROCESSTOKENSID_UNRESTRICTED   = 1
+
+      # A Task Scheduler will apply default settings to the task process.
       TASK_PROCESSTOKENSID_DEFAULT        = 2
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_state
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_state
     class TASK_STATE
+      # The state of the task is unknown.
       TASK_STATE_UNKNOWN    = 0
+
+      # The task is registered but is disabled and no instances of the task are queued or running. The task cannot be run until it is enabled.
       TASK_STATE_DISABLED   = 1
+
+      # Instances of the task are queued.
       TASK_STATE_QUEUED     = 2
+
+      # The task is ready to be executed, but no instances are queued or running.
       TASK_STATE_READY      = 3
+
+      # One or more instances of the task is running.
       TASK_STATE_RUNNING    = 4
     end
 
-    # https://docs.microsoft.com/en-us/windows/desktop/api/taskschd/ne-taskschd-_task_instances_policy
+    # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_instances_policy
     class TASK_INSTANCES_POLICY
+      # Starts new instance while an existing instance is running.
       TASK_INSTANCES_PARALLEL       = 0
+
+      # Starts a new instance of the task after all other instances of the task are complete.
       TASK_INSTANCES_QUEUE          = 1
+
+      # Does not start a new instance if an existing instance of the task is running.
       TASK_INSTANCES_IGNORE_NEW     = 2
+
+      # Stops an existing instance of the task before it starts a new instance.
       TASK_INSTANCES_STOP_EXISTING  = 3
     end
 
@@ -119,11 +216,13 @@ module PuppetX::PuppetLabs::ScheduledTask
       set_account_information(task_userid, nil)
     end
 
+    # API v1 Compatibility list
     V1_COMPATIBILITY = [
       TASK_COMPATIBILITY::TASK_COMPATIBILITY_AT,
       TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1,
     ].freeze
 
+    # API v2 Compatibility list
     V2_COMPATIBILITY = [
       TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_4,
       TASK_COMPATIBILITY::TASK_COMPATIBILITY_V2_3,
@@ -144,6 +243,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       end
     end
 
+    # Reserved for furure use
     RESERVED_FOR_FUTURE_USE = 0
 
     # Returns an array of scheduled task names.
@@ -310,10 +410,12 @@ module PuppetX::PuppetLabs::ScheduledTask
       dir
     end
 
+    # Gets task compatibility
     def compatibility
       @definition.Settings.Compatibility
     end
 
+    # Sets task compatibility
     def compatibility=(value)
       # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381846(v=vs.85).aspx
       @definition.Settings.Compatibility = value
@@ -348,10 +450,12 @@ module PuppetX::PuppetLabs::ScheduledTask
       Trigger::V2.append_trigger(@definition, manifest_hash)
     end
 
+    # Checks if task is enabled
     def enabled
       @definition.Settings.Enabled
     end
 
+    # Sets the enabled value
     def enabled=(value)
       @definition.Settings.Enabled = value
     end
@@ -366,10 +470,12 @@ module PuppetX::PuppetLabs::ScheduledTask
       @service
     end
 
+    # Get task name from task path
     def self.task_name_from_task_path(task_path)
       task_path.rpartition('\\')[2]
     end
 
+    # Get task path folder
     def self.folder_path_from_task_path(task_path)
       path = task_path.rpartition('\\')[0]
 
@@ -387,6 +493,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       task_service.GetFolder(ROOT_FOLDER).CreateFolder(path)
     end
 
+    # Gets the task with a specified task path
     def self.task(task_path)
       raise TypeError unless task_path.is_a?(String)
       service = task_service
@@ -420,6 +527,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       action
     end
 
+    # Gets the action item with the specified index
     def action_at(index)
       @definition.Actions.Item(index)
     rescue WIN32OLERuntimeError => err
