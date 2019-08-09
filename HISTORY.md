@@ -1,15 +1,4 @@
-# Changelog
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-
-- Ability to specify scheduled tasks in subfolders by prepending the folder path to the task name ([MODULES-7203](https://tickets.puppetlabs.com/browse/.MODULES-7203)).
-
-## [1.0.1] - 2019-03-07
+## 1.0.1
 
 ### Fixed
 
@@ -75,7 +64,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 - Updated README with examples for the new provider ([MODULES-6264](https://tickets.puppetlabs.com/browse/MODULES-6264))
 - Updated acceptance tests for the new provider ([MODULES-6362](https://tickets.puppetlabs.com/browse/MODULES-6362))
 
-[Unreleased]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/1.0.1...HEAD
 [1.0.1]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.4.0...1.0.0
 [0.4.0]: https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/0.3.0...0.4.0
