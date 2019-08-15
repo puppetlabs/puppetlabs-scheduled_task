@@ -17,7 +17,7 @@ RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
 
   match do |actual|
     from_ps = run_ps(ps_cmd)
-    actual.to_s == from_ps
+    actual.to_s == from_ps.to_s
   end
 
   failure_message do |actual|
