@@ -14,6 +14,7 @@ Rakefile:
     inherit_from: .rubocop_todo.yml
 
 Gemfile:
+  use_litmus: true
   optional:
     ':development':
       - gem: 'github_changelog_generator'
@@ -29,7 +30,17 @@ spec/default_facts.yml:
 # After running `pdk convert` you will have to remove the extra cells and keep the ones listed below
 # This is raised in https://github.com/puppetlabs/pdk-templates/issues/132
 appveyor.yml:
-  unmanaged: true
+  use_litmus: true
+  matrix_extras:
+    -
+      RUBY_VERSION: 25-x64
+      ACCEPTANCE: 'yes'
+      TARGET_HOST: localhost
+    -
+      RUBY_VERSION: 25-x64
+      ACCEPTANCE: 'yes'
+      TARGET_HOST: localhost
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 .gitlab-ci.yml:
   delete: true
