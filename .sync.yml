@@ -1,46 +1,36 @@
 ---
-NOTICE:
-  copyright_holders:
-    - name: 'Puppet, Inc.'
-      begin: 2018
-
-Rakefile:
-  requires:
-  use_litmus_tasks: true
-
-# For the moment don't do any rubocop checks.
-.rubocop.yml:
+".gitlab-ci.yml":
+  delete: true
+".rubocop.yml":
   default_configs:
-    inherit_from: .rubocop_todo.yml
-
-Gemfile:
-  use_litmus: true
-  optional:
-    ':development':
-      - gem: 'github_changelog_generator'
-        git: 'https://github.com/skywinder/github-changelog-generator'
-        ref: '20ee04ba1234e9e83eb2ffb5056e23d641c7a018'
-        condition: "Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('2.2.2')"
-
-spec/default_facts.yml:
-  unmanaged: true
-
-# WARN: The puppetlabs/scheduled_task module doesn't support parallel_spec
-# PDK Convert will keep adding the default matrix cells instead of replacing them with the below
-# After running `pdk convert` you will have to remove the extra cells and keep the ones listed below
-# This is raised in https://github.com/puppetlabs/pdk-templates/issues/132
+    inherit_from: ".rubocop_todo.yml"
+".travis.yml":
+  simplecov: true
 appveyor.yml:
   use_litmus: true
   matrix_extras:
-    -
-      RUBY_VERSION: 25-x64
-      ACCEPTANCE: 'yes'
-      TARGET_HOST: localhost
-    -
-      RUBY_VERSION: 25-x64
-      ACCEPTANCE: 'yes'
-      TARGET_HOST: localhost
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-.gitlab-ci.yml:
-  delete: true
+  - RUBY_VERSION: 25-x64
+    ACCEPTANCE: 'yes'
+    TARGET_HOST: localhost
+  - RUBY_VERSION: 25-x64
+    ACCEPTANCE: 'yes'
+    TARGET_HOST: localhost
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  simplecov: true
+Gemfile:
+  use_litmus: true
+  optional:
+    ":development":
+    - gem: github_changelog_generator
+      git: https://github.com/skywinder/github-changelog-generator
+      ref: 20ee04ba1234e9e83eb2ffb5056e23d641c7a018
+      condition: Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('2.2.2')
+NOTICE:
+  copyright_holders:
+  - name: Puppet, Inc.
+    begin: 2018
+Rakefile:
+  requires: 
+  use_litmus_tasks: true
+spec/spec_helper.rb:
+  coverage_report: true
