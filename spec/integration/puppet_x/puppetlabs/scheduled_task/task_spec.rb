@@ -17,10 +17,10 @@ RSpec::Matchers.define :be_same_as_powershell_command do |ps_cmd|
 
   match do |actual|
     from_ps = run_ps(ps_cmd)
-    STDERR.puts "@@@@@@@@@@@@@@@@@@@@@@@@@"
+    STDERR.puts '@@@@@@@@@@@@@@@@@@@@@@@@@'
     STDERR.puts "FROM_PS: #{from_ps}"
     STDERR.puts "ACTUAL.to_s: #{actual.to_s}"
-    STDERR.puts "@@@@@@@@@@@@@@@@@@@@@@@@@"
+    STDERR.puts '@@@@@@@@@@@@@@@@@@@@@@@@@''
     actual.to_s == from_ps
   end
 
