@@ -117,11 +117,11 @@ describe 'Scheduled Tasks API v2' do
         it 'does not recurse folders if specified' do
           subject_count = subject.enum_task_names(subject::ROOT_FOLDER, include_child_folders: false).count
           ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath -eq \'\\\' } | Measure-Object).count'
-          expect(subject_count).to be_same_as_powershell_command(ps_cmd)
           puts '#################################'
           puts "SUBJECT COUNT: #{subject_count} is a #{subject_count.class}"
           puts "PS_CMD: #{ps_cmd} is a #{ps_cmd.class}"
           puts '#################################'
+          expect(subject_count).to be_same_as_powershell_command(ps_cmd)
         end
 
         it 'onlies return compatible tasks if specified' do
