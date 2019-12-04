@@ -18,6 +18,8 @@ team-modules/puppetlabs-scheduled_task:
     - source /opt/rh/rh-ruby25/enable
     - bundle exec rake litmus:tear_down
   AfterBuildFailure:
+    - source /opt/rh/rh-ruby25/enable
+    - bundle exec rake litmus:tear_down
   CommitData:
     - RepoType: Git
     - RepoPath: .
