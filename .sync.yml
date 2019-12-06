@@ -8,6 +8,7 @@
   simplecov: true
 appveyor.yml:
   use_litmus: true
+  spec_type: spec
   matrix_extras:
   - RUBY_VERSION: 25-x64
     ACCEPTANCE: 'yes'
