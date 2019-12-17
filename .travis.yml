@@ -5,7 +5,9 @@ cache: bundler
 before_install:
   - bundle -v
   - rm -f Gemfile.lock
-  - gem update --system $RUBYGEMS_VERSION
+  - "# Update system gems if requested. This is useful to temporarily workaround troubles in the test runner"
+  - "# See https://github.com/puppetlabs/pdk-templates/commit/705154d5c437796b821691b707156e1b056d244f for an example of how this was used"
+  - '[ -z "$RUBYGEMS_VERSION" ] || gem update --system $RUBYGEMS_VERSION'
   - gem --version
   - bundle -v
 script:
@@ -37,3 +39,5 @@ branches:
     - /^v\d/
 notifications:
   email: false
+  slack:
+    secure: Wjy6KUrWUFHbMMAeziNZtuvTiK9UHOcGXJmpz3OZ0h16t1CpyL8okFENbG8HkJOXzjL3E27MXpdgAAPACZPHQJkLMFOILDFYTNHSUtgrJfLacY2xudyHEtxmmr7D2QbxsqsUkpwHKZs9S5uHQY3JcB7qu9JCzdxOEF/FGQbNbHoUwnEzVdvYVgTUsYt/yOKkqizdumu5MMqZ8Z+SvHJC/A3BL/I/U/RbmUTldBBSDDzR4RvDLAvlSHnB2wHBWtrnorhC+uLCwjNkO9RQFPwenxVstqRaZ+9rfsk8ceKcAwQ3nXe07QxAZcxvwc1n3+kiUi2fd7gDoaeNp3mdY6ctZIg9tCOdVpGsjL/GzJH8pLv+rMLfo4GmxbZWDCTUxSwhQjBolEUsZy+cpr1o8l+3Ya/gJiEMo3uxNQQXrKiY23Bx7GsYaOiOdfWa0t0r1mZXOn8WD3c5P1V0NHs9NLt7yFfBWXeJE3rgFVf1CHfPYyBFtC1cHIW2j4HMnAc6Sl8+9aPZC390XxNGjsphK+ZH8/SBb6FQKfLyCovvhrMzRzvzhPy2UXIYg/TrOmzNQ2g3cZ9fYyNbM6VVWJGaXNVAxpRf+cu+TGTfptrKota1/HRXCdxOKzuFznaFovkQ+oCF0kr5FSPgerQeAIFA3xtn9JKv1anrpR8U/g55xb/Nr/4=
