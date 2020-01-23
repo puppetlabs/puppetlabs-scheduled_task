@@ -37,7 +37,7 @@ describe 'Should destroy a scheduled task', node: host do
 
       query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
       query_out = run_shell(query_cmd, expect_failures: true)
-      expect(query_out.to_s).to match(%r{ERROR: The system cannot find the file specified})
+      expect(query_out.to_s).to match(%r{ERROR: The system cannot find the (file|path) specified})
     end
   end
 end
