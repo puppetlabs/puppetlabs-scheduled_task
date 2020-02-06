@@ -716,6 +716,9 @@ module PuppetX::PuppetLabs::ScheduledTask
                                # HACK: choose only the first week selected when converting - this LOSES information
                                'which_occurrence' => occurrences.first || '',
                                'day_of_week'      => Day.bitmask_to_names(i_trigger.DaysOfWeek))
+          # MODULES-10101: We will need to evaluate whether the value 'last' has been applied to the WeekOfMonth
+          # parameter by inspecting the value of Trigger::RunOnLastWeekOfMonth. See JIRA ticket for more details.
+          manifest_hash['which_occurrence'] = 'last' if i_trigger.RunOnLastWeekOfMonth
         when Type::TASK_TRIGGER_BOOT
           manifest_hash['schedule'] = 'boot'
         when Type::TASK_TRIGGER_LOGON
