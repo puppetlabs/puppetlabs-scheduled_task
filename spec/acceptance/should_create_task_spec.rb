@@ -220,4 +220,35 @@ describe 'Should create a scheduled task' do
       expect(result.stdout).to match(%r{#{username2}})
     end
   end
+
+  it "correctly determines idempotency for tasks with LastWeekOfMonth='last'" do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure        => present,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      user          => '#{username}',
+      password      => '#{password}',
+      trigger   => {
+        'start_date'       => '2019-9-01',
+        'start_time'       => '05:40',
+        'minutes_interval' => '0',
+        'minutes_duration' => '0',
+        'schedule'         => 'monthly',
+        'months'           => [1,2,3,4,5,6,7,8,9,10,11,12],
+        'which_occurrence' => 'last',
+        'day_of_week'      => ['tues']
+      },
+    }
+    MANIFEST
+    idempotent_apply(pp)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+
+    run_shell(query_cmd) do |result|
+      expect(result.stdout).to match(%r{Last\sTUE})
+    end
+  end
 end
