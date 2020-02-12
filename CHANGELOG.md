@@ -2,18 +2,25 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v2.0.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.1) (2020-02-12)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.0.0...v2.0.1)
+
+### Fixed
+
+- \(MODULES-10101\) Use RunOnLastWeekOfMonth for which\_occurrence = last [\#119](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/119) ([cmccrisken-puppet](https://github.com/cmccrisken-puppet))
+
 ## [v2.0.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.0) (2019-08-15)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/1.0.1...v2.0.0)
 
 ### Changed
 
-- \(MODULES-9370\) Module Alignment [\#88](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/88) ([michaeltlombardi](https://github.com/michaeltlombardi))
+- \(MODULES-9370\) Raise Supported Puppet lower bound from 4.9.0 to 5.5.10 [\#88](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/88) ([michaeltlombardi](https://github.com/michaeltlombardi))
 
 ### Added
 
 - \(MODULES-7203\) Support nonroot task folders [\#83](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/83) ([michaeltlombardi](https://github.com/michaeltlombardi))
-- \(WIN-280\) add skip\(\) unless pattern to tests [\#80](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/80) ([ThoughtCrhyme](https://github.com/ThoughtCrhyme))
 
 ## 1.0.1
 
