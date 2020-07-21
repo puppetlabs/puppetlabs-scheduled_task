@@ -251,4 +251,50 @@ describe 'Should create a scheduled task' do
       expect(result.stdout).to match(%r{Last\sTUE})
     end
   end
+
+  it 'creates a task with synchronisation disabled: taskscheduler_api2', tier_high: true do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure      => present,
+      compatibility => 1,
+      command     => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments   => "foo bar baz",
+      working_dir => 'c:\\\\windows',
+      trigger => {
+        schedule            => daily,
+        start_time          => '12:00',
+        disable_time_zone_synchronization => true,
+      },
+      provider    => 'taskscheduler_api2'
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd)
+  end
+
+  it 'creates a task with synchronisation disabled: win32_taskscheduler', tier_high: true do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure        => present,
+      compatibility => 1,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      trigger       => {
+        schedule            => daily,
+        start_time          => '12:00',
+        disable_time_zone_synchronization => true,
+      },
+      provider      => 'win32_taskscheduler'
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd)
+  end
 end
