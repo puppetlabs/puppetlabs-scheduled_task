@@ -2,13 +2,21 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v2.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.1) (2020-07-24)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.0.1...v2.0.1)
+
+### Added
+
+- \(IAC-918\) - `disable\_time\_zone\_synchronization` function implemented [\#145](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/145) ([david22swan](https://github.com/david22swan))
+
 ## [v2.0.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.1) (2020-02-12)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.0.0...v2.0.1)
 
 ### Fixed
 
-- \(MODULES-10101\) Use RunOnLastWeekOfMonth for which\_occurrence = last [\#119](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/119) ([cmccrisken-puppet](https://github.com/cmccrisken-puppet))
+- \(MODULES-10101\) Use RunOnLastWeekOfMonth for which\_occurrence = last [\#119](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/119) ([sanfrancrisko](https://github.com/sanfrancrisko))
 
 ## [v2.0.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.0) (2019-08-15)
 
