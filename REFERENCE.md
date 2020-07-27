@@ -104,6 +104,9 @@ A trigger can contain the following keys:
     * `minutes_interval` --- The repeat interval in minutes.
     * `minutes_duration` --- The duration in minutes, needs to be greater than the
       minutes_interval.
+    * `disable_time_zone_synchronization` --- Whether or not to disable the
+      `synchronise across time zones` function. Due to difficulties with the
+      api this is non idempotent. Defaults to false
 * For `daily` triggers:
     * `every` --- How often the task should run, as a number of days. Defaults
       to 1. ("2" means every other day, "3" means every three days, etc.)
