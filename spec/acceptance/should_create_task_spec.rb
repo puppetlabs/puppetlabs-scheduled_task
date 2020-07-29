@@ -123,6 +123,53 @@ describe 'Should create a scheduled task' do
     end
   end
 
+  it 'creates a task with a username: taskscheduler_api2' do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure        => present,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      user          => '#{username}',
+      trigger       => {
+        schedule   => daily,
+        start_time => '12:00',
+      },
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd) do |result|
+      expect(result.stdout).to match(%r{#{username}})
+    end
+  end
+
+  it 'creates a task with a username: win32_taskscheduler' do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure        => present,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      user          => '#{username}',
+      trigger       => {
+        schedule   => daily,
+        start_time => '12:00',
+      },
+      provider      => 'win32_taskscheduler'
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd) do |result|
+      expect(result.stdout).to match(%r{#{username}})
+    end
+  end
+
   it "updates a task's credentials: win32_taskscheduler" do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':

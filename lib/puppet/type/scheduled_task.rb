@@ -75,7 +75,11 @@ Puppet::Type.newtype(:scheduled_task) do
 
       Please also note that Puppet must be running as a privileged user
       in order to manage `scheduled_task` resources. Running as an
-      unprivileged user will result in 'access denied' errors."
+      unprivileged user will result in 'access denied' errors.
+
+      If a user is specified without an accompanying password, the
+      task will be created with `Run only when user is logged on`
+      specified."
 
     defaultto :system
 
