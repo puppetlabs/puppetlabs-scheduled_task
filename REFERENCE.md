@@ -106,7 +106,7 @@ A trigger can contain the following keys:
       minutes_interval.
     * `disable_time_zone_synchronization` --- Whether or not to disable the
       `synchronise across time zones` function. Due to difficulties with the
-      api this is non idempotent. Defaults to false
+      API this is non idempotent. Defaults to false.
 * For `daily` triggers:
     * `every` --- How often the task should run, as a number of days. Defaults
       to 1. ("2" means every other day, "3" means every three days, etc.)
@@ -224,4 +224,3 @@ This is only used if specifying a user other than 'SYSTEM'.
 Since there is no way to retrieve the password used to set the
 account information for a task, this parameter will not be used
 to determine if a scheduled task is in sync or not.
-
