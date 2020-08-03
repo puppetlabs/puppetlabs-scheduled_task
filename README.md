@@ -101,7 +101,7 @@ scheduled_task { 'Disk Cleanup Weekly Repeating':
   trigger   => [{
     'schedule'         => 'weekly',
     'start_time'       => '07:00',
-    'day_of_week'      => ['mon', 'tues', 'wed', 'thurs', 'fri'], # Note the absence of Sunday and Monday
+    'day_of_week'      => ['mon', 'tues', 'wed', 'thurs', 'fri'], # Note the absence of Saturday and Sunday
     'minutes_interval' => '60',
     'minutes_duration' => '720'
   }],
