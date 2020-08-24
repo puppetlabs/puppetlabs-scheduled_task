@@ -758,12 +758,14 @@ module PuppetX::PuppetLabs::ScheduledTask
         datetime_string = "#{manifest_hash['start_date']} #{manifest_hash['start_time']}"
         # Time.parse always assumes local time
         # If `disable_time_zone_synchronization` has been set to true then the timezone is removed from the start time
-        start = if manifest_hash['disable_time_zone_synchronization'] && manifest_hash['disable_time_zone_synchronization'] == true
-                  Time.parse(datetime_string).iso8601
-                else
-                  Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..\:..$)|(\-..\:..$)}, '')
-                end
-        i_trigger.StartBoundary = start unless datetime_string.strip.empty?
+        unless datetime_string.strip.empty?
+          start = if manifest_hash['disable_time_zone_synchronization'] && manifest_hash['disable_time_zone_synchronization'] == true
+                    Time.parse(datetime_string).iso8601
+                  else
+                    Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..\:..$)|(\-..\:..$)}, '')
+                  end
+          i_trigger.StartBoundary = start
+        end
 
         # ITrigger specific settings
         case i_trigger.Type
