@@ -2,13 +2,30 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
-## [v2.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.1) (2020-07-24)
+## [v2.2.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.2.0) (2020-08-24)
 
-[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.0.1...v2.0.1)
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.1.0...v2.2.0)
+
+### Added
+
+- pdksync - \(IAC-973\) - Update travis/appveyor to run on new default branch `main` [\#154](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/154) ([david22swan](https://github.com/david22swan))
+- \(IAC-732\) - implement `Run only when user is logged on [\#150](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/150) ([david22swan](https://github.com/david22swan))
+
+### Fixed
+
+- \(MODULES-10783\) Add back empty? check for `datetime\_string` value [\#158](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/158) ([sanfrancrisko](https://github.com/sanfrancrisko))
+
+## [v2.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.1.0) (2020-07-24)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.0.1...v2.1.0)
 
 ### Added
 
 - \(IAC-918\) - `disable\_time\_zone\_synchronization` function implemented [\#145](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/145) ([david22swan](https://github.com/david22swan))
+
+### UNCATEGORIZED PRS; LABEL THEM ON GITHUB
+
+- \(IAC-962\) - v2.1.0 Release Prep [\#146](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/146) ([david22swan](https://github.com/david22swan))
 
 ## [v2.0.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.1) (2020-02-12)
 
