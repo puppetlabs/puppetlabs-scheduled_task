@@ -760,9 +760,9 @@ module PuppetX::PuppetLabs::ScheduledTask
         # If `disable_time_zone_synchronization` has been set to true then the timezone is removed from the start time
         unless datetime_string.strip.empty?
           start = if manifest_hash['disable_time_zone_synchronization'] && manifest_hash['disable_time_zone_synchronization'] == true
-                    Time.parse(datetime_string).iso8601
-                  else
                     Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..\:..$)|(\-..\:..$)}, '')
+                  else
+                    Time.parse(datetime_string).iso8601
                   end
           i_trigger.StartBoundary = start
         end
