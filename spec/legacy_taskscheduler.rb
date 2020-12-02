@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # rubocop:disable # rubocop:disable Style/ClassAndModuleCamelCase
 # DO NOT EDIT, ALTER, OR DELETE THIS FILE
 # This file is copied from core puppet and frozen

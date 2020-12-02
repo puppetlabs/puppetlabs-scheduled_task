@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 def add_test_user
   username = "test_user_#{rand(999).to_i}"
   password = 'password!@#123'

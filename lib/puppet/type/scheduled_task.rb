@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Puppet::Type.newtype(:scheduled_task) do
   @doc = <<-PUPPET
     @summary

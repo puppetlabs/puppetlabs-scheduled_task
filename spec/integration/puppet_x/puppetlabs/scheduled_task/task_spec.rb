@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # rubocop:disable RSpec/ExpectActual
 require 'spec_helper'
 
