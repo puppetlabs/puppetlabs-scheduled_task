@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'time'
 
 # @api private
@@ -260,14 +262,14 @@ module PuppetX::PuppetLabs::ScheduledTask
         if manifest_hash['minutes_interval']
           interval = Integer(manifest_hash['minutes_interval'])
           # interval < 0
-          if interval < 0
+          if interval.negative?
             raise ArgumentError, 'minutes_interval must be an integer greater or equal to 0'
           end
 
           # defaults to a day when unspecified
           duration = Integer(manifest_hash['minutes_duration'] || 1440)
 
-          if interval > 0 && interval >= duration
+          if interval.positive? && interval >= duration
             raise ArgumentError, 'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
           end
         end
@@ -375,7 +377,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to day names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask < 0 || bitmask > MAX_VALUE
+          if bitmask.negative? || bitmask > MAX_VALUE
             raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
           end
 
@@ -414,7 +416,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to index
         def self.bitmask_to_indexes(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask < 0 || bitmask > MAX_VALUE
+          if bitmask.negative? || bitmask > MAX_VALUE
             raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
           end
 
@@ -520,7 +522,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to indexes
         def self.bitmask_to_indexes(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask < 0 || bitmask > MAX_VALUE
+          if bitmask.negative? || bitmask > MAX_VALUE
             raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
           end
 
@@ -572,7 +574,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask < 0 || bitmask > MAX_VALUE
+          if bitmask.negative? || bitmask > MAX_VALUE
             raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
           end
 
@@ -741,7 +743,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Values for all Trigger Types
         if manifest_hash['minutes_interval']
           minutes_interval = manifest_hash['minutes_interval']
-          if minutes_interval > 0
+          if minutes_interval.positive?
             i_trigger.Repetition.Interval = "PT#{minutes_interval}M"
             # one day in minutes
             i_trigger.Repetition.Duration = 'PT1440M' unless manifest_hash.key?('minutes_duration')

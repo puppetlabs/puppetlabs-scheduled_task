@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This class is used to manage tasks using the Task Scheduler V2 API
 #
 # https://docs.microsoft.com/en-gb/windows/win32/taskschd/task-scheduler-2-0-interfaces
@@ -10,7 +12,7 @@ module PuppetX::PuppetLabs::ScheduledTask
   # Installs and manages Windows Scheduled Tasks.
   class Task
     # The name of the root folder for tasks
-    ROOT_FOLDER = '\\'.freeze
+    ROOT_FOLDER = '\\'
 
     # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_enum_flags
     class TASK_ENUM_FLAGS
