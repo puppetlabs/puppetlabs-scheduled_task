@@ -12,7 +12,7 @@
   ],
   "operatingsystem_support": [
     {
-      "operatingsystem": "windows",
+      "operatingsystem": "Windows",
       "operatingsystemrelease": [
         "2008",
         "2008 R2",
