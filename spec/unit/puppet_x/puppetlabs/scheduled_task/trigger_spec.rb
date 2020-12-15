@@ -760,23 +760,21 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     # 31 bits for 31 days
     ALL_NUMERIC_DAYS_SET = 0b01111111111111111111111111111111
-    # 32 bits for 31 days + 'last'
-    ALL_DAYS_SET = 0b11111111111111111111111111111111
 
     EXPECTED_DAYS_CONVERSIONS =
       [
-        { days: 1,                       bitmask: 0b00000000000000000000000000000001 },
-        { days: [],                      bitmask: 0 },
-        { days: [2],                     bitmask: 0b00000000000000000000000000000010 },
-        { days: [3, 5, 8, 12],           bitmask: 0b00000000000000000000100010010100 },
-        { days: [3, 5, 8, 12, 'last'],   bitmask: 0b10000000000000000000100010010100 },
-        { days: (1..31).to_a,            bitmask: ALL_NUMERIC_DAYS_SET },
-        { days: (1..31).to_a + ['last'], bitmask: ALL_DAYS_SET },
+        { days: 1,                       bitmask: 0b00000000000000000000000000000001, LastDayOfMonth: false },
+        { days: [],                      bitmask: 0, LastDayOfMonth: false },
+        { days: [2],                     bitmask: 0b00000000000000000000000000000010, LastDayOfMonth: false },
+        { days: [3, 5, 8, 12],           bitmask: 0b00000000000000000000100010010100, LastDayOfMonth: false },
+        { days: [3, 5, 8, 12, 'last'],   bitmask: 0b00000000000000000000100010010100, LastDayOfMonth: true },
+        { days: (1..31).to_a,            bitmask: ALL_NUMERIC_DAYS_SET, LastDayOfMonth: false },
+        { days: (1..31).to_a + ['last'], bitmask: ALL_NUMERIC_DAYS_SET, LastDayOfMonth: true },
         # equivalent representations
-        { days: 'last',                  bitmask: 0b10000000000000000000000000000000 },
-        { days: ['last'],                bitmask: 1 << (32 - 1) },
-        { days: [1, 'last'],             bitmask: 0b10000000000000000000000000000001 },
-        { days: [1, 30, 31, 'last'],     bitmask: 0b11100000000000000000000000000001 },
+        { days: 'last',                  bitmask: 0b00000000000000000000000000000000, LastDayOfMonth: true },
+        { days: ['last'],                bitmask: 0b00000000000000000000000000000000, LastDayOfMonth: true },
+        { days: [1, 'last'],             bitmask: 0b00000000000000000000000000000001, LastDayOfMonth: true },
+        { days: [1, 30, 31, 'last'],     bitmask: 0b01100000000000000000000000000001, LastDayOfMonth: true },
       ].freeze
 
     describe '#indexes_to_bitmask' do
@@ -792,7 +790,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         end
       end
 
-      ['foo', ['bar'], -1, 0x1000, [33]].each do |value|
+      [-1, 0x1000, [33]].each do |value|
         it "should raise an ArgumentError with value: #{value}" do
           expect { days.class.indexes_to_bitmask(value) }.to raise_error(ArgumentError)
         end
@@ -802,7 +800,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
     describe '#bitmask_to_indexes' do
       EXPECTED_DAYS_CONVERSIONS.each do |conversion|
         it "should create expected days #{conversion[:days]} from bitmask #{'%32b' % conversion[:bitmask]}" do
-          expect(days.class.bitmask_to_indexes(conversion[:bitmask])).to eq([conversion[:days]].flatten)
+          expect(days.class.bitmask_to_indexes(conversion[:bitmask], conversion[:LastDayOfMonth])).to eq([conversion[:days]].flatten)
         end
       end
 
@@ -812,9 +810,21 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         end
       end
 
-      ['foo', -1, ALL_DAYS_SET + 1].each do |value|
-        it "should raise an ArgumentError with value: #{value}" do
-          expect { days.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
+      it "should raise an ArgumentError with value: #{ALL_NUMERIC_DAYS_SET + 1}" do
+        expect { days.class.bitmask_to_indexes(ALL_NUMERIC_DAYS_SET + 1) }.to raise_error(ArgumentError)
+      end
+    end
+
+    describe '#last_day_of_month?' do
+      EXPECTED_DAYS_CONVERSIONS.each do |conversion|
+        it "returns #{conversion[:LastDayOfMonth]} from days #{conversion[:days]}" do
+          expect(days.class.last_day_of_month?(conversion[:days])).to eq(conversion[:LastDayOfMonth])
+        end
+      end
+
+      [[1, 3, 'first'], [1, 3, 'last', 'first']].each do |value|
+        it "returns an ArgumentError for days #{value}" do
+          expect { days.class.last_day_of_month?(value) }.to raise_error(ArgumentError)
         end
       end
     end
@@ -1048,9 +1058,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         {
           i_trigger:         {
             Type: v2::Type::TASK_TRIGGER_MONTHLY,
-            DaysOfMonth: 0b11111111111111111111111111111111,
+            DaysOfMonth: 0b01111111111111111111111111111111,
             MonthsOfYear: 1,
-            RunOnLastDayOfMonth: true, # ignored
+            RunOnLastDayOfMonth: true,
             RandomDelay: 'P2DT5S', # ignored
           },
           expected:         {
@@ -1066,7 +1076,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             # HACK: choose only the last week selected for test conversion, as this LOSES information
             WeeksOfMonth: 0b10000,
             MonthsOfYear: 0b111111111111,
-            RunOnLastWeekOfMonth: true, # ignored
+            RunOnLastWeekOfMonth: true,
             RandomDelay: 'P2DT5S', # ignored
           },
           expected:         {

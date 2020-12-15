@@ -163,6 +163,7 @@ Puppet::Type.newtype(:scheduled_task) do
             all months. Each month must be an integer between 1 and 12.
           * `on` **(Required)** --- Which days of the month the task should run,
             as an array. Each day must be an integer between 1 and 31 or the string `last`.
+            The string `last` is only supported for tasks with level 2 compatibility or higher.
       * For `monthly` (by weekday) triggers:
           * `months` --- Which months the task should run, as an array. Defaults to
             all months. Each month must be an integer between 1 and 12.

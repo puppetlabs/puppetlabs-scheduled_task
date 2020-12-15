@@ -5,7 +5,8 @@ require 'time'
 # @api private
 # PuppetX::PuppetLabs::ScheduledTask module
 module PuppetX::PuppetLabs::ScheduledTask
-  # This module is used to manage the triggers for the Task Scheduler V2 API
+  # @api private
+  # PuppetX::PuppetLabs::ScheduledTask::Trigger module
   module Trigger
     # Gets or sets the amount of time that is allowed to complete the task.
     class Duration
@@ -389,42 +390,46 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       # Defines the day of the month the task will run.
       class Days
-        # 32 bits for 31 possible days to set + value 'last'
-        MAX_VALUE = 0b11111111111111111111111111111111
+        # 32 bit mask, but only 31 days can be set.
+        # This is contrary to the V2 IMonthlyTrigger::DaysOfMonth documentation
+        # referenced below, but in testing, setting the last bit of the bit
+        # mask does not set 'last' day of month as that documentation suggests.
+        # Instead it results in an error. That feature will be handled instead
+        # by the RunOnLastDayOfMonth property of the trigger object.
+        # V2 IMonthlyTrigger::RunOnLastDayOfMonth
+        # https://docs.microsoft.com/en-us/windows/win32/api/taskschd/nf-taskschd-imonthlytrigger-put_runonlastdayofmonth
+        MAX_VALUE = 0b01111111111111111111111111111111
 
         # V1 MONTHLYDATE structure
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381918(v=vs.85).aspx
         # V2 IMonthlyTrigger::DaysOfMonth
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380735(v=vs.85).aspx
         def self.indexes_to_bitmask(day_indexes)
-          day_indexes = [day_indexes].flatten.map do |m|
-            # The special "day" of 'last' is represented by day "number"
-            # 32. 'last' has the special meaning of "the last day of the
-            # month", no matter how many days there are in the month.
-            # raises if unable to convert
-            (m.is_a?(String) && m.casecmp('last').zero?) ? 32 : Integer(m)
+          if day_indexes.nil? || (day_indexes.is_a?(Hash) && day_indexes.empty?)
+            raise TypeError, 'Day indexes value must not be nil or an empty hash.'
           end
 
-          invalid_days = day_indexes.reject { |i| i.between?(1, 32) }
+          integer_days = Array(day_indexes).select { |i| i.is_a?(Integer) }
+          invalid_days = integer_days.reject { |i| i.between?(1, 31) }
+
           unless invalid_days.empty?
-            raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31, or 'last'"
+            raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31"
           end
-
-          day_indexes.reduce(0) { |bitmask, day_index| bitmask | 1 << day_index - 1 }
+          integer_days.reduce(0) { |bitmask, day_index| bitmask | 1 << day_index - 1 }
         end
 
         # Converts bitmask to index
-        def self.bitmask_to_indexes(bitmask)
+        def self.bitmask_to_indexes(bitmask, run_on_last_day_of_month = nil)
           bitmask = Integer(bitmask)
           if bitmask.negative? || bitmask > MAX_VALUE
             raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
           end
 
-          bit_index(bitmask).map do |bit_index|
-            # Day 32 has the special meaning of "the last day of the
-            # month", no matter how many days there are in the month.
-            (bit_index == 31) ? 'last' : bit_index + 1
-          end
+          indexes = bit_index(bitmask).map { |bit_index| bit_index + 1 }
+
+          indexes << 'last' if run_on_last_day_of_month
+
+          indexes
         end
 
         # Returns bit index
@@ -434,6 +439,14 @@ module PuppetX::PuppetLabs::ScheduledTask
             # given position is set in the bitmask
             (bitmask & bit_to_check) == bit_to_check
           end
+        end
+
+        def self.last_day_of_month?(day_indexes)
+          invalid_day_names = Array(day_indexes).select { |i| i.is_a?(String) && (i != 'last') }
+          unless invalid_day_names.empty?
+            raise ArgumentError, "Only 'last' is allowed as a day name. All other values must be integers between 1 and 31."
+          end
+          Array(day_indexes).include? 'last'
         end
       end
 
@@ -705,16 +718,16 @@ module PuppetX::PuppetLabs::ScheduledTask
           manifest_hash['schedule'] = 'daily'
           manifest_hash['every'] = i_trigger.DaysInterval
         when Type::TASK_TRIGGER_WEEKLY
-          manifest_hash.merge!('schedule' => 'weekly',
+          manifest_hash.merge!('schedule'    => 'weekly',
                                'every'       => i_trigger.WeeksInterval,
                                'day_of_week' => Day.bitmask_to_names(i_trigger.DaysOfWeek))
         when Type::TASK_TRIGGER_MONTHLY
           manifest_hash.merge!('schedule' => 'monthly',
                                'months'   => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
-                               'on'       => Days.bitmask_to_indexes(i_trigger.DaysOfMonth))
+                               'on'       => Days.bitmask_to_indexes(i_trigger.DaysOfMonth, i_trigger.RunOnLastDayOfMonth))
         when Type::TASK_TRIGGER_MONTHLYDOW
           occurrences = V2::WeeksOfMonth.bitmask_to_names(i_trigger.WeeksOfMonth)
-          manifest_hash.merge!('schedule' => 'monthly',
+          manifest_hash.merge!('schedule'         => 'monthly',
                                'months'           => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
                                # HACK: choose only the first week selected when converting - this LOSES information
                                'which_occurrence' => occurrences.first || '',
@@ -783,6 +796,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         when Type::TASK_TRIGGER_MONTHLY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa382062(v=vs.85).aspx
+          i_trigger.RunOnLastDayOfMonth = Days.last_day_of_month?(manifest_hash['on'])
           i_trigger.DaysOfMonth = Days.indexes_to_bitmask(manifest_hash['on'])
           i_trigger.MonthsOfYear = Month.indexes_to_bitmask(manifest_hash['months'] || Month.indexes)
 
