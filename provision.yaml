@@ -6,7 +6,7 @@ default:
 vagrant:
   provisioner: vagrant
   images:
-  - gusztavvargadr/windows-server'
+  - gusztavvargadr/windows-server
 release_checks:
   provisioner: abs
   images:
