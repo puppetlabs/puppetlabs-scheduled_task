@@ -7,6 +7,9 @@
 # Frozen from: https://github.com/puppetlabs/puppet/blob/5.5.3/lib/puppet/util/windows/taskscheduler.rb
 require 'puppet/util/windows'
 
+# disabling some false positives on the FFI definitions
+# rubocop:disable Naming/ClassAndModuleCamelCase,Naming/ConstantName,Lint/Void
+
 # The TaskScheduler class encapsulates taskscheduler settings and behavior
 class Win32::TaskScheduler
   include Puppet::Util::Windows::String
@@ -198,10 +201,9 @@ class Win32::TaskScheduler
       begin
         @pits.Release if @pits && !@pits.null?
         @pits = nil
-      rescue
+      rescue # rubocop:disable Lint/SuppressedException
       end
     end
-    # rubocop:enable Lint/HandleExceptions
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)
     new_work_item(work_item, trigger) if work_item && trigger

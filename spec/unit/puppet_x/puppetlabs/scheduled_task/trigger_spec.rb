@@ -741,13 +741,13 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       end
 
       [nil, {}, ['bar']].each do |value|
-        it "raises an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { day.class.bitmask_to_names(value) }.to raise_error(TypeError)
         end
       end
 
       [-1, 'foo', ALL_DAY_SET + 1].each do |value|
-        it "raises an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { day.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
         end
       end
@@ -919,13 +919,13 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       end
 
       [nil, {}, ['bar']].each do |value|
-        it "raises an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { weeks_of_month.class.bitmask_to_names(value) }.to raise_error(TypeError)
         end
       end
 
       [-1, 'foo', ALL_WEEKS_OF_MONTH_SET + 1].each do |value|
-        it "raises an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { weeks_of_month.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
         end
       end

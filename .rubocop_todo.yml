@@ -1,7 +1,0 @@
-Style/ClassAndModuleCamelCase:
-  Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
-
-Style/ClassAndModuleChildren:
-  Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/error.rb'

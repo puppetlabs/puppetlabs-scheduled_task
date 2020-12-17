@@ -74,7 +74,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Scheduled Task manifest
     class Manifest
       # Valid Keys
-      ValidKeys = [
+      ValidKeys = [ # rubocop:disable Naming/ConstantName
         'index',
         'enabled',
         'schedule',
@@ -92,7 +92,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       ].freeze
 
       # Valid Schedule Keys
-      ValidScheduleKeys = [
+      ValidScheduleKeys = [ # rubocop:disable Naming/ConstantName
         'once',
         'daily',
         'weekly',
