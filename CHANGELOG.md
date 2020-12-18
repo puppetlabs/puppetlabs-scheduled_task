@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v2.3.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.3.1) (2020-12-18)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.3.0...v2.3.1)
+
+### Fixed
+
+- \(MODULES-10893\) Fix Last Day Of Month Trigger [\#175](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/175) ([RandomNoun7](https://github.com/RandomNoun7))
+
 ## [v2.3.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.3.0) (2020-12-16)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.2.1...v2.3.0)
