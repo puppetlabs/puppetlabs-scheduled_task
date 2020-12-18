@@ -26,6 +26,35 @@ describe 'Should create a scheduled task' do
     end
   end
 
+  it 'creates a task that runs on the last day of the month: taskscheduler_api2', tier_high: true do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure      => present,
+      compatibility => 2,
+      command     => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments   => "foo bar baz",
+      working_dir => 'c:\\\\windows',
+      trigger => {
+        schedule   => 'monthly',
+        start_time => '12:00',
+        on         => [1, 3, 'last'],
+      },
+      provider    => 'taskscheduler_api2'
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd) do |result|
+      # Even though the bit mask value for '32' doesn't actuall work to set
+      # `last` day of the month as a trigger, schtasks.exe still returns day 32
+      # if `last` is set as a trigger day. My guess is that this is for backward
+      # compatability with something in schtasks.exe
+      expect(result.stdout).to match(%r{Days:.+01, 03, 32})
+    end
+  end
+
   it 'creates a task if it does not exist: taskscheduler_api2', tier_high: true do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':

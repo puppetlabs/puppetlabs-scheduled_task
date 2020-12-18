@@ -301,6 +301,9 @@ For all triggers:
     Each month must be an integer between 1 and 12.
   * `on` (Required) — Which days of the month the task should run, as an array.
     Each day must be an integer between 1 and 31.
+    * The string `last` may be used in the array for this property to trigger a
+    task to run on the last day of each selected month. This feature is only
+    available for tasks with compatibility level `2` or higher.
 * For monthly (by weekday) triggers:
   * `months` — Which months the task should run, as an array. Defaults to all months. Each month must be an integer between 1 and 12.
   * `day_of_week` (Required) — Which day of the week the task should run, as an array with only one element.
