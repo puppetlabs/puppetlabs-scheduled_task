@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable # rubocop:disable Style/ClassAndModuleCamelCase
 # DO NOT EDIT, ALTER, OR DELETE THIS FILE
 # This file is copied from core puppet and frozen
 # It is used in spec tests to ensure compatibility
@@ -195,7 +194,6 @@ class Win32::TaskScheduler
     end
 
     @pits = COM::TaskScheduler.new
-    # rubocop:disable Lint/HandleExceptions
     at_exit do
       begin
         @pits.Release if @pits && !@pits.null?

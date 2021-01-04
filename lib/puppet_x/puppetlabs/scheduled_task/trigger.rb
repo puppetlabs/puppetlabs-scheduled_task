@@ -522,8 +522,8 @@ module PuppetX::PuppetLabs::ScheduledTask
           month_indexes = [month_indexes].flatten.map do |m|
             begin
                                                 Integer(m)
-                                              rescue
-                                                m
+            rescue
+              m
                                               end
           end
           invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys

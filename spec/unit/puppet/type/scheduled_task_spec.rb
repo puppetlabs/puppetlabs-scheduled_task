@@ -115,7 +115,7 @@ describe Puppet::Type.type(:scheduled_task) do
 
   describe 'when setting the compatibility' do
     [1, 2, 3, 4, 6].each do |compat|
-      it "should allow #{compat}" do
+      it "allows #{compat}" do
         expect(described_class.new(
           title: 'Foo',
           command: 'C:\Windows\System32\notepad.exe',
