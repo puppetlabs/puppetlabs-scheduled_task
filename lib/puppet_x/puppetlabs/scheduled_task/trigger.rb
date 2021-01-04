@@ -2,6 +2,12 @@
 
 require 'time'
 
+# module PuppetX
+module PuppetX; end
+
+# module PuppetX::PuppetLabs
+module PuppetX::PuppetLabs; end
+
 # @api private
 # PuppetX::PuppetLabs::ScheduledTask module
 module PuppetX::PuppetLabs::ScheduledTask

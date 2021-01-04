@@ -10,7 +10,12 @@ require_relative './trigger'
 # disabling some false positives on the FFI definitions
 # rubocop:disable Naming/ClassAndModuleCamelCase,Lint/Void
 
-# PuppetX::PuppetLabs::ScheduledTask module
+# module PuppetX
+module PuppetX; end
+
+# module PuppetX::PuppetLabs
+module PuppetX::PuppetLabs; end
+
 module PuppetX::PuppetLabs::ScheduledTask
   # Installs and manages Windows Scheduled Tasks.
   class Task
