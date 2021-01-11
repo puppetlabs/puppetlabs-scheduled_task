@@ -9,7 +9,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
   describe '#iso8601_datetime_to_local' do
     [nil, ''].each do |value|
-      it "should return nil given value '#{value}' (#{value.class})" do
+      it "returns nil given value '#{value}' (#{value.class})" do
         expect(trigger.iso8601_datetime_to_local(value)).to eq(nil)
       end
     end
@@ -19,7 +19,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       { input: '1753-01-01T00:00:00', expected: Time.local(1753, 1, 1, 0, 0, 0).getutc },
       { input: '1899-12-30T00:00:00', expected: Time.local(1899, 12, 30, 0, 0, 0).getutc },
     ].each do |value|
-      it "should return a valid Time object for date string #{value[:input]} in the local timezone" do
+      it "returns a valid Time object for date string #{value[:input]} in the local timezone" do
         converted = trigger.iso8601_datetime_to_local(value[:input])
         expect(converted).to eq(value[:expected])
         expect(converted.to_s).to eq(converted.localtime.to_s)
@@ -27,7 +27,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
     end
 
     [:foo, [], {}].each do |value|
-      it "should raise ArgumentError given value '#{value}' (#{value.class})" do
+      it "raises ArgumentError given value '#{value}' (#{value.class})" do
         expect { trigger.iso8601_datetime_to_local(value) }.to raise_error(ArgumentError)
       end
     end
@@ -69,7 +69,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           },
         },
       ].each do |value|
-        it "should return downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
+        it "returns downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
           expect(manifest.class.canonicalize_and_validate(value[:input])).to eq(value[:expected])
         end
       end
@@ -81,7 +81,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { 'type' => [] },
         { 'type' => 1 },
       ].each do |value|
-        it "should fail with ArgumentError given a hash with invalid keys #{value}" do
+        it "fails with ArgumentError given a hash with invalid keys #{value}" do
           expect { manifest.class.canonicalize_and_validate(value) }.to raise_error(ArgumentError)
         end
       end
@@ -123,7 +123,6 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { 'schedule' => 'boot' },
         { 'schedule' => 'logon' },
       ].each do |event_manifest|
-
         describe 'when validating event based triggers' do
           it 'allows a nil start_time for event based triggers' do
             expect { manifest.class.canonicalize_and_validate(event_manifest) }.not_to raise_error(ArgumentError)
@@ -647,7 +646,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#to_hash' do
       EXPECTED_CONVERSIONS.each do |conversion|
-        it "should create expected hashes from duration string #{conversion[:duration]}" do
+        it "creates expected hashes from duration string #{conversion[:duration]}" do
           expect(trigger_duration.class.to_hash(conversion[:duration])).to eq(conversion[:duration_hash])
         end
       end
@@ -657,7 +656,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         '123',
       ]
         .each do |duration|
-        it "should return nil when failing to parse duration string #{duration}" do
+        it "returns nil when failing to parse duration string #{duration}" do
           expect(trigger_duration.class.to_hash(duration)).to be_nil
         end
       end
@@ -670,7 +669,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
       EXPECTED_CONVERSIONS.each do |conversion|
         rounded_seconds = conversion[:expected_seconds].to_i
-        it "should return #{rounded_seconds} seconds given a duration hash" do
+        it "returns #{rounded_seconds} seconds given a duration hash" do
           converted = trigger_duration.class.hash_to_seconds(conversion[:duration_hash])
           expect(converted).to eq(rounded_seconds)
         end
@@ -687,14 +686,14 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       end
 
       [1234, '0', 999.999].each do |value|
-        it "should return 0 for the #{value.class} value: #{value}" do
+        it "returns 0 for the #{value.class} value: #{value}" do
           expect(trigger_duration.class.to_minutes(value)).to be_zero
         end
       end
 
       EXPECTED_CONVERSIONS.each do |conversion|
         expected_minutes = conversion[:expected_seconds].to_i / 60
-        it "should return #{expected_minutes} minutes given a duration #{conversion[:duration]}" do
+        it "returns #{expected_minutes} minutes given a duration #{conversion[:duration]}" do
           converted = trigger_duration.class.to_minutes(conversion[:duration])
           expect(converted).to eq(expected_minutes)
         end
@@ -722,13 +721,13 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#names_to_bitmask' do
       EXPECTED_DAY_CONVERSIONS.each do |conversion|
-        it "should create expected bitmask #{'%08b' % conversion[:bitmask]} from days #{conversion[:days]}" do
+        it "creates expected bitmask #{'%08b' % conversion[:bitmask]} from days #{conversion[:days]}" do
           expect(day.class.names_to_bitmask(conversion[:days])).to eq(conversion[:bitmask])
         end
       end
 
       [nil, 1, {}, 'foo', ['bar']].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do
           expect { day.class.names_to_bitmask(value) }.to raise_error(ArgumentError)
         end
       end
@@ -736,19 +735,19 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#bitmask_to_names' do
       EXPECTED_DAY_CONVERSIONS.each do |conversion|
-        it "should create expected days #{conversion[:days]} from bitmask #{'%08b' % conversion[:bitmask]}" do
+        it "creates expected days #{conversion[:days]} from bitmask #{'%08b' % conversion[:bitmask]}" do
           expect(day.class.bitmask_to_names(conversion[:bitmask])).to eq([conversion[:days]].flatten)
         end
       end
 
       [nil, {}, ['bar']].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { day.class.bitmask_to_names(value) }.to raise_error(TypeError)
         end
       end
 
       [-1, 'foo', ALL_DAY_SET + 1].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { day.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
         end
       end
@@ -779,19 +778,19 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#indexes_to_bitmask' do
       EXPECTED_DAYS_CONVERSIONS.each do |conversion|
-        it "should create expected bitmask #{'%32b' % conversion[:bitmask]} from days #{conversion[:days]}" do
+        it "creates expected bitmask #{'%32b' % conversion[:bitmask]} from days #{conversion[:days]}" do
           expect(days.class.indexes_to_bitmask(conversion[:days])).to eq(conversion[:bitmask])
         end
       end
 
       [nil, {}].each do |value|
-        it "should raise a TypeError with value: #{value}" do
+        it "raises a TypeError with value: #{value}" do
           expect { days.class.indexes_to_bitmask(value) }.to raise_error(TypeError)
         end
       end
 
       [-1, 0x1000, [33]].each do |value|
-        it "should raise an ArgumentError with value: #{value}" do
+        it "raises an ArgumentError with value: #{value}" do
           expect { days.class.indexes_to_bitmask(value) }.to raise_error(ArgumentError)
         end
       end
@@ -799,18 +798,18 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#bitmask_to_indexes' do
       EXPECTED_DAYS_CONVERSIONS.each do |conversion|
-        it "should create expected days #{conversion[:days]} from bitmask #{'%32b' % conversion[:bitmask]}" do
+        it "creates expected days #{conversion[:days]} from bitmask #{'%32b' % conversion[:bitmask]}" do
           expect(days.class.bitmask_to_indexes(conversion[:bitmask], conversion[:LastDayOfMonth])).to eq([conversion[:days]].flatten)
         end
       end
 
       [nil, {}, ['bar']].each do |value|
-        it "should raise a TypeError with value: #{value}" do
+        it "raises a TypeError with value: #{value}" do
           expect { days.class.bitmask_to_indexes(value) }.to raise_error(TypeError)
         end
       end
 
-      it "should raise an ArgumentError with value: #{ALL_NUMERIC_DAYS_SET + 1}" do
+      it "raises an ArgumentError with value: #{ALL_NUMERIC_DAYS_SET + 1}" do
         expect { days.class.bitmask_to_indexes(ALL_NUMERIC_DAYS_SET + 1) }.to raise_error(ArgumentError)
       end
     end
@@ -848,13 +847,13 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#indexes_to_bitmask' do
       EXPECTED_MONTH_CONVERSIONS.each do |conversion|
-        it "should create expected bitmask #{'%12b' % conversion[:bitmask]} from months #{conversion[:months]}" do
+        it "creates expected bitmask #{'%12b' % conversion[:bitmask]} from months #{conversion[:months]}" do
           expect(month.class.indexes_to_bitmask(conversion[:months])).to eq(conversion[:bitmask])
         end
       end
 
       [nil, 13, [13], {}, 'foo', ['bar']].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do
           expect { month.class.indexes_to_bitmask(value) }.to raise_error(ArgumentError)
         end
       end
@@ -862,20 +861,20 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#bitmask_to_indexes' do
       EXPECTED_MONTH_CONVERSIONS.each do |conversion|
-        it "should create expected months #{conversion[:months]} from bitmask #{'%08b' % conversion[:bitmask]}" do
+        it "creates expected months #{conversion[:months]} from bitmask #{'%08b' % conversion[:bitmask]}" do
           expect(month.class.bitmask_to_indexes(conversion[:bitmask])).to eq([conversion[:months]].flatten)
         end
       end
     end
 
     [nil, [13], {}, ['bar']].each do |value|
-      it "should raise a TypeError with value: #{value}" do
+      it "raises a TypeError with value: #{value}" do
         expect { month.class.bitmask_to_indexes(value) }.to raise_error(TypeError)
       end
     end
 
     ['foo', -1, ALL_MONTHS_SET + 1].each do |value|
-      it "should raise an ArgumentError with value: #{value}" do
+      it "raises an ArgumentError with value: #{value}" do
         expect { month.class.bitmask_to_indexes(value) }.to raise_error(ArgumentError)
       end
     end
@@ -900,13 +899,13 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#names_to_bitmask' do
       EXPECTED_WEEKS_OF_MONTH_CONVERSIONS.each do |conversion|
-        it "should create expected bitmask #{'%08b' % conversion[:bitmask]} from weeks #{conversion[:weeks]}" do
+        it "creates expected bitmask #{'%08b' % conversion[:bitmask]} from weeks #{conversion[:weeks]}" do
           expect(weeks_of_month.class.names_to_bitmask(conversion[:weeks])).to eq(conversion[:bitmask])
         end
       end
 
       [nil, 1, {}, 'foo', ['bar']].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do
           expect { weeks_of_month.class.names_to_bitmask(value) }.to raise_error(ArgumentError)
         end
       end
@@ -914,19 +913,19 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
     describe '#bitmask_to_names' do
       EXPECTED_WEEKS_OF_MONTH_CONVERSIONS.each do |conversion|
-        it "should create expected weeks #{conversion[:weeks]} from bitmask #{'%08b' % conversion[:bitmask]}" do
+        it "creates expected weeks #{conversion[:weeks]} from bitmask #{'%08b' % conversion[:bitmask]}" do
           expect(weeks_of_month.class.bitmask_to_names(conversion[:bitmask])).to eq([conversion[:weeks]].flatten)
         end
       end
 
       [nil, {}, ['bar']].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { weeks_of_month.class.bitmask_to_names(value) }.to raise_error(TypeError)
         end
       end
 
       [-1, 'foo', ALL_WEEKS_OF_MONTH_SET + 1].each do |value|
-        it "should raise an error with invalid value: #{value}" do
+        it "raises an error with invalid value: #{value}" do # rubocop:disable RSpec/RepeatedDescription
           expect { weeks_of_month.class.bitmask_to_names(value) }.to raise_error(ArgumentError)
         end
       end
@@ -969,7 +968,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           RunOnLastWeekOfMonth: false,
           RandomDelay: '' },
       ].each do |trigger_details|
-        it "should convert a default #{v2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
+        it "converts a default #{v2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
           i_trigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
           # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
           i_trigger[:Repetition] = stub(i_trigger[:Repetition])
@@ -982,7 +981,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { ole_type: 'IBootTrigger', Type: v2::Type::TASK_TRIGGER_BOOT },
         { ole_type: 'ILogonTrigger', Type: v2::Type::TASK_TRIGGER_LOGON },
       ].each do |trigger_details|
-        it "should convert an #{trigger_details[:ole_type]} instance" do
+        it "converts an #{trigger_details[:ole_type]} instance" do
           # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
           i_trigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
           expect { v2_class.class.to_manifest_hash(i_trigger) }.not_to raise_error(ArgumentError)
@@ -995,7 +994,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { ole_type: 'ISessionStateChangeTrigger', Type: v2::Type::TASK_TRIGGER_SESSION_STATE_CHANGE },
         { ole_type: 'IEventTrigger', Type: v2::Type::TASK_TRIGGER_EVENT },
       ].each do |trigger_details|
-        it "should fail to convert an #{trigger_details[:ole_type]} instance" do
+        it "fails to convert an #{trigger_details[:ole_type]} instance" do
           # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
           i_trigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
           expect { v2_class.class.to_manifest_hash(i_trigger) }.to raise_error(ArgumentError)
@@ -1087,7 +1086,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           },
         },
       ].each do |trigger_details|
-        it "should convert a full ITrigger type #{v2::TYPE_MANIFEST_MAP[trigger_details[:i_trigger][:Type]]} to the equivalent V1 hash" do
+        it "converts a full ITrigger type #{v2::TYPE_MANIFEST_MAP[trigger_details[:i_trigger][:Type]]} to the equivalent V1 hash" do
           i_trigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:i_trigger])
           # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
           i_trigger[:Repetition] = stub(i_trigger[:Repetition])

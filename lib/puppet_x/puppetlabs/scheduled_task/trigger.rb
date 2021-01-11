@@ -2,6 +2,12 @@
 
 require 'time'
 
+# module PuppetX
+module PuppetX; end
+
+# module PuppetX::PuppetLabs
+module PuppetX::PuppetLabs; end
+
 # @api private
 # PuppetX::PuppetLabs::ScheduledTask module
 module PuppetX::PuppetLabs::ScheduledTask
@@ -74,7 +80,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Scheduled Task manifest
     class Manifest
       # Valid Keys
-      ValidKeys = [
+      ValidKeys = [ # rubocop:disable Naming/ConstantName
         'index',
         'enabled',
         'schedule',
@@ -92,7 +98,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       ].freeze
 
       # Valid Schedule Keys
-      ValidScheduleKeys = [
+      ValidScheduleKeys = [ # rubocop:disable Naming/ConstantName
         'once',
         'daily',
         'weekly',
@@ -522,8 +528,8 @@ module PuppetX::PuppetLabs::ScheduledTask
           month_indexes = [month_indexes].flatten.map do |m|
             begin
                                                 Integer(m)
-                                              rescue
-                                                m
+            rescue
+              m
                                               end
           end
           invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys

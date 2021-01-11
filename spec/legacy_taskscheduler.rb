@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-# rubocop:disable # rubocop:disable Style/ClassAndModuleCamelCase
 # DO NOT EDIT, ALTER, OR DELETE THIS FILE
 # This file is copied from core puppet and frozen
 # It is used in spec tests to ensure compatibility
 # between this module and the old built-in type.
 # Frozen from: https://github.com/puppetlabs/puppet/blob/5.5.3/lib/puppet/util/windows/taskscheduler.rb
 require 'puppet/util/windows'
+
+# disabling some false positives on the FFI definitions
+# rubocop:disable Naming/ClassAndModuleCamelCase,Naming/ConstantName,Lint/Void
 
 # The TaskScheduler class encapsulates taskscheduler settings and behavior
 class Win32::TaskScheduler
@@ -195,15 +197,13 @@ class Win32::TaskScheduler
     end
 
     @pits = COM::TaskScheduler.new
-    # rubocop:disable Lint/HandleExceptions
     at_exit do
       begin
         @pits.Release if @pits && !@pits.null?
         @pits = nil
-      rescue
+      rescue # rubocop:disable Lint/SuppressedException
       end
     end
-    # rubocop:enable Lint/HandleExceptions
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)
     new_work_item(work_item, trigger) if work_item && trigger

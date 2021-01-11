@@ -425,7 +425,7 @@ task_providers.each do |task_provider|
         task2.stubs(:new).returns(mock_task)
       end
 
-      it "should delegate to #{task2.name} using the resource's name" do
+      it "delegates to #{task2.name} using the resource's name" do
         task2.expects(:exists?).with('Test Task').returns(true)
 
         expect(resource.provider.exists?).to eq(true)
@@ -1478,7 +1478,6 @@ task_providers.each do |task_provider|
       end
 
       # Rubocop gets false positives here because of the exists? method in the SUT
-      # rubocop:disable RSpec/PredicateMatcher
       describe '#exists?' do
         it 'works with Unicode task names' do
           task_name = name + "\u16A0\u16C7\u16BB" # ᚠᛇᚻ
