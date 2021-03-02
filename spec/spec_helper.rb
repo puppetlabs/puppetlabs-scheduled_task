@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-RSpec.configure do |c|
-  c.mock_with :rspec
-end
-
 require 'puppetlabs_spec_helper/module_spec_helper'
 require 'rspec-puppet-facts'
 
@@ -37,6 +33,7 @@ default_facts.each do |fact, value|
 end
 
 RSpec.configure do |c|
+  c.mock_with :rspec
   c.default_facts = default_facts
   c.before :each do
     # set to strictest setting for testing
