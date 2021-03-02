@@ -33,7 +33,6 @@ default_facts.each do |fact, value|
 end
 
 RSpec.configure do |c|
-  c.mock_with :rspec
   c.default_facts = default_facts
   c.before :each do
     # set to strictest setting for testing
