@@ -1,6 +1,6 @@
 {
   "name": "puppetlabs-scheduled_task",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "author": "puppetlabs",
   "summary": "Manage scheduled tasks for Windows Server 2008 and newer operating systems.",
   "license": "Apache-2.0",
