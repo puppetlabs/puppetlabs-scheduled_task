@@ -970,9 +970,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       ].each do |trigger_details|
         it "converts a default #{v2::TYPE_MANIFEST_MAP[trigger_details[:Type]]}" do
           i_trigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
-          # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
-          i_trigger[:Repetition] = stub(i_trigger[:Repetition])
-          i_trigger = stub(i_trigger)
+          i_trigger[:Repetition] = OpenStruct.new(i_trigger[:Repetition])
+          i_trigger = OpenStruct.new(i_trigger)
           expect(v2_class.class.to_manifest_hash(i_trigger)).not_to be_nil
         end
       end
@@ -982,8 +981,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { ole_type: 'ILogonTrigger', Type: v2::Type::TASK_TRIGGER_LOGON },
       ].each do |trigger_details|
         it "converts an #{trigger_details[:ole_type]} instance" do
-          # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
-          i_trigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+          i_trigger = OpenStruct.new(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
           expect { v2_class.class.to_manifest_hash(i_trigger) }.not_to raise_error(ArgumentError)
         end
       end
@@ -995,8 +993,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { ole_type: 'IEventTrigger', Type: v2::Type::TASK_TRIGGER_EVENT },
       ].each do |trigger_details|
         it "fails to convert an #{trigger_details[:ole_type]} instance" do
-          # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
-          i_trigger = stub(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+          i_trigger = OpenStruct.new(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
           expect { v2_class.class.to_manifest_hash(i_trigger) }.to raise_error(ArgumentError)
         end
       end
@@ -1088,9 +1085,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       ].each do |trigger_details|
         it "converts a full ITrigger type #{v2::TYPE_MANIFEST_MAP[trigger_details[:i_trigger][:Type]]} to the equivalent V1 hash" do
           i_trigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:i_trigger])
-          # stub is not usable outside of specs (like in DEFAULT_V2_ITRIGGER_PROPERTIES)
-          i_trigger[:Repetition] = stub(i_trigger[:Repetition])
-          i_trigger = stub(i_trigger)
+          i_trigger[:Repetition] = OpenStruct.new(i_trigger[:Repetition])
+          i_trigger = OpenStruct.new(i_trigger)
           converted = CONVERTED_V2_MANIFEST_HASH.merge(trigger_details[:expected])
           expect(v2_class.class.to_manifest_hash(i_trigger)).to eq(converted)
         end
