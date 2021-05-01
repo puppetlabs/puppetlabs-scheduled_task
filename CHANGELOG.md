@@ -34,22 +34,19 @@ All notable changes to this project will be documented in this file. The format 
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.2.0...v2.2.1)
 
+### Added
+
+- pdksync - \(IAC-973\) - Update travis/appveyor to run on new default branch `main` [\#154](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/154) ([david22swan](https://github.com/david22swan))
+- (IAC-732) - implement `Run only when user is logged on [\#150](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/150) ([david22swan](https://github.com/david22swan))
+
 ### Fixed
 
-- \(bugfix\) - fix `disable\_time\_zone\_synchronization` so that it correctly disables functionality when set to true [\#161](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/161) ([david22swan](https://github.com/david22swan))
+- \(bugfix\) - fix `disable_time_zone_synchronization` so that it correctly disables functionality when set to true [\#161](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/161) ([david22swan](https://github.com/david22swan))
+- \(MODULES-10783\) Add back empty? check for `datetime_string` value [\#158](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/158) ([sanfrancrisko](https://github.com/sanfrancrisko))
 
 ## [v2.2.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.2.0) (2020-08-24)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v2.1.0...v2.2.0)
-
-### Added
-
-- pdksync - \(IAC-973\) - Update travis/appveyor to run on new default branch `main` [\#154](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/154) ([david22swan](https://github.com/david22swan))
-- \(IAC-732\) - implement `Run only when user is logged on [\#150](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/150) ([david22swan](https://github.com/david22swan))
-
-### Fixed
-
-- \(MODULES-10783\) Add back empty? check for `datetime\_string` value [\#158](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/158) ([sanfrancrisko](https://github.com/sanfrancrisko))
 
 ## [v2.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.1.0) (2020-07-24)
 
@@ -57,7 +54,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
-- \(IAC-918\) - `disable\_time\_zone\_synchronization` function implemented [\#145](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/145) ([david22swan](https://github.com/david22swan))
+- \(IAC-918\) - `disable_time_zone_synchronization` function implemented [\#145](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/145) ([david22swan](https://github.com/david22swan))
 
 ## [v2.0.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v2.0.1) (2020-02-12)
 
