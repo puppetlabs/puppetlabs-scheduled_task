@@ -79,9 +79,10 @@ Puppet::Type.newtype(:scheduled_task) do
       in order to manage `scheduled_task` resources. Running as an
       unprivileged user will result in 'access denied' errors.
 
-      If a user is specified without an accompanying password, the
-      task will be created with `Run only when user is logged on`
-      specified."
+      If a user is specified without an accompanying password, and the
+      user does not end with a dollar sign (`$`) signifying a Group
+      Managed Service Account (gMSA), the task will be created with
+      `Run only when user is logged on` specified."
 
     defaultto :system
 

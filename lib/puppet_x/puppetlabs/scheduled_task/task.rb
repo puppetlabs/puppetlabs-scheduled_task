@@ -359,7 +359,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         @definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_SERVICE_ACCOUNT
       else
         @definition.Principal.UserId = user
-        @definition.Principal.LogonType = if @task_password
+        @definition.Principal.LogonType = if @task_password || user[-1] == '$'
                                             TASK_LOGON_TYPE::TASK_LOGON_PASSWORD
                                           else
                                             TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN
