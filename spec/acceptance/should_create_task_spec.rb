@@ -348,6 +348,9 @@ describe 'Should create a scheduled task' do
     MANIFEST
     apply_manifest(pp, catch_failures: true)
 
+    # Ensure it's idempotent
+    apply_manifest(pp, catch_changes: true)
+
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
     run_shell(query_cmd)
@@ -370,6 +373,9 @@ describe 'Should create a scheduled task' do
     }
     MANIFEST
     apply_manifest(pp, catch_failures: true)
+
+    # Ensure it's idempotent
+    apply_manifest(pp, catch_changes: true)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
