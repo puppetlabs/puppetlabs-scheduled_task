@@ -713,7 +713,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           'enabled'                           => i_trigger.Enabled,
           'minutes_interval'                  => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
           'minutes_duration'                  => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
-          'disable_time_zone_synchronization' => start_boundary ? !i_trigger.StartBoundary.include?("+") : false,
+          'disable_time_zone_synchronization' => start_boundary ? !i_trigger.StartBoundary.include?('+') : false,
         }
 
         case i_trigger.Type
