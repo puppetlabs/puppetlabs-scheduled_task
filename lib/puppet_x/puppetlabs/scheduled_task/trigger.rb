@@ -708,11 +708,12 @@ module PuppetX::PuppetLabs::ScheduledTask
         _end_boundary = Trigger.iso8601_datetime_to_local(i_trigger.EndBoundary)
 
         manifest_hash = {
-          'start_date'       => start_boundary ? Manifest.format_date(start_boundary) : '',
-          'start_time'       => start_boundary ? Manifest.format_time(start_boundary) : '',
-          'enabled'          => i_trigger.Enabled,
-          'minutes_interval' => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
-          'minutes_duration' => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
+          'start_date'                        => start_boundary ? Manifest.format_date(start_boundary) : '',
+          'start_time'                        => start_boundary ? Manifest.format_time(start_boundary) : '',
+          'enabled'                           => i_trigger.Enabled,
+          'minutes_interval'                  => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
+          'minutes_duration'                  => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
+          'disable_time_zone_synchronization' => start_boundary ? !i_trigger.StartBoundary.include?("+") : false,
         }
 
         case i_trigger.Type
