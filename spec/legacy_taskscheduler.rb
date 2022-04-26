@@ -198,11 +198,9 @@ class Win32::TaskScheduler
 
     @pits = COM::TaskScheduler.new
     at_exit do
-      begin
-        @pits.Release if @pits && !@pits.null?
-        @pits = nil
-      rescue # rubocop:disable Lint/SuppressedException
-      end
+      @pits.Release if @pits && !@pits.null?
+      @pits = nil
+    rescue # rubocop:disable Lint/SuppressedException
     end
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)

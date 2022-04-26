@@ -1510,61 +1510,57 @@ task_providers.each do |task_provider|
 
       describe 'does not corrupt tasks' do
         it 'when setting maximum length values for all settings' do
-          begin
-            task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
+          task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
 
-            application_name = 'a' * Win32::TaskScheduler::MAX_PATH
-            parameters = 'b' * Win32::TaskScheduler::MAX_PARAMETERS_LENGTH
-            working_directory = 'c' * Win32::TaskScheduler::MAX_PATH
-            comment = 'd' * Win32::TaskScheduler::MAX_COMMENT_LENGTH
-            creator = 'e' * Win32::TaskScheduler::MAX_ACCOUNT_LENGTH
+          application_name = 'a' * Win32::TaskScheduler::MAX_PATH
+          parameters = 'b' * Win32::TaskScheduler::MAX_PARAMETERS_LENGTH
+          working_directory = 'c' * Win32::TaskScheduler::MAX_PATH
+          comment = 'd' * Win32::TaskScheduler::MAX_COMMENT_LENGTH
+          creator = 'e' * Win32::TaskScheduler::MAX_ACCOUNT_LENGTH
 
-            task.application_name = application_name
-            task.parameters = parameters
-            task.working_directory = working_directory
-            task.comment = comment
-            task.creator = creator
+          task.application_name = application_name
+          task.parameters = parameters
+          task.working_directory = working_directory
+          task.comment = comment
+          task.creator = creator
 
-            # saving and reloading (activating) can induce COM load errors when
-            # file is corrupted, which can happen when the upper bounds of these lengths are set too high
-            task.save
-            task.activate(name)
+          # saving and reloading (activating) can induce COM load errors when
+          # file is corrupted, which can happen when the upper bounds of these lengths are set too high
+          task.save
+          task.activate(name)
 
-            # furthermore, corrupted values may not necessarily be read back properly
-            # note that SYSTEM is always returned as an empty string in account_information
-            expect(task.account_information).to eq('')
-            expect(task.application_name).to eq(application_name)
-            expect(task.parameters).to eq(parameters)
-            expect(task.working_directory).to eq(working_directory)
-            expect(task.comment).to eq(comment)
-            expect(task.creator).to eq(creator)
-          ensure
-            delete_task_with_retry(task, name)
-          end
+          # furthermore, corrupted values may not necessarily be read back properly
+          # note that SYSTEM is always returned as an empty string in account_information
+          expect(task.account_information).to eq('')
+          expect(task.application_name).to eq(application_name)
+          expect(task.parameters).to eq(parameters)
+          expect(task.working_directory).to eq(working_directory)
+          expect(task.comment).to eq(comment)
+          expect(task.creator).to eq(creator)
+        ensure
+          delete_task_with_retry(task, name)
         end
 
         it 'by preventing a save() not preceded by a set_account_information()' do
-          begin
-            # creates a default new task with SYSTEM user
-            task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
-            # save automatically resets the current task
-            task.save
+          # creates a default new task with SYSTEM user
+          task = Win32::TaskScheduler.new(name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
+          # save automatically resets the current task
+          task.save
 
-            # re-activate named task, try to modify, and save
-            task.activate(name)
-            task.application_name = 'c:/windows/system32/notepad.exe'
+          # re-activate named task, try to modify, and save
+          task.activate(name)
+          task.application_name = 'c:/windows/system32/notepad.exe'
 
-            expect { task.save }.to raise_error(Puppet::Error, %r{Account information must be set on the current task to save it properly})
+          expect { task.save }.to raise_error(Puppet::Error, %r{Account information must be set on the current task to save it properly})
 
-            # on a failed save, the current task is still active - add SYSTEM
-            task.set_account_information('', nil)
-            expect(task.save).to be_instance_of(Win32::TaskScheduler::COM::Task)
+          # on a failed save, the current task is still active - add SYSTEM
+          task.set_account_information('', nil)
+          expect(task.save).to be_instance_of(Win32::TaskScheduler::COM::Task)
 
-            # the most appropriate additional validation here would be to confirm settings with schtasks.exe
-            # but that test can live inside a system-level acceptance test
-          ensure
-            delete_task_with_retry(task, name)
-          end
+          # the most appropriate additional validation here would be to confirm settings with schtasks.exe
+          # but that test can live inside a system-level acceptance test
+        ensure
+          delete_task_with_retry(task, name)
         end
       end
     end

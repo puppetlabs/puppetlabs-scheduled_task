@@ -526,11 +526,9 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts indexes to bitmask
         def self.indexes_to_bitmask(month_indexes)
           month_indexes = [month_indexes].flatten.map do |m|
-            begin
-                                                Integer(m)
-            rescue
-              m
-                                              end
+            Integer(m)
+          rescue
+            m
           end
           invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys
           raise ArgumentError, 'Month must be specified as an integer in the range 1-12' unless invalid_months.empty?
