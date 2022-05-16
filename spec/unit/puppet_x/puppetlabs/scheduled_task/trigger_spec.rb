@@ -1025,6 +1025,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           },
           expected:         {
             'schedule' => 'once',
+            'disable_time_zone_synchronization' => false,
           },
         },
         {
@@ -1036,6 +1037,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           expected:         {
             'schedule' => 'daily',
             'every'    => 2,
+            'disable_time_zone_synchronization' => false,
           },
         },
         {
@@ -1049,6 +1051,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'schedule'    => 'weekly',
             'every'       => 2,
             'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+            'disable_time_zone_synchronization' => false,
           },
         },
         {
@@ -1063,6 +1066,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'schedule' => 'monthly',
             'months'   => [1],
             'on'       => (1..31).to_a + ['last'],
+            'disable_time_zone_synchronization' => false,
           },
         },
         {
@@ -1080,6 +1084,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'months'           => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             'which_occurrence' => 'last',
             'day_of_week'      => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+            'disable_time_zone_synchronization' => false,
           },
         },
       ].each do |trigger_details|
