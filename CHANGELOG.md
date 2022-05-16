@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v3.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.1.0) (2022-05-16)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v3.0.1...v3.1.0)
+
+### Added
+
+- Make disable\_time\_zone\_synchronization idempotent [\#207](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/207) ([omolenkamp](https://github.com/omolenkamp))
+- pdksync - \(FM-8922\) - Add Support for Windows 2022 [\#204](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/204) ([david22swan](https://github.com/david22swan))
+
 ## [v3.0.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.0.1) (2021-06-14)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v3.0.0...v3.0.1)
