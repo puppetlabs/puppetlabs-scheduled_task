@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
-## [v3.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.1.0) (2022-05-16)
+## [v3.1.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.1.1) (2022-10-03)
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v3.1.0...v3.1.1)
+
+### Fixed
+
+- \(MAINT\) Dropped support for Windows\(7,8,8.1, 2008 Server and 2008 R2 Server\) [\#215](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/215) ([jordanbreen28](https://github.com/jordanbreen28))
+
+## [v3.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.1.0) (2022-05-17)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v3.0.1...v3.1.0)
 
