@@ -387,6 +387,12 @@ task_providers.each do |task_provider|
         expect(resource.provider.user).to eq('this is my user')
       end
 
+      it 'gets the description from the description on the task' do
+        mock_task.expects(:description).returns('this is a description')
+
+        expect(resource.provider.user).to eq('this is a description')
+      end
+
       describe 'whether the task is enabled' do
         it 'reports tasks with the disabled bit set as disabled' do
           mock_task.stubs(:enabled).returns(false)
@@ -1089,6 +1095,14 @@ task_providers.each do |task_provider|
         end
       end
 
+      describe '#description=' do
+        it 'sets the description on the task' do
+          mock_task.expects(:description=).with('this is a description')
+
+          resource.provider.description = 'this is a description'
+        end
+      end
+
       describe '#enabled=' do
         it 'sets the enabled property if the task should be disabled' do
           mock_task.stubs(:enabled).returns(true)
@@ -1226,6 +1240,7 @@ task_providers.each do |task_provider|
       let(:working_dir) { 'C:\Windows\Some\Directory' }
       let(:enabled) { true }
       let(:command) { 'C:\Windows\System32\notepad.exe' }
+      let(:description) { 'this is a description' }
       let(:arguments) { '/a /list /of /arguments' }
       let(:compatibility) { 1 }
       let(:resource) do
@@ -1236,6 +1251,7 @@ task_providers.each do |task_provider|
           arguments: arguments,
           compatibility: compatibility,
           working_dir: working_dir,
+          description: description,
           trigger: { 'schedule' => 'once', 'start_date' => '2011-09-27', 'start_time' => '17:00' },
         )
       end
@@ -1246,6 +1262,7 @@ task_providers.each do |task_provider|
         mock_task.stubs(:application_name=)
         mock_task.stubs(:parameters=)
         mock_task.stubs(:working_directory=)
+        mock_task.stubs(:description=)
         mock_task.stubs(:set_account_information)
         mock_task.stubs(:enabled)
         mock_task.stubs(:enabled=)
@@ -1311,6 +1328,7 @@ task_providers.each do |task_provider|
           new_mock_task.stubs(:application_name=)
           new_mock_task.stubs(:parameters=)
           new_mock_task.stubs(:working_directory=)
+          new_mock_task.stubs(:description=)
           new_mock_task.stubs(:enabled)
           new_mock_task.stubs(:enabled=)
           new_mock_task.stubs(:delete_trigger)

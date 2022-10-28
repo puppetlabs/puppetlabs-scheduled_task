@@ -10,6 +10,7 @@ describe 'Should create a scheduled task' do
   let(:password) { password }
   let(:password2) { password2 }
   let!(:taskname) { "pl#{rand(999_999).to_i}" }
+  let(:description) { "foobar" }
 
   after(:all) do
     remove_test_user(username)
@@ -151,6 +152,53 @@ describe 'Should create a scheduled task' do
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
     run_shell(query_cmd) do |result|
       expect(result.stdout).to match(%r{#{username}})
+    end
+  end
+
+  it 'creates a task with a description: taskscheduler_api2' do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure        => present,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      description   => '#{description}',
+      trigger       => {
+        schedule   => daily,
+        start_time => '12:00',
+      },
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd) do |result|
+      expect(result.stdout).to match(%r{#{description}})
+    end
+  end
+
+  it 'creates a task with a description: win32_taskscheduler' do
+    pp = <<-MANIFEST
+    scheduled_task {'#{taskname}':
+      ensure        => present,
+      command       => 'c:\\\\windows\\\\system32\\\\notepad.exe',
+      arguments     => "foo bar baz",
+      working_dir   => 'c:\\\\windows',
+      description   => '#{description}',
+      trigger       => {
+        schedule   => daily,
+        start_time => '12:00',
+      },
+      provider      => 'win32_taskscheduler'
+    }
+    MANIFEST
+    apply_manifest(pp, catch_failures: true)
+
+    # Verify the task exists
+    query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
+    run_shell(query_cmd) do |result|
+      expect(result.stdout).to match(%r{#{description}})
     end
   end
 

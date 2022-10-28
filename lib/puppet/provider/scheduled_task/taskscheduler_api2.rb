@@ -44,6 +44,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     task.parameters
   end
 
+  def description
+    task.description
+  end
+
   def working_dir
     task.working_directory
   end
@@ -96,6 +100,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
   def arguments=(value)
     task.parameters = value
+  end
+
+  def description=(value)
+    task.description = value
   end
 
   def working_dir=(value)
@@ -160,7 +168,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     @task = PuppetX::PuppetLabs::ScheduledTask::Task.new(resource[:name])
     self.command = resource[:command]
 
-    [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility].each do |prop|
+    [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility, :description].each do |prop|
       send("#{prop}=", resource[prop]) if resource[prop]
     end
   end

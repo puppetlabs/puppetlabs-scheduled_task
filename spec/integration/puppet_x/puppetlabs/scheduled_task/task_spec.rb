@@ -361,6 +361,17 @@ describe 'Scheduled Tasks API v2' do
         task.save
         expect(new_working_directory).to be_same_as_powershell_command(ps_cmd)
       end
+
+      it 'is able to update the description' do
+        new_description = 'updated description'
+        ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].WorkingDirectory)'
+        task = subject.new(task_name)
+
+        expect('').to be_same_as_powershell_command(ps_cmd)
+        task.new_description = new_description
+        task.save
+        expect(new_description).to be_same_as_powershell_command(ps_cmd)
+      end
     end
   end
 

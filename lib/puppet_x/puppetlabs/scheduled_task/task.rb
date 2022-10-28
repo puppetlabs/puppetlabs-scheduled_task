@@ -435,6 +435,16 @@ module PuppetX::PuppetLabs::ScheduledTask
       @definition.Settings.Compatibility = value
     end
 
+    # Gets task description
+    def description
+      @definition.RegistrationInfo.Description
+    end
+
+    # Sets task description
+    def description=(value)
+      @definition.RegistrationInfo.Description = value
+    end
+
     # Returns a set of trigger hashes with their indexes, for supported trigger
     # types. Returns nil for each unknown trigger types in the collection.
     #
