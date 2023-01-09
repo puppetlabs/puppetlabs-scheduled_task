@@ -65,6 +65,10 @@ Puppet::Type.newtype(:scheduled_task) do
       should be specified as a space-separated string."
   end
 
+  newproperty(:description) do
+    desc "The description of the scheduled task."
+  end
+
   newproperty(:user) do
     desc "The user to run the scheduled task as.  Please note that not
       all security configurations will allow running a scheduled task

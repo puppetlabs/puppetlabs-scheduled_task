@@ -30,6 +30,10 @@ should be specified as a space-separated string.
 
 The full path to the application to run, without any arguments.
 
+##### `description`
+
+The description of the scheduled task.
+
 ##### `compatibility`
 
 Valid values: `1`, `2`, `3`, `4`, `5`, `6`
