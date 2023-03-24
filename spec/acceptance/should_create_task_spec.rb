@@ -10,7 +10,7 @@ describe 'Should create a scheduled task' do
   let(:password) { password }
   let(:password2) { password2 }
   let!(:taskname) { "pl#{rand(999_999).to_i}" }
-  let(:description) { "foobar" }
+  let(:description) { 'foobar' }
 
   after(:all) do
     remove_test_user(username)

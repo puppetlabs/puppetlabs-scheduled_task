@@ -6,5 +6,5 @@ scheduled_task { 'Run Notepad':
     schedule   => daily,
     start_time => '12:00',
   },
-  provider    => 'taskscheduler_api2'
+  provider    => 'taskscheduler_api2',
 }
