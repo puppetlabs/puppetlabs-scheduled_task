@@ -30,10 +30,6 @@ should be specified as a space-separated string.
 
 The full path to the application to run, without any arguments.
 
-##### `description`
-
-The description of the scheduled task.
-
 ##### `compatibility`
 
 Valid values: `1`, `2`, `3`, `4`, `5`, `6`
@@ -48,9 +44,13 @@ new features for tasks introduced in Windows 10
 
 Default value: `1`
 
+##### `description`
+
+The description of the scheduled task.
+
 ##### `enabled`
 
-Valid values: ``true``, ``false``
+Valid values: `true`, `false`
 
 Whether the triggers for this task should be enabled. This attribute
 affects every trigger for the task; triggers cannot be enabled or
@@ -216,11 +216,11 @@ The full path of the directory in which to start the command.
 
 The following parameters are available in the `scheduled_task` type.
 
-* [`name`](#name)
-* [`password`](#password)
-* [`provider`](#provider)
+* [`name`](#-scheduled_task--name)
+* [`password`](#-scheduled_task--password)
+* [`provider`](#-scheduled_task--provider)
 
-##### <a name="name"></a>`name`
+##### <a name="-scheduled_task--name"></a>`name`
 
 namevar
 
@@ -232,7 +232,7 @@ inside of subfolder(s), specify the path from root, such as
 specify a taskname inside of subfolders if the compatibility is
 set to 2 or higher and when using the taskscheduler2_api provider.
 
-##### <a name="password"></a>`password`
+##### <a name="-scheduled_task--password"></a>`password`
 
 The password for the user specified in the 'user' attribute.
 This is only used if specifying a user other than 'SYSTEM'.
@@ -240,7 +240,7 @@ Since there is no way to retrieve the password used to set the
 account information for a task, this parameter will not be used
 to determine if a scheduled task is in sync or not.
 
-##### <a name="provider"></a>`provider`
+##### <a name="-scheduled_task--provider"></a>`provider`
 
 The specific backend to use for this `scheduled_task` resource. You will seldom need to specify this --- Puppet will
 usually discover the appropriate provider for your platform.
