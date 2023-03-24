@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v3.2.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.2.0) - 2023-03-23
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v3.1.1...v3.2.0)
+
+### Added
+
+- Control scheduled task description field [#220](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/220) ([dwjvaughan](https://github.com/dwjvaughan))
+
 ## [v3.1.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v3.1.1) (2022-10-03)
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v3.1.0...v3.1.1)

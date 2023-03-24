@@ -66,7 +66,7 @@ Puppet::Type.newtype(:scheduled_task) do
   end
 
   newproperty(:description) do
-    desc "The description of the scheduled task."
+    desc 'The description of the scheduled task.'
   end
 
   newproperty(:user) do
