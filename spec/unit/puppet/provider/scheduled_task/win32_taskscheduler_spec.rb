@@ -1496,6 +1496,7 @@ task_providers.each do |task_provider|
       end
 
       # Rubocop gets false positives here because of the exists? method in the SUT
+      # rubocop:disable RSpec/PredicateMatcher
       describe '#exists?' do
         it 'works with Unicode task names' do
           task_name = name + "\u16A0\u16C7\u16BB" # ᚠᛇᚻ

@@ -220,10 +220,10 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         if manifest_hash.key?('every')
           every = begin
-                    Integer(manifest_hash['every'])
-                  rescue
-                    nil
-                  end
+            Integer(manifest_hash['every'])
+          rescue
+            nil
+          end
           raise ArgumentError, "Invalid every value: #{manifest_hash['every']}" if every.nil?
           manifest_hash['every'] = every
         end
