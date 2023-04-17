@@ -122,6 +122,7 @@ Puppet::Type.newtype(:scheduled_task) do
 
     validate do |value|
       raise Puppet::Error, _('must be a number') unless value.is_a?(Integer)
+
       super(value)
     end
 

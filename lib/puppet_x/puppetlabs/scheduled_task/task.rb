@@ -276,6 +276,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       filter_compatibility = !options[:include_compatibility].empty?
       task_folder.GetTasks(TASK_ENUM_FLAGS::TASK_ENUM_HIDDEN).each do |task|
         next if filter_compatibility && !options[:include_compatibility].include?(task.Definition.Settings.Compatibility)
+
         array << task.Path
       end
       return array unless options[:include_child_folders]
@@ -290,6 +291,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Returns whether or not the scheduled task exists.
     def self.exists?(task_path)
       raise TypeError unless task_path.is_a?(String)
+
       begin
         task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
@@ -514,12 +516,14 @@ module PuppetX::PuppetLabs::ScheduledTask
       unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
         raise Puppet::Error.new(_('GetFolder failed with: %{error}') % { error: e }, e)
       end
+
       task_service.GetFolder(ROOT_FOLDER).CreateFolder(path)
     end
 
     # Gets the task with a specified task path
     def self.task(task_path)
       raise TypeError unless task_path.is_a?(String)
+
       service = task_service
       begin
         task_folder = service.GetFolder(folder_path_from_task_path(task_path))
@@ -556,6 +560,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       @definition.Actions.Item(index)
     rescue WIN32OLERuntimeError => err
       raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
+
       nil
     end
 
@@ -570,6 +575,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       @definition.Triggers.Item(index)
     rescue WIN32OLERuntimeError => err
       raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
+
       nil
     end
 

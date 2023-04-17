@@ -6,18 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 32
-# This cop supports safe autocorrection (--autocorrect).
-Layout/EmptyLineAfterGuardClause:
-  Exclude:
-    - 'lib/puppet/provider/scheduled_task/taskscheduler_api2.rb'
-    - 'lib/puppet/provider/scheduled_task/win32_taskscheduler.rb'
-    - 'lib/puppet/type/scheduled_task.rb'
-    - 'lib/puppet_x/puppetlabs/scheduled_task/error.rb'
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
-    - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
-    - 'spec/legacy_taskscheduler.rb'
-
 # Offense count: 6
 # This cop supports safe autocorrection (--autocorrect).
 Layout/EmptyLinesAroundArguments:

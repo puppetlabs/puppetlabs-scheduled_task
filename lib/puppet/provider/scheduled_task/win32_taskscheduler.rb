@@ -52,6 +52,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def user
     account = task.account_information
     return 'system' if account == ''
+
     account
   end
 
@@ -169,6 +170,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def flush
     return if resource[:ensure] == :absent
     raise('Parameter command is required.') unless resource[:command]
+
     # HACK: even though the user may actually be insync?, for task changes to
     # fully propagate, it is necessary to explicitly set the user for the task,
     # even when it is SYSTEM (and has a nil password)
@@ -182,6 +184,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def triggers_same?(current_trigger, desired_trigger)
     return false if current_trigger.key?('enabled') && !current_trigger['enabled']
+
     # Canonicalizing the desired hash ensures it is in a matching state with what we convert from on-disk
     desired = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(desired_trigger)
     # This method ensures that current_trigger:

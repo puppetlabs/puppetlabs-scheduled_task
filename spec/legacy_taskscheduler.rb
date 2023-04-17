@@ -204,6 +204,7 @@ class Win32::TaskScheduler
     end
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)
+
     new_work_item(work_item, trigger) if work_item && trigger
   end
 
@@ -211,6 +212,7 @@ class Win32::TaskScheduler
   #
   def enum
     raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
+
     array = []
 
     @pits.UseInstance(COM::EnumWorkItems, :Enum) do |pi_enum|
@@ -350,6 +352,7 @@ class Win32::TaskScheduler
         if user.length > MAX_ACCOUNT_LENGTH
           raise Error, _('User has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH }
         end
+
         user = wide_string(user)
         password = wide_string(password)
         @pitask.SetAccountInformation(user, password)
@@ -422,6 +425,7 @@ class Win32::TaskScheduler
     if app.length > MAX_PATH
       raise Error, _('Application name has exceeded maximum allowed length %{max}') % { max: MAX_PATH }
     end
+
     @pitask.SetApplicationName(wide_string(app))
 
     app
@@ -913,9 +917,11 @@ class Win32::TaskScheduler
       if key == 'type'
         new_type_hash = {}
         raise ArgumentError unless value.is_a?(Hash)
+
         value.each do |subkey, subvalue|
           subkey = subkey.to_s.downcase
           raise ArgumentError, _("Invalid type key '%{key}'") % { key: subkey } unless ValidTypeKeys.include?(subkey)
+
           new_type_hash[subkey] = subvalue
         end
         new_hash[key] = new_type_hash
@@ -938,6 +944,7 @@ class Win32::TaskScheduler
 
   def populate_trigger(task_trigger, trigger)
     raise TypeError unless task_trigger.is_a?(COM::TaskTrigger)
+
     trigger = transform_and_validate(trigger)
 
     FFI::MemoryPointer.new(COM::TASK_TRIGGER.size) do |trigger_ptr|

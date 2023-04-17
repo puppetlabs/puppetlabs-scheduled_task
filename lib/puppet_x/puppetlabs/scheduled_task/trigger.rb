@@ -42,6 +42,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       # Converts a hash in a time format to seconds
       def self.hash_to_seconds(value)
         return 0 if value.nil?
+
         time = 0
         # Note - the Year and Month calculations are approximate
         time += value[:year].to_i   * (365.2422 * 24 * 60**2)      unless value[:year].nil?
@@ -175,6 +176,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       # returns original object with downcased keys
       def self.canonicalize_and_validate(manifest_hash)
         raise TypeError unless manifest_hash.is_a?(Hash)
+
         manifest_hash = downcase_keys(manifest_hash)
 
         # check for valid key usage
@@ -189,11 +191,13 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         required.each do |field|
           next if manifest_hash.key?(field)
+
           raise ArgumentError, "Must specify '#{field}' when defining a trigger"
         end
 
         start_time_valid = time_valid?(manifest_hash['start_time'])
         raise ArgumentError, "Invalid start_time value: #{manifest_hash['start_time']}" unless start_time_valid
+
         # The start_time must be canonicalized to match the format that the rest of the code expects
         manifest_hash['start_time'] = format_time(Time.parse(manifest_hash['start_time'])) unless manifest_hash['start_time'].nil?
 
@@ -209,6 +213,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
             ['day_of_week', 'which_occurrence'].each do |field|
               next if manifest_hash.key?(field)
+
               raise ArgumentError, "#{field} must be specified when creating a monthly day-of-week based trigger"
             end
           else
@@ -225,6 +230,7 @@ module PuppetX::PuppetLabs::ScheduledTask
             nil
           end
           raise ArgumentError, "Invalid every value: #{manifest_hash['every']}" if every.nil?
+
           manifest_hash['every'] = every
         end
 
@@ -286,16 +292,19 @@ module PuppetX::PuppetLabs::ScheduledTask
         if manifest_hash['start_date']
           start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
           raise ArgumentError, "start_date must be on or after #{format_date(MINIMUM_TRIGGER_DATE)}" unless start_date >= MINIMUM_TRIGGER_DATE
+
           manifest_hash['start_date'] = format_date(start_date)
         end
 
         if manifest_hash['user_id']
           raise 'user_id can only be verified on a Windows Operating System' unless Puppet.features.microsoft_windows?
+
           # If the user specifies undef in the manifest, coerce that into an empty string;
           # This is what scheduled tasks expects to receive for 'all users'
           user_id = (manifest_hash['user_id'] == :undef) ? '' : manifest_hash['user_id']
           # If the user cannot be resolved, the task will fail to save with a vague error
           raise ArgumentError, "Invalid user, specified user must exist: #{user_id}" unless Puppet::Util::Windows::SID.name_to_sid(user_id)
+
           # To keep the internal comparison consistent but human readable, convert from
           # the user id specified in the manifest to the canonical representation of that
           # account's SID on the system. If the specified user_id is null/empty, leave it
@@ -421,6 +430,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           unless invalid_days.empty?
             raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31"
           end
+
           integer_days.reduce(0) { |bitmask, day_index| bitmask | 1 << day_index - 1 }
         end
 
@@ -452,6 +462,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           unless invalid_day_names.empty?
             raise ArgumentError, "Only 'last' is allowed as a day name. All other values must be integers between 1 and 31."
           end
+
           Array(day_indexes).include? 'last'
         end
       end
