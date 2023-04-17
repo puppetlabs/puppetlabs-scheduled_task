@@ -349,9 +349,7 @@ class Win32::TaskScheduler
       if (user.nil? || user == '') && (password.nil? || password == '')
         @pitask.SetAccountInformation(wide_string(''), FFI::Pointer::NULL)
       else
-        if user.length > MAX_ACCOUNT_LENGTH
-          raise Error, _('User has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH }
-        end
+        raise Error, _('User has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH } if user.length > MAX_ACCOUNT_LENGTH
 
         user = wide_string(user)
         password = wide_string(password)
@@ -422,9 +420,7 @@ class Win32::TaskScheduler
     raise TypeError unless app.is_a?(String)
 
     # the application name is written to a .job file on disk, so is subject to path limitations
-    if app.length > MAX_PATH
-      raise Error, _('Application name has exceeded maximum allowed length %{max}') % { max: MAX_PATH }
-    end
+    raise Error, _('Application name has exceeded maximum allowed length %{max}') % { max: MAX_PATH } if app.length > MAX_PATH
 
     @pitask.SetApplicationName(wide_string(app))
 
@@ -459,9 +455,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless param.is_a?(String)
 
-    if param.length > MAX_PARAMETERS_LENGTH
-      raise Error, _('Parameters has exceeded maximum allowed length %{max}') % { max: MAX_PARAMETERS_LENGTH }
-    end
+    raise Error, _('Parameters has exceeded maximum allowed length %{max}') % { max: MAX_PARAMETERS_LENGTH } if param.length > MAX_PARAMETERS_LENGTH
 
     @pitask.SetParameters(wide_string(param))
 
@@ -494,9 +488,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless dir.is_a?(String)
 
-    if dir.length > MAX_PATH
-      raise Error, _('Working directory has exceeded maximum allowed length %{max}') % { max: MAX_PATH }
-    end
+    raise Error, _('Working directory has exceeded maximum allowed length %{max}') % { max: MAX_PATH } if dir.length > MAX_PATH
 
     @pitask.SetWorkingDirectory(wide_string(dir))
 
@@ -560,9 +552,7 @@ class Win32::TaskScheduler
 
     # I'm working around github issue #1 here.
     enum.each do |name|
-      if name.downcase == task.downcase + '.job'
-        raise Error, _("task '%{task}' already exists") % { task: task }
-      end
+      raise Error, _("task '%{task}' already exists") % { task: task } if name.downcase == task.downcase + '.job'
     end
 
     FFI::MemoryPointer.new(:pointer) do |ptr|
@@ -767,9 +757,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless comment.is_a?(String)
 
-    if comment.length > MAX_COMMENT_LENGTH
-      raise Error, _('Comment has exceeded maximum allowed length %{max}') % { max: MAX_COMMENT_LENGTH }
-    end
+    raise Error, _('Comment has exceeded maximum allowed length %{max}') % { max: MAX_COMMENT_LENGTH } if comment.length > MAX_COMMENT_LENGTH
 
     @pitask.SetComment(wide_string(comment))
     comment
@@ -799,9 +787,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless creator.is_a?(String)
 
-    if creator.length > MAX_ACCOUNT_LENGTH
-      raise Error, _('Creator has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH }
-    end
+    raise Error, _('Creator has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH } if creator.length > MAX_ACCOUNT_LENGTH
 
     @pitask.SetCreator(wide_string(creator))
     creator
@@ -954,9 +940,7 @@ class Win32::TaskScheduler
         tmp = trigger['type'].is_a?(Hash) ? trigger['type'] : nil
         case trigger['trigger_type']
         when :TASK_TIME_TRIGGER_DAILY
-          if tmp && tmp['days_interval']
-            trigger_type_union[:Daily][:DaysInterval] = tmp['days_interval']
-          end
+          trigger_type_union[:Daily][:DaysInterval] = tmp['days_interval'] if tmp && tmp['days_interval']
         when :TASK_TIME_TRIGGER_WEEKLY
           if tmp && tmp['weeks_interval'] && tmp['days_of_week']
             trigger_type_union[:Weekly][:WeeksInterval] = tmp['weeks_interval']

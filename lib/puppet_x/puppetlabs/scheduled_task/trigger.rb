@@ -183,9 +183,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         invalid_keys = manifest_hash.keys - ValidKeys
         raise ArgumentError, "Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}" unless invalid_keys.empty?
 
-        unless ValidScheduleKeys.include?(manifest_hash['schedule'])
-          raise ArgumentError, "Unknown schedule type: #{manifest_hash['schedule'].inspect}"
-        end
+        raise ArgumentError, "Unknown schedule type: #{manifest_hash['schedule'].inspect}" unless ValidScheduleKeys.include?(manifest_hash['schedule'])
 
         required = V2::EVENT_BASED_TRIGGER_MAP.value?(manifest_hash['schedule']) ? [] : ['start_time']
 
@@ -266,25 +264,19 @@ module PuppetX::PuppetLabs::ScheduledTask
           duration = Integer(manifest_hash['minutes_duration'])
           # defaults to -1 when unspecified
           interval = Integer(manifest_hash['minutes_interval'] || -1)
-          if duration != 0 && duration <= interval
-            raise ArgumentError, 'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
-          end
+          raise ArgumentError, 'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0' if duration != 0 && duration <= interval
         end
 
         # interval set with / without duration
         if manifest_hash['minutes_interval']
           interval = Integer(manifest_hash['minutes_interval'])
           # interval < 0
-          if interval.negative?
-            raise ArgumentError, 'minutes_interval must be an integer greater or equal to 0'
-          end
+          raise ArgumentError, 'minutes_interval must be an integer greater or equal to 0' if interval.negative?
 
           # defaults to a day when unspecified
           duration = Integer(manifest_hash['minutes_duration'] || 1440)
 
-          if interval.positive? && interval >= duration
-            raise ArgumentError, 'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
-          end
+          raise ArgumentError, 'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0' if interval.positive? && interval >= duration
         end
         manifest_hash['minutes_interval'] = interval if interval
         manifest_hash['minutes_duration'] = duration if duration
@@ -321,7 +313,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         rekeyed = hash.map do |k, v|
           [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
         end
-        Hash[rekeyed]
+        rekeyed.to_h
       end
 
       private_class_method :downcase_keys
@@ -393,9 +385,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to day names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           DAY_CONST_MAP.values.each_with_object([]) do |day, names|
             names << DAY_CONST_MAP.key(day) if bitmask & day != 0
@@ -420,16 +410,12 @@ module PuppetX::PuppetLabs::ScheduledTask
         # V2 IMonthlyTrigger::DaysOfMonth
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380735(v=vs.85).aspx
         def self.indexes_to_bitmask(day_indexes)
-          if day_indexes.nil? || (day_indexes.is_a?(Hash) && day_indexes.empty?)
-            raise TypeError, 'Day indexes value must not be nil or an empty hash.'
-          end
+          raise TypeError, 'Day indexes value must not be nil or an empty hash.' if day_indexes.nil? || (day_indexes.is_a?(Hash) && day_indexes.empty?)
 
           integer_days = Array(day_indexes).select { |i| i.is_a?(Integer) }
           invalid_days = integer_days.reject { |i| i.between?(1, 31) }
 
-          unless invalid_days.empty?
-            raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31"
-          end
+          raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31" unless invalid_days.empty?
 
           integer_days.reduce(0) { |bitmask, day_index| bitmask | (1 << (day_index - 1)) }
         end
@@ -437,9 +423,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to index
         def self.bitmask_to_indexes(bitmask, run_on_last_day_of_month = nil)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           indexes = bit_index(bitmask).map { |bit_index| bit_index + 1 }
 
@@ -459,9 +443,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         def self.last_day_of_month?(day_indexes)
           invalid_day_names = Array(day_indexes).select { |i| i.is_a?(String) && (i != 'last') }
-          unless invalid_day_names.empty?
-            raise ArgumentError, "Only 'last' is allowed as a day name. All other values must be integers between 1 and 31."
-          end
+          raise ArgumentError, "Only 'last' is allowed as a day name. All other values must be integers between 1 and 31." unless invalid_day_names.empty?
 
           Array(day_indexes).include? 'last'
         end
@@ -550,9 +532,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to indexes
         def self.bitmask_to_indexes(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           MONTHNUM_CONST_MAP.values.each_with_object([]) do |day, indexes|
             indexes << MONTHNUM_CONST_MAP.key(day) if bitmask & day != 0
@@ -602,9 +582,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           WEEK_OF_MONTH_CONST_MAP.values.each_with_object([]) do |week, names|
             names << WEEK_OF_MONTH_CONST_MAP.key(week) if bitmask & week != 0
@@ -710,9 +688,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       # Converts trigger to manifest hash
       def self.to_manifest_hash(i_trigger)
-        if TYPE_MANIFEST_MAP[i_trigger.Type].nil?
-          raise ArgumentError, _('Unknown trigger type %{type}') % { type: i_trigger.ole_type.to_s }
-        end
+        raise ArgumentError, _('Unknown trigger type %{type}') % { type: i_trigger.ole_type.to_s } if TYPE_MANIFEST_MAP[i_trigger.Type].nil?
 
         # StartBoundary and EndBoundary may be empty strings per V2 API
         start_boundary = Trigger.iso8601_datetime_to_local(i_trigger.StartBoundary)

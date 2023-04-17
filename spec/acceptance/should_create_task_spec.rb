@@ -21,9 +21,7 @@ describe 'Should create a scheduled task' do
     run_shell("schtasks.exe /delete /tn #{taskname} /f", accept_all_exit_codes: true) do |r|
       # Empty means deletion was ok.  The 'The system cannot find the file specified' error occurs
       # if the task does not exist
-      unless r.stderr.empty? || r.stderr =~ %r{ERROR: The system cannot find the .+ specified}
-        raise r.stderr
-      end
+      raise r.stderr unless r.stderr.empty? || r.stderr =~ %r{ERROR: The system cannot find the .+ specified}
     end
   end
 

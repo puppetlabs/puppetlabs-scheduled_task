@@ -219,9 +219,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       @task, @definition = self.class.task(@full_task_path)
       task_userid = @definition.Principal.UserId || ''
 
-      if compatibility_level == :v1_compatibility
-        self.compatibility = TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
-      end
+      self.compatibility = TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1 if compatibility_level == :v1_compatibility
 
       set_account_information(task_userid, nil)
     end
@@ -513,9 +511,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     def self.create_folder(path)
       task_service.GetFolder(path)
     rescue WIN32OLERuntimeError => e
-      unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
-        raise Puppet::Error.new(_('GetFolder failed with: %{error}') % { error: e }, e)
-      end
+      raise Puppet::Error.new(_('GetFolder failed with: %{error}') % { error: e }, e) unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
 
       task_service.GetFolder(ROOT_FOLDER).CreateFolder(path)
     end
@@ -531,9 +527,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         task = task_folder.GetTask(task_name_from_task_path(task_path))
         return task, task.Definition
       rescue WIN32OLERuntimeError => e
-        unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
-          raise Puppet::Error.new(_('GetTask failed with: %{error}') % { error: e }, e)
-        end
+        raise Puppet::Error.new(_('GetTask failed with: %{error}') % { error: e }, e) unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
       end
 
       [nil, service.NewTask(0)]
@@ -548,9 +542,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         break if action
       end
 
-      if action.nil? && options.fetch(:create_if_missing, false)
-        action = @definition.Actions.Create(TASK_ACTION_TYPE::TASK_ACTION_EXEC)
-      end
+      action = @definition.Actions.Create(TASK_ACTION_TYPE::TASK_ACTION_EXEC) if action.nil? && options.fetch(:create_if_missing, false)
 
       action
     end

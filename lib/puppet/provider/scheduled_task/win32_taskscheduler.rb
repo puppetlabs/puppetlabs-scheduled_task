@@ -144,12 +144,12 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def user=(value)
     raise("Invalid user: #{value}") unless Puppet::Util::Windows::SID.name_to_sid(value)
 
-    if !value.to_s.casecmp('system').zero?
-      task.set_account_information(value, resource[:password])
-    else
+    if value.to_s.casecmp('system').zero?
       # Win32::TaskScheduler treats a nil/empty username & password as
       # requesting the SYSTEM account.
       task.set_account_information(nil, nil)
+    else
+      task.set_account_information(value, resource[:password])
     end
   end
 
@@ -198,9 +198,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def validate_trigger(value)
     [value].flatten.each do |t|
       ['index', 'enabled'].each do |key|
-        if t.key?(key)
-          raise "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
-        end
+        raise "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)." if t.key?(key)
       end
       PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(t)
     end

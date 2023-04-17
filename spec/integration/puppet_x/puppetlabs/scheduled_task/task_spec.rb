@@ -393,9 +393,7 @@ describe 'Scheduled Tasks API v2' do
         TASK_TIME_TRIGGER_ONCE: trigger::V2::Type::TASK_TRIGGER_TIME,
       }.freeze
 
-    unless v1_type_map.keys.include?(v1trigger['trigger_type'])
-      raise ArgumentError, _('Unknown trigger type %{type}') % { type: v1trigger['trigger_type'] }
-    end
+    raise ArgumentError, _('Unknown trigger type %{type}') % { type: v1trigger['trigger_type'] } unless v1_type_map.keys.include?(v1trigger['trigger_type'])
 
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381950(v=vs.85).aspx
     week_of_month_names = {
