@@ -31,11 +31,11 @@ def manifest_triggers
   now = Time.now
 
   defaults = {
-    'minutes_interval'        => 0,
-    'minutes_duration'        => 0,
-    'start_date'              => ST::Trigger::Manifest.format_date(now),
-    'start_time'              => ST::Trigger::Manifest.format_time(now),
-    'enabled'                 => true,
+    'minutes_interval' => 0,
+    'minutes_duration' => 0,
+    'start_date' => ST::Trigger::Manifest.format_date(now),
+    'start_time' => ST::Trigger::Manifest.format_time(now),
+    'enabled' => true,
   }
 
   [
@@ -43,15 +43,15 @@ def manifest_triggers
     defaults.merge('schedule' => 'daily',
                    'every' => 1),
     defaults.merge('schedule' => 'weekly',
-                   'every'       => 1,
+                   'every' => 1,
                    'day_of_week' => ['mon']),
     defaults.merge('schedule' => 'monthly',
-                   'months'    => [1],
-                   'on'        => [14]),
+                   'months' => [1],
+                   'on' => [14]),
     defaults.merge('schedule' => 'monthly',
-                   'months'           => [1],
+                   'months' => [1],
                    'which_occurrence' => 'first',
-                   'day_of_week'      => ['mon']),
+                   'day_of_week' => ['mon']),
   ]
 end
 
@@ -397,11 +397,11 @@ describe 'Scheduled Tasks API v2' do
 
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381950(v=vs.85).aspx
     week_of_month_names = {
-      'first'  => 1, # TASK_FIRST_WEEKs
+      'first' => 1, # TASK_FIRST_WEEKs
       'second' => 2, # TASK_SECOND_WEEKs
-      'third'  => 3, # TASK_THIRD_WEEKs
+      'third' => 3, # TASK_THIRD_WEEKs
       'fourth' => 4, # TASK_FOURTH_WEEKs
-      'last'   => 5, # TASK_LAST_WEEKs
+      'last' => 5, # TASK_LAST_WEEKs
     }.freeze
 
     manifest_hash = {}
@@ -455,18 +455,18 @@ describe 'Scheduled Tasks API v2' do
     now = Time.now
     default_once_trigger =
       {
-        'flags'                   => 0,
-        'end_day'                 => 0,
-        'end_year'                => 0,
-        'minutes_interval'        => 0,
-        'end_month'               => 0,
-        'minutes_duration'        => 0,
-        'start_year'              => now.year,
-        'start_month'             => now.month,
-        'start_day'               => now.day,
-        'start_hour'              => now.hour,
-        'start_minute'            => now.min,
-        'trigger_type'            => :TASK_TIME_TRIGGER_ONCE,
+        'flags' => 0,
+        'end_day' => 0,
+        'end_year' => 0,
+        'minutes_interval' => 0,
+        'end_month' => 0,
+        'minutes_duration' => 0,
+        'start_year' => now.year,
+        'start_month' => now.month,
+        'start_day' => now.day,
+        'start_hour' => now.hour,
+        'start_minute' => now.min,
+        'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
         # 'once' has no specific settings, so 'type' should be omitted
       }
 

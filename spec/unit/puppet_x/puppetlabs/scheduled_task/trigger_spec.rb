@@ -40,32 +40,32 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       [
         {
           # only set required fields
-          input:         {
-            'Enabled'             => nil,
-            'ScHeDuLe'            => 'once',
-            'START_date'          => '2018-2-3',
-            'start_Time'          => '1:12',
-            'EVERY'               => 1,
-            'mONTHS'              => 12,
-            'On'                  => [1, 'last'],
-            'Which_Occurrence'    => 'first',
-            'DAY_OF_week'         => ['mon'],
-            'MINutes_intERVAL'    => nil,
-            'minutes_duration'    => nil,
+          input: {
+            'Enabled' => nil,
+            'ScHeDuLe' => 'once',
+            'START_date' => '2018-2-3',
+            'start_Time' => '1:12',
+            'EVERY' => 1,
+            'mONTHS' => 12,
+            'On' => [1, 'last'],
+            'Which_Occurrence' => 'first',
+            'DAY_OF_week' => ['mon'],
+            'MINutes_intERVAL' => nil,
+            'minutes_duration' => nil,
           },
           # all keys are lower
-          expected:         {
-            'enabled'             => nil,
-            'schedule'            => 'once',
-            'start_date'          => '2018-2-3',
-            'start_time'          => '01:12',
-            'every'               => 1,
-            'months'              => [12],
-            'on'                  => [1, 'last'],
-            'which_occurrence'    => 'first',
-            'day_of_week'         => ['mon'],
-            'minutes_interval'    => nil,
-            'minutes_duration'    => nil,
+          expected: {
+            'enabled' => nil,
+            'schedule' => 'once',
+            'start_date' => '2018-2-3',
+            'start_time' => '01:12',
+            'every' => 1,
+            'months' => [12],
+            'on' => [1, 'last'],
+            'which_occurrence' => 'first',
+            'day_of_week' => ['mon'],
+            'minutes_interval' => nil,
+            'minutes_duration' => nil,
           },
         },
       ].each do |value|
@@ -88,9 +88,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
       MINIMAL_MANIFEST_HASH =
         {
-          'schedule'            => 'once',
-          'start_date'          => '2018-2-3',
-          'start_time'          => '01:12',
+          'schedule' => 'once',
+          'start_date' => '2018-2-3',
+          'start_time' => '01:12',
         }.freeze
 
       it 'canonicalizes `start_date` to %Y-%-m-%-d' do
@@ -1012,65 +1012,65 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       CONVERTED_V2_MANIFEST_HASH = {
         'start_date' => '2005-10-11',
         'start_time' => '13:21',
-        'enabled'    => true,
+        'enabled' => true,
         'minutes_interval' => 20, # PT20M
         'minutes_duration' => 20, # PT20M
       }.freeze
 
       [
         {
-          i_trigger:         {
+          i_trigger: {
             Type: v2::Type::TASK_TRIGGER_TIME,
             RandomDelay: 'P2DT5S', # ignored
           },
-          expected:         {
+          expected: {
             'schedule' => 'once',
             'disable_time_zone_synchronization' => false,
           },
         },
         {
-          i_trigger:         {
+          i_trigger: {
             Type: v2::Type::TASK_TRIGGER_DAILY,
             DaysInterval: 2,
             RandomDelay: 'P2DT5S', # ignored
           },
-          expected:         {
+          expected: {
             'schedule' => 'daily',
-            'every'    => 2,
+            'every' => 2,
             'disable_time_zone_synchronization' => false,
           },
         },
         {
-          i_trigger:         {
+          i_trigger: {
             Type: v2::Type::TASK_TRIGGER_WEEKLY,
             DaysOfWeek: 0b1111111,
             WeeksInterval: 2,
             RandomDelay: 'P2DT5S', # ignored
           },
-          expected:         {
-            'schedule'    => 'weekly',
-            'every'       => 2,
+          expected: {
+            'schedule' => 'weekly',
+            'every' => 2,
             'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
             'disable_time_zone_synchronization' => false,
           },
         },
         {
-          i_trigger:         {
+          i_trigger: {
             Type: v2::Type::TASK_TRIGGER_MONTHLY,
             DaysOfMonth: 0b01111111111111111111111111111111,
             MonthsOfYear: 1,
             RunOnLastDayOfMonth: true,
             RandomDelay: 'P2DT5S', # ignored
           },
-          expected:         {
+          expected: {
             'schedule' => 'monthly',
-            'months'   => [1],
-            'on'       => (1..31).to_a + ['last'],
+            'months' => [1],
+            'on' => (1..31).to_a + ['last'],
             'disable_time_zone_synchronization' => false,
           },
         },
         {
-          i_trigger:         {
+          i_trigger: {
             Type: v2::Type::TASK_TRIGGER_MONTHLYDOW,
             DaysOfWeek: 0b1111111,
             # HACK: choose only the last week selected for test conversion, as this LOSES information
@@ -1079,11 +1079,11 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             RunOnLastWeekOfMonth: true,
             RandomDelay: 'P2DT5S', # ignored
           },
-          expected:         {
-            'schedule'         => 'monthly',
-            'months'           => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          expected: {
+            'schedule' => 'monthly',
+            'months' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             'which_occurrence' => 'last',
-            'day_of_week'      => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
+            'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
             'disable_time_zone_synchronization' => false,
           },
         },

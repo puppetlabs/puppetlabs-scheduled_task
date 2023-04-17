@@ -133,19 +133,19 @@ module PuppetX::PuppetLabs::ScheduledTask
         when 'daily'
           {
             'schedule' => 'daily',
-            'every'    => 1,
+            'every' => 1,
           }
         when 'weekly'
           {
-            'schedule'     => 'weekly',
+            'schedule' => 'weekly',
             'days_of_week' => V2::Day.names,
-            'every'        => 1,
+            'every' => 1,
           }
         when 'monthly'
           {
             'schedule' => 'monthly',
-            'months'   => V2::Month.indexes,
-            'days'     => 0,
+            'months' => V2::Month.indexes,
+            'days' => 0,
           }
         end
       end
@@ -154,11 +154,11 @@ module PuppetX::PuppetLabs::ScheduledTask
       def self.default_trigger_for(schedule = 'once')
         now = Time.now
         {
-          'enabled'             => true,
-          'minutes_interval'    => 0,
-          'minutes_duration'    => 0,
-          'start_date'          => format_date(now),
-          'start_time'          => format_time(now),
+          'enabled' => true,
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'start_date' => format_date(now),
+          'start_time' => format_time(now),
         }.merge(default_trigger_settings_for(schedule))
       end
 
@@ -362,13 +362,13 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         # Day name to HEX map
         DAY_CONST_MAP = {
-          'sun'   => TASK_SUNDAY,
-          'mon'   => TASK_MONDAY,
-          'tues'  => TASK_TUESDAY,
-          'wed'   => TASK_WEDNESDAY,
+          'sun' => TASK_SUNDAY,
+          'mon' => TASK_MONDAY,
+          'tues' => TASK_TUESDAY,
+          'wed' => TASK_WEDNESDAY,
           'thurs' => TASK_THURSDAY,
-          'fri'   => TASK_FRIDAY,
-          'sat'   => TASK_SATURDAY,
+          'fri' => TASK_FRIDAY,
+          'sat' => TASK_SATURDAY,
         }.freeze
 
         # Returns day names
@@ -515,15 +515,15 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         # Month number to HEX map
         MONTHNUM_CONST_MAP = {
-          1  => TASK_JANUARY,
-          2  => TASK_FEBRUARY,
-          3  => TASK_MARCH,
-          4  => TASK_APRIL,
-          5  => TASK_MAY,
-          6  => TASK_JUNE,
-          7  => TASK_JULY,
-          8  => TASK_AUGUST,
-          9  => TASK_SEPTEMBER,
+          1 => TASK_JANUARY,
+          2 => TASK_FEBRUARY,
+          3 => TASK_MARCH,
+          4 => TASK_APRIL,
+          5 => TASK_MAY,
+          6 => TASK_JUNE,
+          7 => TASK_JULY,
+          8 => TASK_AUGUST,
+          9 => TASK_SEPTEMBER,
           10 => TASK_OCTOBER,
           11 => TASK_NOVEMBER,
           12 => TASK_DECEMBER,
@@ -583,11 +583,11 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         # Week of the month to HEX map
         WEEK_OF_MONTH_CONST_MAP = {
-          'first'  => FIRST,
+          'first' => FIRST,
           'second' => SECOND,
-          'third'  => THIRD,
+          'third' => THIRD,
           'fourth' => FOURTH,
-          'last'   => LAST,
+          'last' => LAST,
         }.freeze
 
         # Converts names to bitmask
@@ -675,18 +675,18 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       # Trigger type to day map
       SCHEDULE_BASED_TRIGGER_MAP = {
-        Type::TASK_TRIGGER_DAILY      => 'daily',
-        Type::TASK_TRIGGER_WEEKLY     => 'weekly',
+        Type::TASK_TRIGGER_DAILY => 'daily',
+        Type::TASK_TRIGGER_WEEKLY => 'weekly',
         # NOTE: monthly uses context to determine MONTHLY or MONTHLYDOW
-        Type::TASK_TRIGGER_MONTHLY    => 'monthly',
+        Type::TASK_TRIGGER_MONTHLY => 'monthly',
         Type::TASK_TRIGGER_MONTHLYDOW => 'monthly',
-        Type::TASK_TRIGGER_TIME       => 'once',
+        Type::TASK_TRIGGER_TIME => 'once',
       }.freeze
 
       # Event based trigger map
       EVENT_BASED_TRIGGER_MAP = {
-        Type::TASK_TRIGGER_BOOT                 => 'boot',
-        Type::TASK_TRIGGER_LOGON                => 'logon',
+        Type::TASK_TRIGGER_BOOT => 'boot',
+        Type::TASK_TRIGGER_LOGON => 'logon',
         # The triggers below are not yet supported.
         # Type::TASK_TRIGGER_EVENT                => 'event',
         # Type::TASK_TRIGGER_IDLE                 => 'idle',
@@ -719,11 +719,11 @@ module PuppetX::PuppetLabs::ScheduledTask
         _end_boundary = Trigger.iso8601_datetime_to_local(i_trigger.EndBoundary)
 
         manifest_hash = {
-          'start_date'                        => start_boundary ? Manifest.format_date(start_boundary) : '',
-          'start_time'                        => start_boundary ? Manifest.format_time(start_boundary) : '',
-          'enabled'                           => i_trigger.Enabled,
-          'minutes_interval'                  => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
-          'minutes_duration'                  => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
+          'start_date' => start_boundary ? Manifest.format_date(start_boundary) : '',
+          'start_time' => start_boundary ? Manifest.format_time(start_boundary) : '',
+          'enabled' => i_trigger.Enabled,
+          'minutes_interval' => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
+          'minutes_duration' => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
           'disable_time_zone_synchronization' => start_boundary ? !%r{(Z|[+-]\d\d:\d\d)$}.match?(i_trigger.StartBoundary) : false,
         }
 
@@ -734,20 +734,20 @@ module PuppetX::PuppetLabs::ScheduledTask
           manifest_hash['schedule'] = 'daily'
           manifest_hash['every'] = i_trigger.DaysInterval
         when Type::TASK_TRIGGER_WEEKLY
-          manifest_hash.merge!('schedule'    => 'weekly',
-                               'every'       => i_trigger.WeeksInterval,
+          manifest_hash.merge!('schedule' => 'weekly',
+                               'every' => i_trigger.WeeksInterval,
                                'day_of_week' => Day.bitmask_to_names(i_trigger.DaysOfWeek))
         when Type::TASK_TRIGGER_MONTHLY
           manifest_hash.merge!('schedule' => 'monthly',
-                               'months'   => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
-                               'on'       => Days.bitmask_to_indexes(i_trigger.DaysOfMonth, i_trigger.RunOnLastDayOfMonth))
+                               'months' => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
+                               'on' => Days.bitmask_to_indexes(i_trigger.DaysOfMonth, i_trigger.RunOnLastDayOfMonth))
         when Type::TASK_TRIGGER_MONTHLYDOW
           occurrences = V2::WeeksOfMonth.bitmask_to_names(i_trigger.WeeksOfMonth)
-          manifest_hash.merge!('schedule'         => 'monthly',
-                               'months'           => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
+          manifest_hash.merge!('schedule' => 'monthly',
+                               'months' => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
                                # HACK: choose only the first week selected when converting - this LOSES information
                                'which_occurrence' => occurrences.first || '',
-                               'day_of_week'      => Day.bitmask_to_names(i_trigger.DaysOfWeek))
+                               'day_of_week' => Day.bitmask_to_names(i_trigger.DaysOfWeek))
           # MODULES-10101: We will need to evaluate whether the value 'last' has been applied to the WeekOfMonth
           # parameter by inspecting the value of Trigger::RunOnLastWeekOfMonth. See JIRA ticket for more details.
           manifest_hash['which_occurrence'] = 'last' if i_trigger.RunOnLastWeekOfMonth

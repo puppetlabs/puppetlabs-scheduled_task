@@ -48,309 +48,309 @@ task_providers.each do |task_provider|
           it 'handles a single daily trigger' do
             mock_task.expects(:triggers).returns([{
                                                    'start_date' => '2011-9-12',
-                                                   'start_time'       => '13:20',
-                                                   'schedule'         => 'daily',
-                                                   'every'            => '2',
+                                                   'start_time' => '13:20',
+                                                   'schedule' => 'daily',
+                                                   'every' => '2',
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
-                                                   'enabled'          => true,
-                                                   'index'            => 0,
+                                                   'enabled' => true,
+                                                   'index' => 0,
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
-                                                      'start_date'       => '2011-9-12',
-                                                      'start_time'       => '13:20',
-                                                      'schedule'         => 'daily',
-                                                      'every'            => '2',
+                                                      'start_date' => '2011-9-12',
+                                                      'start_time' => '13:20',
+                                                      'schedule' => 'daily',
+                                                      'every' => '2',
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
-                                                      'enabled'          => true,
-                                                      'index'            => 0,
+                                                      'enabled' => true,
+                                                      'index' => 0,
                                                     }])
           end
 
           it 'handles a single daily with repeat trigger' do
             mock_task.expects(:triggers).returns([{
                                                    'start_date' => '2011-9-12',
-                                                   'start_time'       => '13:20',
-                                                   'schedule'         => 'daily',
-                                                   'every'            => '2',
+                                                   'start_time' => '13:20',
+                                                   'schedule' => 'daily',
+                                                   'every' => '2',
                                                    'minutes_interval' => 60,
                                                    'minutes_duration' => 180,
-                                                   'enabled'          => true,
-                                                   'index'            => 0,
+                                                   'enabled' => true,
+                                                   'index' => 0,
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
-                                                      'start_date'       => '2011-9-12',
-                                                      'start_time'       => '13:20',
-                                                      'schedule'         => 'daily',
-                                                      'every'            => '2',
+                                                      'start_date' => '2011-9-12',
+                                                      'start_time' => '13:20',
+                                                      'schedule' => 'daily',
+                                                      'every' => '2',
                                                       'minutes_interval' => 60,
                                                       'minutes_duration' => 180,
-                                                      'enabled'          => true,
-                                                      'index'            => 0,
+                                                      'enabled' => true,
+                                                      'index' => 0,
                                                     }])
           end
 
           it 'handles a single weekly trigger' do
             mock_task.expects(:triggers).returns([{
                                                    'start_date' => '2011-9-12',
-                                                   'start_time'       => '13:20',
-                                                   'schedule'         => 'weekly',
-                                                   'every'            => '2',
-                                                   'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
+                                                   'start_time' => '13:20',
+                                                   'schedule' => 'weekly',
+                                                   'every' => '2',
+                                                   'day_of_week' => ['sun', 'mon', 'wed', 'fri'],
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
-                                                   'enabled'          => true,
-                                                   'index'            => 0,
+                                                   'enabled' => true,
+                                                   'index' => 0,
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
-                                                      'start_date'       => '2011-9-12',
-                                                      'start_time'       => '13:20',
-                                                      'schedule'         => 'weekly',
-                                                      'every'            => '2',
-                                                      'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
+                                                      'start_date' => '2011-9-12',
+                                                      'start_time' => '13:20',
+                                                      'schedule' => 'weekly',
+                                                      'every' => '2',
+                                                      'day_of_week' => ['sun', 'mon', 'wed', 'fri'],
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
-                                                      'enabled'          => true,
-                                                      'index'            => 0,
+                                                      'enabled' => true,
+                                                      'index' => 0,
                                                     }])
           end
 
           it 'handles a single monthly date-based trigger' do
             mock_task.expects(:triggers).returns([{
                                                    'start_date' => '2011-9-12',
-                                                   'start_time'       => '13:20',
-                                                   'schedule'         => 'monthly',
-                                                   'months'           => [1, 2, 8, 9, 12],
-                                                   'on'               => [1, 3, 5, 15, 'last'],
+                                                   'start_time' => '13:20',
+                                                   'schedule' => 'monthly',
+                                                   'months' => [1, 2, 8, 9, 12],
+                                                   'on' => [1, 3, 5, 15, 'last'],
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
-                                                   'enabled'          => true,
-                                                   'index'            => 0,
+                                                   'enabled' => true,
+                                                   'index' => 0,
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
-                                                      'start_date'       => '2011-9-12',
-                                                      'start_time'       => '13:20',
-                                                      'schedule'         => 'monthly',
-                                                      'months'           => [1, 2, 8, 9, 12],
-                                                      'on'               => [1, 3, 5, 15, 'last'],
+                                                      'start_date' => '2011-9-12',
+                                                      'start_time' => '13:20',
+                                                      'schedule' => 'monthly',
+                                                      'months' => [1, 2, 8, 9, 12],
+                                                      'on' => [1, 3, 5, 15, 'last'],
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
-                                                      'enabled'          => true,
-                                                      'index'            => 0,
+                                                      'enabled' => true,
+                                                      'index' => 0,
                                                     }])
           end
 
           it 'handles a single monthly day-of-week-based trigger' do
             mock_task.expects(:triggers).returns([{
                                                    'start_date' => '2011-9-12',
-                                                   'start_time'       => '13:20',
-                                                   'schedule'         => 'monthly',
-                                                   'months'           => [1, 2, 8, 9, 12],
+                                                   'start_time' => '13:20',
+                                                   'schedule' => 'monthly',
+                                                   'months' => [1, 2, 8, 9, 12],
                                                    'which_occurrence' => 'first',
-                                                   'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
-                                                   'enabled'          => true,
-                                                   'index'            => 0,
+                                                   'day_of_week' => ['sun', 'mon', 'wed', 'fri'],
+                                                   'enabled' => true,
+                                                   'index' => 0,
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
-                                                      'start_date'       => '2011-9-12',
-                                                      'start_time'       => '13:20',
-                                                      'schedule'         => 'monthly',
-                                                      'months'           => [1, 2, 8, 9, 12],
+                                                      'start_date' => '2011-9-12',
+                                                      'start_time' => '13:20',
+                                                      'schedule' => 'monthly',
+                                                      'months' => [1, 2, 8, 9, 12],
                                                       'which_occurrence' => 'first',
-                                                      'day_of_week'      => ['sun', 'mon', 'wed', 'fri'],
-                                                      'enabled'          => true,
-                                                      'index'            => 0,
+                                                      'day_of_week' => ['sun', 'mon', 'wed', 'fri'],
+                                                      'enabled' => true,
+                                                      'index' => 0,
                                                     }])
           end
 
           it 'handles a single one-time trigger' do
             mock_task.expects(:triggers).returns([{
                                                    'start_date' => '2011-9-12',
-                                                   'start_time'       => '13:20',
-                                                   'schedule'         => 'once',
+                                                   'start_time' => '13:20',
+                                                   'schedule' => 'once',
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
-                                                   'enabled'          => true,
-                                                   'index'            => 0,
+                                                   'enabled' => true,
+                                                   'index' => 0,
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
-                                                      'start_date'       => '2011-9-12',
-                                                      'start_time'       => '13:20',
-                                                      'schedule'         => 'once',
+                                                      'start_date' => '2011-9-12',
+                                                      'start_time' => '13:20',
+                                                      'schedule' => 'once',
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
-                                                      'enabled'          => true,
-                                                      'index'            => 0,
+                                                      'enabled' => true,
+                                                      'index' => 0,
                                                     }])
           end
         end
 
         it 'handles multiple triggers' do
           mock_task.expects(:triggers).returns([{
-                                                 'start_date'       => '2011-10-13',
-                                                 'start_time'       => '14:21',
-                                                 'schedule'         => 'once',
+                                                 'start_date' => '2011-10-13',
+                                                 'start_time' => '14:21',
+                                                 'schedule' => 'once',
                                                  'minutes_interval' => 0,
                                                  'minutes_duration' => 0,
-                                                 'enabled'          => true,
-                                                 'index'            => 0,
+                                                 'enabled' => true,
+                                                 'index' => 0,
                                                },
                                                 {
-                                                  'start_date'       => '2012-11-14',
-                                                  'start_time'       => '15:22',
-                                                  'schedule'         => 'once',
+                                                  'start_date' => '2012-11-14',
+                                                  'start_time' => '15:22',
+                                                  'schedule' => 'once',
                                                   'minutes_interval' => 0,
                                                   'minutes_duration' => 0,
-                                                  'enabled'          => true,
-                                                  'index'            => 1,
+                                                  'enabled' => true,
+                                                  'index' => 1,
                                                 },
                                                 {
-                                                  'start_date'       => '2013-12-15',
-                                                  'start_time'       => '16:23',
-                                                  'schedule'         => 'once',
+                                                  'start_date' => '2013-12-15',
+                                                  'start_time' => '16:23',
+                                                  'schedule' => 'once',
                                                   'minutes_interval' => 0,
                                                   'minutes_duration' => 0,
-                                                  'enabled'          => true,
-                                                  'index'            => 2,
+                                                  'enabled' => true,
+                                                  'index' => 2,
                                                 }])
 
           expect(resource.provider.trigger).to match_array([
                                                              {
-                                                               'start_date'       => '2011-10-13',
-                                                               'start_time'       => '14:21',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2011-10-13',
+                                                               'start_time' => '14:21',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 0,
                                                                'minutes_duration' => 0,
-                                                               'enabled'          => true,
-                                                               'index'            => 0,
+                                                               'enabled' => true,
+                                                               'index' => 0,
                                                              },
                                                              {
-                                                               'start_date'       => '2012-11-14',
-                                                               'start_time'       => '15:22',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2012-11-14',
+                                                               'start_time' => '15:22',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 0,
                                                                'minutes_duration' => 0,
-                                                               'enabled'          => true,
-                                                               'index'            => 1,
+                                                               'enabled' => true,
+                                                               'index' => 1,
                                                              },
                                                              {
-                                                               'start_date'       => '2013-12-15',
-                                                               'start_time'       => '16:23',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2013-12-15',
+                                                               'start_time' => '16:23',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 0,
                                                                'minutes_duration' => 0,
-                                                               'enabled'          => true,
-                                                               'index'            => 2,
+                                                               'enabled' => true,
+                                                               'index' => 2,
                                                              },
                                                            ])
         end
 
         it 'handles multiple triggers with repeat triggers' do
           mock_task.expects(:triggers).returns([{
-                                                 'start_date'       => '2011-10-13',
-                                                 'start_time'       => '14:21',
-                                                 'schedule'         => 'once',
+                                                 'start_date' => '2011-10-13',
+                                                 'start_time' => '14:21',
+                                                 'schedule' => 'once',
                                                  'minutes_interval' => 15,
                                                  'minutes_duration' => 60,
-                                                 'enabled'          => true,
-                                                 'index'            => 0,
+                                                 'enabled' => true,
+                                                 'index' => 0,
                                                },
                                                 {
-                                                  'start_date'       => '2012-11-14',
-                                                  'start_time'       => '15:22',
-                                                  'schedule'         => 'once',
+                                                  'start_date' => '2012-11-14',
+                                                  'start_time' => '15:22',
+                                                  'schedule' => 'once',
                                                   'minutes_interval' => 30,
                                                   'minutes_duration' => 120,
-                                                  'enabled'          => true,
-                                                  'index'            => 1,
+                                                  'enabled' => true,
+                                                  'index' => 1,
                                                 },
                                                 {
-                                                  'start_date'       => '2013-12-15',
-                                                  'start_time'       => '16:23',
-                                                  'schedule'         => 'once',
+                                                  'start_date' => '2013-12-15',
+                                                  'start_time' => '16:23',
+                                                  'schedule' => 'once',
                                                   'minutes_interval' => 60,
                                                   'minutes_duration' => 240,
-                                                  'enabled'          => true,
-                                                  'index'            => 2,
+                                                  'enabled' => true,
+                                                  'index' => 2,
                                                 }])
 
           expect(resource.provider.trigger).to match_array([
                                                              {
-                                                               'start_date'       => '2011-10-13',
-                                                               'start_time'       => '14:21',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2011-10-13',
+                                                               'start_time' => '14:21',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 15,
                                                                'minutes_duration' => 60,
-                                                               'enabled'          => true,
-                                                               'index'            => 0,
+                                                               'enabled' => true,
+                                                               'index' => 0,
                                                              },
                                                              {
-                                                               'start_date'       => '2012-11-14',
-                                                               'start_time'       => '15:22',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2012-11-14',
+                                                               'start_time' => '15:22',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 30,
                                                                'minutes_duration' => 120,
-                                                               'enabled'          => true,
-                                                               'index'            => 1,
+                                                               'enabled' => true,
+                                                               'index' => 1,
                                                              },
                                                              {
-                                                               'start_date'       => '2013-12-15',
-                                                               'start_time'       => '16:23',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2013-12-15',
+                                                               'start_time' => '16:23',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 60,
                                                                'minutes_duration' => 240,
-                                                               'enabled'          => true,
-                                                               'index'            => 2,
+                                                               'enabled' => true,
+                                                               'index' => 2,
                                                              },
                                                            ])
         end
 
         it 'skips triggers Win32::TaskScheduler cannot handle' do
           mock_task.expects(:triggers).returns([{
-                                                 'start_date'       => '2011-10-13',
-                                                 'start_time'       => '14:21',
-                                                 'schedule'         => 'once',
+                                                 'start_date' => '2011-10-13',
+                                                 'start_time' => '14:21',
+                                                 'schedule' => 'once',
                                                  'minutes_interval' => 0,
                                                  'minutes_duration' => 0,
-                                                 'enabled'          => true,
-                                                 'index'            => 0,
+                                                 'enabled' => true,
+                                                 'index' => 0,
                                                },
                                                 nil,
                                                 {
-                                                  'start_date'       => '2013-12-15',
-                                                  'start_time'       => '16:23',
-                                                  'schedule'         => 'once',
+                                                  'start_date' => '2013-12-15',
+                                                  'start_time' => '16:23',
+                                                  'schedule' => 'once',
                                                   'minutes_interval' => 0,
                                                   'minutes_duration' => 0,
-                                                  'enabled'          => true,
-                                                  'index'            => 2,
+                                                  'enabled' => true,
+                                                  'index' => 2,
                                                 }])
 
           expect(resource.provider.trigger).to match_array([
                                                              {
-                                                               'start_date'       => '2011-10-13',
-                                                               'start_time'       => '14:21',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2011-10-13',
+                                                               'start_time' => '14:21',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 0,
                                                                'minutes_duration' => 0,
-                                                               'enabled'          => true,
-                                                               'index'            => 0,
+                                                               'enabled' => true,
+                                                               'index' => 0,
                                                              },
                                                              {
-                                                               'start_date'       => '2013-12-15',
-                                                               'start_time'       => '16:23',
-                                                               'schedule'         => 'once',
+                                                               'start_date' => '2013-12-15',
+                                                               'start_time' => '16:23',
+                                                               'schedule' => 'once',
                                                                'minutes_interval' => 0,
                                                                'minutes_duration' => 0,
-                                                               'enabled'          => true,
-                                                               'index'            => 2,
+                                                               'enabled' => true,
+                                                               'index' => 2,
                                                              },
                                                            ])
         end
@@ -726,19 +726,19 @@ task_providers.each do |task_provider|
       describe 'comparing monthly day-of-week-based triggers' do
         it "considers 'desired' triggers not specifying 'months' to have the same value as the 'current' trigger" do
           current = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
           desired = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-09-12',
-            'start_time'       => '15:30',
+            'schedule' => 'monthly',
+            'start_date' => '2011-09-12',
+            'start_time' => '15:30',
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
 
           expect(provider).to be_triggers_same(current, desired)
@@ -746,20 +746,20 @@ task_providers.each do |task_provider|
 
         it "considers different 'start_dates' as different triggers" do
           current = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
           desired = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-10-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-10-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -767,20 +767,20 @@ task_providers.each do |task_provider|
 
         it "considers different 'start_times' as different triggers" do
           current = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
           desired = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-09-12',
-            'start_time'       => '22:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-09-12',
+            'start_time' => '22:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -788,20 +788,20 @@ task_providers.each do |task_provider|
 
         it "considers different 'months' as different triggers" do
           current = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
           desired = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-09-12',
-            'start_time'       => '15:30',
-            'months'           => [3, 5, 7, 9],
+            'schedule' => 'monthly',
+            'start_date' => '2011-09-12',
+            'start_time' => '15:30',
+            'months' => [3, 5, 7, 9],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -809,20 +809,20 @@ task_providers.each do |task_provider|
 
         it "considers different 'which_occurrence' as different triggers" do
           current = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
           desired = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-09-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-09-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'last',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -830,20 +830,20 @@ task_providers.each do |task_provider|
 
         it "considers different 'day_of_week' as different triggers" do
           current = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
           desired = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-09-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-09-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['fri'],
+            'day_of_week' => ['fri'],
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -851,12 +851,12 @@ task_providers.each do |task_provider|
 
         it 'considers triggers that are the same as being the same' do
           trigger = {
-            'schedule'         => 'monthly',
-            'start_date'       => '2011-9-12',
-            'start_time'       => '15:30',
-            'months'           => [3],
+            'schedule' => 'monthly',
+            'start_date' => '2011-9-12',
+            'start_time' => '15:30',
+            'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week'      => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat'],
           }
 
           expect(provider).to be_triggers_same(trigger, trigger)
