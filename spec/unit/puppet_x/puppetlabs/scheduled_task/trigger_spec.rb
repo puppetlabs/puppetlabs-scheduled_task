@@ -51,7 +51,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'Which_Occurrence' => 'first',
             'DAY_OF_week' => ['mon'],
             'MINutes_intERVAL' => nil,
-            'minutes_duration' => nil,
+            'minutes_duration' => nil
           },
           # all keys are lower
           expected: {
@@ -65,8 +65,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'which_occurrence' => 'first',
             'day_of_week' => ['mon'],
             'minutes_interval' => nil,
-            'minutes_duration' => nil,
-          },
+            'minutes_duration' => nil
+          }
         },
       ].each do |value|
         it "returns downcased keys #{value[:expected]} given a hash with valid case-insensitive keys #{value[:input]}" do
@@ -90,7 +90,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         {
           'schedule' => 'once',
           'start_date' => '2018-2-3',
-          'start_time' => '01:12',
+          'start_time' => '01:12'
         }.freeze
 
       it 'canonicalizes `start_date` to %Y-%-m-%-d' do
@@ -272,7 +272,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         let(:puppet_trigger) do
           {
             'start_date' => '2011-1-1',
-            'start_time' => '01:10',
+            'start_time' => '01:10'
           }
         end
         let(:trigger) do
@@ -616,9 +616,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             day: '4',
             minute: '5',
             hour: '2',
-            second: nil,
+            second: nil
           },
-          expected_seconds: (DAYS_IN_YEAR / 12 * SECONDS_IN_DAY) + (4 * SECONDS_IN_DAY) + (5 * 60) + (2 * SECONDS_IN_HOUR),
+          expected_seconds: (DAYS_IN_YEAR / 12 * SECONDS_IN_DAY) + (4 * SECONDS_IN_DAY) + (5 * 60) + (2 * SECONDS_IN_HOUR)
         },
         {
           duration: 'PT20M',
@@ -628,9 +628,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             day: nil,
             minute: '20',
             hour: nil,
-            second: nil,
+            second: nil
           },
-          expected_seconds: 20 * 60,
+          expected_seconds: 20 * 60
         },
         {
           duration: 'P1Y2M30DT12H60M60S',
@@ -640,9 +640,9 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             day: '30',
             minute: '60',
             hour: '12',
-            second: '60',
+            second: '60'
           },
-          expected_seconds: (DAYS_IN_YEAR * SECONDS_IN_DAY) + ((DAYS_IN_YEAR / 12 * 2) * SECONDS_IN_DAY) + (30 * SECONDS_IN_DAY) + (60 * 60) + (SECONDS_IN_HOUR * 12) + 60,
+          expected_seconds: (DAYS_IN_YEAR * SECONDS_IN_DAY) + ((DAYS_IN_YEAR / 12 * 2) * SECONDS_IN_DAY) + (30 * SECONDS_IN_DAY) + (60 * 60) + (SECONDS_IN_HOUR * 12) + 60
         },
       ].freeze
 
@@ -717,7 +717,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { days: ['sun', 'sat'], bitmask: 0b1000001 },
         {
           days: ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-          bitmask: ALL_DAY_SET,
+          bitmask: ALL_DAY_SET
         },
       ].freeze
 
@@ -895,7 +895,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         { weeks: ['fourth', 'last'], bitmask: 0b11000 },
         {
           weeks: ['first', 'second', 'third', 'fourth', 'last'],
-          bitmask: ALL_WEEKS_OF_MONTH_SET,
+          bitmask: ALL_WEEKS_OF_MONTH_SET
         },
       ].freeze
 
@@ -945,7 +945,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         ExecutionTimeLimit: '',
         StartBoundary: '',
         EndBoundary: '',
-        Enabled: true,
+        Enabled: true
       }.freeze
 
       [
@@ -1007,7 +1007,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         # StartBoundary is usually specified in local time without TZ
         StartBoundary: '2005-10-11T13:21:17' + Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone,
         EndBoundary: '2005-10-11T13:21:17Z',
-        Enabled: true,
+        Enabled: true
       }.freeze
 
       # manifest specifies dates / times as local time
@@ -1016,45 +1016,45 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         'start_time' => '13:21',
         'enabled' => true,
         'minutes_interval' => 20, # PT20M
-        'minutes_duration' => 20, # PT20M
+        'minutes_duration' => 20 # PT20M
       }.freeze
 
       [
         {
           i_trigger: {
             Type: v2::Type::TASK_TRIGGER_TIME,
-            RandomDelay: 'P2DT5S', # ignored
+            RandomDelay: 'P2DT5S' # ignored
           },
           expected: {
             'schedule' => 'once',
-            'disable_time_zone_synchronization' => false,
-          },
+            'disable_time_zone_synchronization' => false
+          }
         },
         {
           i_trigger: {
             Type: v2::Type::TASK_TRIGGER_DAILY,
             DaysInterval: 2,
-            RandomDelay: 'P2DT5S', # ignored
+            RandomDelay: 'P2DT5S' # ignored
           },
           expected: {
             'schedule' => 'daily',
             'every' => 2,
-            'disable_time_zone_synchronization' => false,
-          },
+            'disable_time_zone_synchronization' => false
+          }
         },
         {
           i_trigger: {
             Type: v2::Type::TASK_TRIGGER_WEEKLY,
             DaysOfWeek: 0b1111111,
             WeeksInterval: 2,
-            RandomDelay: 'P2DT5S', # ignored
+            RandomDelay: 'P2DT5S' # ignored
           },
           expected: {
             'schedule' => 'weekly',
             'every' => 2,
             'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-            'disable_time_zone_synchronization' => false,
-          },
+            'disable_time_zone_synchronization' => false
+          }
         },
         {
           i_trigger: {
@@ -1062,14 +1062,14 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             DaysOfMonth: 0b01111111111111111111111111111111,
             MonthsOfYear: 1,
             RunOnLastDayOfMonth: true,
-            RandomDelay: 'P2DT5S', # ignored
+            RandomDelay: 'P2DT5S' # ignored
           },
           expected: {
             'schedule' => 'monthly',
             'months' => [1],
             'on' => (1..31).to_a + ['last'],
-            'disable_time_zone_synchronization' => false,
-          },
+            'disable_time_zone_synchronization' => false
+          }
         },
         {
           i_trigger: {
@@ -1079,15 +1079,15 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             WeeksOfMonth: 0b10000,
             MonthsOfYear: 0b111111111111,
             RunOnLastWeekOfMonth: true,
-            RandomDelay: 'P2DT5S', # ignored
+            RandomDelay: 'P2DT5S' # ignored
           },
           expected: {
             'schedule' => 'monthly',
             'months' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             'which_occurrence' => 'last',
             'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-            'disable_time_zone_synchronization' => false,
-          },
+            'disable_time_zone_synchronization' => false
+          }
         },
       ].each do |trigger_details|
         it "converts a full ITrigger type #{v2::TYPE_MANIFEST_MAP[trigger_details[:i_trigger][:Type]]} to the equivalent V1 hash" do

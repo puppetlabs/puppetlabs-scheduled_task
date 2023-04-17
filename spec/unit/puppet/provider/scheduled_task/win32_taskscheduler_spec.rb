@@ -54,7 +54,7 @@ task_providers.each do |task_provider|
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
                                                    'enabled' => true,
-                                                   'index' => 0,
+                                                   'index' => 0
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
@@ -65,7 +65,7 @@ task_providers.each do |task_provider|
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
                                                       'enabled' => true,
-                                                      'index' => 0,
+                                                      'index' => 0
                                                     }])
           end
 
@@ -78,7 +78,7 @@ task_providers.each do |task_provider|
                                                    'minutes_interval' => 60,
                                                    'minutes_duration' => 180,
                                                    'enabled' => true,
-                                                   'index' => 0,
+                                                   'index' => 0
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
@@ -89,7 +89,7 @@ task_providers.each do |task_provider|
                                                       'minutes_interval' => 60,
                                                       'minutes_duration' => 180,
                                                       'enabled' => true,
-                                                      'index' => 0,
+                                                      'index' => 0
                                                     }])
           end
 
@@ -103,7 +103,7 @@ task_providers.each do |task_provider|
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
                                                    'enabled' => true,
-                                                   'index' => 0,
+                                                   'index' => 0
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
@@ -115,7 +115,7 @@ task_providers.each do |task_provider|
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
                                                       'enabled' => true,
-                                                      'index' => 0,
+                                                      'index' => 0
                                                     }])
           end
 
@@ -129,7 +129,7 @@ task_providers.each do |task_provider|
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
                                                    'enabled' => true,
-                                                   'index' => 0,
+                                                   'index' => 0
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
@@ -141,7 +141,7 @@ task_providers.each do |task_provider|
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
                                                       'enabled' => true,
-                                                      'index' => 0,
+                                                      'index' => 0
                                                     }])
           end
 
@@ -154,7 +154,7 @@ task_providers.each do |task_provider|
                                                    'which_occurrence' => 'first',
                                                    'day_of_week' => ['sun', 'mon', 'wed', 'fri'],
                                                    'enabled' => true,
-                                                   'index' => 0,
+                                                   'index' => 0
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
@@ -165,7 +165,7 @@ task_providers.each do |task_provider|
                                                       'which_occurrence' => 'first',
                                                       'day_of_week' => ['sun', 'mon', 'wed', 'fri'],
                                                       'enabled' => true,
-                                                      'index' => 0,
+                                                      'index' => 0
                                                     }])
           end
 
@@ -177,7 +177,7 @@ task_providers.each do |task_provider|
                                                    'minutes_interval' => 0,
                                                    'minutes_duration' => 0,
                                                    'enabled' => true,
-                                                   'index' => 0,
+                                                   'index' => 0
                                                  }])
 
             expect(resource.provider.trigger).to eq([{
@@ -187,7 +187,7 @@ task_providers.each do |task_provider|
                                                       'minutes_interval' => 0,
                                                       'minutes_duration' => 0,
                                                       'enabled' => true,
-                                                      'index' => 0,
+                                                      'index' => 0
                                                     }])
           end
         end
@@ -200,7 +200,7 @@ task_providers.each do |task_provider|
                                                  'minutes_interval' => 0,
                                                  'minutes_duration' => 0,
                                                  'enabled' => true,
-                                                 'index' => 0,
+                                                 'index' => 0
                                                },
                                                 {
                                                   'start_date' => '2012-11-14',
@@ -209,7 +209,7 @@ task_providers.each do |task_provider|
                                                   'minutes_interval' => 0,
                                                   'minutes_duration' => 0,
                                                   'enabled' => true,
-                                                  'index' => 1,
+                                                  'index' => 1
                                                 },
                                                 {
                                                   'start_date' => '2013-12-15',
@@ -218,7 +218,7 @@ task_providers.each do |task_provider|
                                                   'minutes_interval' => 0,
                                                   'minutes_duration' => 0,
                                                   'enabled' => true,
-                                                  'index' => 2,
+                                                  'index' => 2
                                                 }])
 
           expect(resource.provider.trigger).to contain_exactly({
@@ -228,7 +228,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 0,
                                                                  'minutes_duration' => 0,
                                                                  'enabled' => true,
-                                                                 'index' => 0,
+                                                                 'index' => 0
                                                                }, {
                                                                  'start_date' => '2012-11-14',
                                                                  'start_time' => '15:22',
@@ -236,7 +236,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 0,
                                                                  'minutes_duration' => 0,
                                                                  'enabled' => true,
-                                                                 'index' => 1,
+                                                                 'index' => 1
                                                                }, {
                                                                  'start_date' => '2013-12-15',
                                                                  'start_time' => '16:23',
@@ -244,7 +244,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 0,
                                                                  'minutes_duration' => 0,
                                                                  'enabled' => true,
-                                                                 'index' => 2,
+                                                                 'index' => 2
                                                                })
         end
 
@@ -256,7 +256,7 @@ task_providers.each do |task_provider|
                                                  'minutes_interval' => 15,
                                                  'minutes_duration' => 60,
                                                  'enabled' => true,
-                                                 'index' => 0,
+                                                 'index' => 0
                                                },
                                                 {
                                                   'start_date' => '2012-11-14',
@@ -265,7 +265,7 @@ task_providers.each do |task_provider|
                                                   'minutes_interval' => 30,
                                                   'minutes_duration' => 120,
                                                   'enabled' => true,
-                                                  'index' => 1,
+                                                  'index' => 1
                                                 },
                                                 {
                                                   'start_date' => '2013-12-15',
@@ -274,7 +274,7 @@ task_providers.each do |task_provider|
                                                   'minutes_interval' => 60,
                                                   'minutes_duration' => 240,
                                                   'enabled' => true,
-                                                  'index' => 2,
+                                                  'index' => 2
                                                 }])
 
           expect(resource.provider.trigger).to contain_exactly({
@@ -284,7 +284,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 15,
                                                                  'minutes_duration' => 60,
                                                                  'enabled' => true,
-                                                                 'index' => 0,
+                                                                 'index' => 0
                                                                }, {
                                                                  'start_date' => '2012-11-14',
                                                                  'start_time' => '15:22',
@@ -292,7 +292,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 30,
                                                                  'minutes_duration' => 120,
                                                                  'enabled' => true,
-                                                                 'index' => 1,
+                                                                 'index' => 1
                                                                }, {
                                                                  'start_date' => '2013-12-15',
                                                                  'start_time' => '16:23',
@@ -300,7 +300,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 60,
                                                                  'minutes_duration' => 240,
                                                                  'enabled' => true,
-                                                                 'index' => 2,
+                                                                 'index' => 2
                                                                })
         end
 
@@ -312,7 +312,7 @@ task_providers.each do |task_provider|
                                                  'minutes_interval' => 0,
                                                  'minutes_duration' => 0,
                                                  'enabled' => true,
-                                                 'index' => 0,
+                                                 'index' => 0
                                                },
                                                 nil,
                                                 {
@@ -322,7 +322,7 @@ task_providers.each do |task_provider|
                                                   'minutes_interval' => 0,
                                                   'minutes_duration' => 0,
                                                   'enabled' => true,
-                                                  'index' => 2,
+                                                  'index' => 2
                                                 }])
 
           expect(resource.provider.trigger).to contain_exactly({
@@ -332,7 +332,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 0,
                                                                  'minutes_duration' => 0,
                                                                  'enabled' => true,
-                                                                 'index' => 0,
+                                                                 'index' => 0
                                                                }, {
                                                                  'start_date' => '2013-12-15',
                                                                  'start_time' => '16:23',
@@ -340,7 +340,7 @@ task_providers.each do |task_provider|
                                                                  'minutes_interval' => 0,
                                                                  'minutes_duration' => 0,
                                                                  'enabled' => true,
-                                                                 'index' => 2,
+                                                                 'index' => 2
                                                                })
         end
       end
@@ -720,14 +720,14 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
           desired = {
             'schedule' => 'monthly',
             'start_date' => '2011-09-12',
             'start_time' => '15:30',
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
 
           expect(provider).to be_triggers_same(current, desired)
@@ -740,7 +740,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
           desired = {
             'schedule' => 'monthly',
@@ -748,7 +748,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -761,7 +761,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
           desired = {
             'schedule' => 'monthly',
@@ -769,7 +769,7 @@ task_providers.each do |task_provider|
             'start_time' => '22:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -782,7 +782,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
           desired = {
             'schedule' => 'monthly',
@@ -790,7 +790,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3, 5, 7, 9],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -803,7 +803,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
           desired = {
             'schedule' => 'monthly',
@@ -811,7 +811,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'last',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -824,7 +824,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
           desired = {
             'schedule' => 'monthly',
@@ -832,7 +832,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['fri'],
+            'day_of_week' => ['fri']
           }
 
           expect(provider).not_to be_triggers_same(current, desired)
@@ -845,7 +845,7 @@ task_providers.each do |task_provider|
             'start_time' => '15:30',
             'months' => [3],
             'which_occurrence' => 'first',
-            'day_of_week' => ['mon', 'tues', 'sat'],
+            'day_of_week' => ['mon', 'tues', 'sat']
           }
 
           expect(provider).to be_triggers_same(trigger, trigger)
@@ -1384,7 +1384,7 @@ task_providers.each do |task_provider|
         it 'for a DAILY schedule' do
           trigger = {
             'trigger_type' => :TASK_TIME_TRIGGER_DAILY,
-            'type' => { 'days_interval' => 1 },
+            'type' => { 'days_interval' => 1 }
           }
           task = Win32::TaskScheduler.new(name, trigger)
 
@@ -1396,7 +1396,7 @@ task_providers.each do |task_provider|
         it 'for a WEEKLY schedule' do
           trigger = {
             'trigger_type' => :TASK_TIME_TRIGGER_WEEKLY,
-            'type' => { 'weeks_interval' => 1, 'days_of_week' => 1 },
+            'type' => { 'weeks_interval' => 1, 'days_of_week' => 1 }
           }
           task = Win32::TaskScheduler.new(name, trigger)
 
@@ -1408,7 +1408,7 @@ task_providers.each do |task_provider|
         it 'for a MONTHLYDATE schedule' do
           trigger = {
             'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDATE,
-            'type' => { 'days' => 1, 'months' => 1 },
+            'type' => { 'days' => 1, 'months' => 1 }
           }
           task = Win32::TaskScheduler.new(name, trigger)
 
@@ -1420,7 +1420,7 @@ task_providers.each do |task_provider|
         it 'for a MONTHLYDOW schedule' do
           trigger = {
             'trigger_type' => :TASK_TIME_TRIGGER_MONTHLYDOW,
-            'type' => { 'weeks' => 1, 'days_of_week' => 1, 'months' => 1 },
+            'type' => { 'weeks' => 1, 'days_of_week' => 1, 'months' => 1 }
           }
           task = Win32::TaskScheduler.new(name, trigger)
 

@@ -1001,7 +1001,7 @@ class Win32::TaskScheduler
       'minutes_interval' => task_trigger[:MinutesInterval],
       'flags' => task_trigger[:rgFlags],
       'trigger_type' => task_trigger[:TriggerType],
-      'random_minutes_interval' => task_trigger[:wRandomMinutesInterval],
+      'random_minutes_interval' => task_trigger[:wRandomMinutesInterval]
     }
 
     case task_trigger[:TriggerType]
@@ -1010,18 +1010,18 @@ class Win32::TaskScheduler
     when :TASK_TIME_TRIGGER_WEEKLY
       trigger['type'] = {
         'weeks_interval' => task_trigger[:Type][:Weekly][:WeeksInterval],
-        'days_of_week' => task_trigger[:Type][:Weekly][:rgfDaysOfTheWeek],
+        'days_of_week' => task_trigger[:Type][:Weekly][:rgfDaysOfTheWeek]
       }
     when :TASK_TIME_TRIGGER_MONTHLYDATE
       trigger['type'] = {
         'days' => task_trigger[:Type][:MonthlyDate][:rgfDays],
-        'months' => task_trigger[:Type][:MonthlyDate][:rgfMonths],
+        'months' => task_trigger[:Type][:MonthlyDate][:rgfMonths]
       }
     when :TASK_TIME_TRIGGER_MONTHLYDOW
       trigger['type'] = {
         'weeks' => task_trigger[:Type][:MonthlyDOW][:wWhichWeek],
         'days_of_week' => task_trigger[:Type][:MonthlyDOW][:rgfDaysOfTheWeek],
-        'months' => task_trigger[:Type][:MonthlyDOW][:rgfMonths],
+        'months' => task_trigger[:Type][:MonthlyDOW][:rgfMonths]
       }
     when :TASK_TIME_TRIGGER_ONCE
       trigger['type'] = { 'once' => nil }

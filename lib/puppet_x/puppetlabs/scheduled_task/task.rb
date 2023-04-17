@@ -265,7 +265,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       options = {
         include_child_folders: true,
-        include_compatibility: [],
+        include_compatibility: []
       }.merge(enum_options)
 
       array = []

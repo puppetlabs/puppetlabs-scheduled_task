@@ -35,7 +35,7 @@ def manifest_triggers
     'minutes_duration' => 0,
     'start_date' => ST::Trigger::Manifest.format_date(now),
     'start_time' => ST::Trigger::Manifest.format_time(now),
-    'enabled' => true,
+    'enabled' => true
   }
 
   [
@@ -390,7 +390,7 @@ describe 'Scheduled Tasks API v2' do
         TASK_TIME_TRIGGER_WEEKLY: trigger::V2::Type::TASK_TRIGGER_WEEKLY,
         TASK_TIME_TRIGGER_MONTHLYDATE: trigger::V2::Type::TASK_TRIGGER_MONTHLY,
         TASK_TIME_TRIGGER_MONTHLYDOW: trigger::V2::Type::TASK_TRIGGER_MONTHLYDOW,
-        TASK_TIME_TRIGGER_ONCE: trigger::V2::Type::TASK_TRIGGER_TIME,
+        TASK_TIME_TRIGGER_ONCE: trigger::V2::Type::TASK_TRIGGER_TIME
       }.freeze
 
     raise ArgumentError, _('Unknown trigger type %{type}') % { type: v1trigger['trigger_type'] } unless v1_type_map.keys.include?(v1trigger['trigger_type'])
@@ -401,7 +401,7 @@ describe 'Scheduled Tasks API v2' do
       'second' => 2, # TASK_SECOND_WEEKs
       'third' => 3, # TASK_THIRD_WEEKs
       'fourth' => 4, # TASK_FOURTH_WEEKs
-      'last' => 5, # TASK_LAST_WEEKs
+      'last' => 5 # TASK_LAST_WEEKs
     }.freeze
 
     manifest_hash = {}
@@ -466,7 +466,7 @@ describe 'Scheduled Tasks API v2' do
         'start_day' => now.day,
         'start_hour' => now.hour,
         'start_minute' => now.min,
-        'trigger_type' => :TASK_TIME_TRIGGER_ONCE,
+        'trigger_type' => :TASK_TIME_TRIGGER_ONCE
         # 'once' has no specific settings, so 'type' should be omitted
       }
 
