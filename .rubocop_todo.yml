@@ -175,11 +175,6 @@ Style/ClassAndModuleChildren:
     - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
     - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
 
-# Offense count: 1
-Style/MixinUsage:
-  Exclude:
-    - 'spec/spec_helper.rb'
-
 # Offense count: 6
 Style/OpenStructUse:
   Exclude:
