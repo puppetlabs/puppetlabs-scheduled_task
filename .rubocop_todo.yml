@@ -6,29 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: leading, trailing
-Layout/LineContinuationLeadingSpace:
-  Exclude:
-    - 'lib/puppet/provider/scheduled_task/taskscheduler_api2.rb'
-
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AutoCorrect, EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/LineContinuationSpacing:
-  Exclude:
-    - 'lib/puppet/provider/scheduled_task/taskscheduler_api2.rb'
-    - 'lib/puppet/provider/scheduled_task/win32_taskscheduler.rb'
-
-# Offense count: 6
-# This cop supports safe autocorrection (--autocorrect).
-Lint/AmbiguousOperatorPrecedence:
-  Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
-
 # Offense count: 17
 # This cop supports unsafe autocorrection (--autocorrect-all).
 Lint/BooleanSymbol:

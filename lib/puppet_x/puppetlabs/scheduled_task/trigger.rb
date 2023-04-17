@@ -45,10 +45,10 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         time = 0
         # Note - the Year and Month calculations are approximate
-        time += value[:year].to_i   * (365.2422 * 24 * 60**2)      unless value[:year].nil?
-        time += value[:month].to_i  * (365.2422 * 2 * 60**2)       unless value[:month].nil?
-        time += value[:day].to_i    * 24 * 60**2                   unless value[:day].nil?
-        time += value[:hour].to_i   * 60**2                        unless value[:hour].nil?
+        time += value[:year].to_i   * (365.2422 * 24 * (60**2))      unless value[:year].nil?
+        time += value[:month].to_i  * (365.2422 * 2 * (60**2))       unless value[:month].nil?
+        time += value[:day].to_i    * 24 * (60**2)                   unless value[:day].nil?
+        time += value[:hour].to_i   * (60**2)                        unless value[:hour].nil?
         time += value[:minute].to_i * 60                           unless value[:minute].nil?
         time += value[:second].to_i                                unless value[:second].nil?
 
@@ -431,7 +431,7 @@ module PuppetX::PuppetLabs::ScheduledTask
             raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31"
           end
 
-          integer_days.reduce(0) { |bitmask, day_index| bitmask | 1 << day_index - 1 }
+          integer_days.reduce(0) { |bitmask, day_index| bitmask | (1 << (day_index - 1)) }
         end
 
         # Converts bitmask to index
