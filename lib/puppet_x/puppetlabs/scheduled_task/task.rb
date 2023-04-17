@@ -294,7 +294,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
         _task = task_folder.GetTask(task_name_from_task_path(task_path))
-      rescue
+      rescue StandardError
         return false
       end
       true

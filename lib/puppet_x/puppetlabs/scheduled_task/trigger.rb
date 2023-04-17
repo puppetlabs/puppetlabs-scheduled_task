@@ -166,7 +166,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       def self.time_valid?(time)
         Time.parse("2016-5-1 #{time}")
         true
-      rescue
+      rescue StandardError
         false
       end
 
@@ -224,7 +224,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         if manifest_hash.key?('every')
           every = begin
             Integer(manifest_hash['every'])
-          rescue
+          rescue StandardError
             nil
           end
           raise ArgumentError, "Invalid every value: #{manifest_hash['every']}" if every.nil?
@@ -520,7 +520,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         def self.indexes_to_bitmask(month_indexes)
           month_indexes = [month_indexes].flatten.map do |m|
             Integer(m)
-          rescue
+          rescue StandardError
             m
           end
           invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys
@@ -767,7 +767,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # If `disable_time_zone_synchronization` has been set to true then the timezone is removed from the start time
         unless datetime_string.strip.empty?
           start = if manifest_hash['disable_time_zone_synchronization'] && manifest_hash['disable_time_zone_synchronization'] == true
-                    Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..\:..$)|(\-..\:..$)}, '')
+                    Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..:..$)|(-..:..$)}, '')
                   else
                     Time.parse(datetime_string).iso8601
                   end

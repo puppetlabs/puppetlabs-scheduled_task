@@ -200,7 +200,7 @@ class Win32::TaskScheduler
     at_exit do
       @pits.Release if @pits && !@pits.null?
       @pits = nil
-    rescue # rubocop:disable Lint/SuppressedException
+    rescue StandardError # rubocop:disable Lint/SuppressedException
     end
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)
@@ -295,7 +295,7 @@ class Win32::TaskScheduler
         pi_persist_file.Save(wide_file, 1)
         pi_persist_file.SaveCompleted(wide_file)
       end
-    rescue
+    rescue StandardError
       reset = false
     ensure
       reset_current_task if reset
@@ -700,18 +700,16 @@ class Win32::TaskScheduler
       st = ptr.read_hresult
     end
 
-    status = case st
-             when SCHED_S_TASK_READY
-               'ready'
-             when SCHED_S_TASK_RUNNING
-               'running'
-             when SCHED_S_TASK_NOT_SCHEDULED
-               'not scheduled'
-             else
-               'unknown'
-             end
-
-    status
+    case st
+    when SCHED_S_TASK_READY
+      'ready'
+    when SCHED_S_TASK_RUNNING
+      'running'
+    when SCHED_S_TASK_NOT_SCHEDULED
+      'not scheduled'
+    else
+      'unknown'
+    end
   end
 
   # Returns the exit code from the last scheduled run.
