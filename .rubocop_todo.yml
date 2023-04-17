@@ -6,12 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 6
-# This cop supports safe autocorrection (--autocorrect).
-Layout/EmptyLinesAroundArguments:
-  Exclude:
-    - 'spec/legacy_taskscheduler.rb'
-
 # Offense count: 331
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: AllowMultipleStyles, EnforcedHashRocketStyle, EnforcedColonStyle, EnforcedLastArgumentHashStyle.

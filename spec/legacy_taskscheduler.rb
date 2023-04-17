@@ -1058,7 +1058,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381811(v=vs.85).aspx
     ITaskScheduler = com::Interface[com::IUnknown,
                                     FFI::WIN32::GUID['148BD527-A2AB-11CE-B11F-00AA00530503'],
-
                                     SetTargetComputer: [[:lpcwstr], :hresult],
                                     # LPWSTR *
                                     GetTargetComputer: [[:pointer], :hresult],
@@ -1081,7 +1080,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380706(v=vs.85).aspx
     IEnumWorkItems = com::Interface[com::IUnknown,
                                     FFI::WIN32::GUID['148BD528-A2AB-11CE-B11F-00AA00530503'],
-
                                     # ULONG, LPWSTR **, ULONG *
                                     Next: [[:win32_ulong, :pointer, :pointer], :hresult],
                                     Skip: [[:win32_ulong], :hresult],
@@ -1095,7 +1093,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381216(v=vs.85).aspx
     IScheduledWorkItem = com::Interface[com::IUnknown,
                                         FFI::WIN32::GUID['a6b952f0-a4b1-11d0-997d-00aa006887ec'],
-
                                         # WORD *, ITaskTrigger **
                                         CreateTrigger: [[:pointer, :pointer], :hresult],
                                         DeleteTrigger: [[:word], :hresult],
@@ -1147,7 +1144,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381311(v=vs.85).aspx
     ITask = com::Interface[IScheduledWorkItem,
                            FFI::WIN32::GUID['148BD524-A2AB-11CE-B11F-00AA00530503'],
-
                            SetApplicationName: [[:lpcwstr], :hresult],
                            # LPWSTR *
                            GetApplicationName: [[:pointer], :hresult],
@@ -1180,7 +1176,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/ms687223(v=vs.85).aspx
     IPersistFile = com::Interface[IPersist,
                                   FFI::WIN32::GUID['0000010b-0000-0000-C000-000000000046'],
-
                                   IsDirty: [[], :hresult],
                                   Load: [[:lpcolestr, :dword], :hresult],
                                   Save: [[:lpcolestr, :win32_bool], :hresult],
@@ -1194,7 +1189,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381864(v=vs.85).aspx
     ITaskTrigger = com::Interface[com::IUnknown,
                                   FFI::WIN32::GUID['148BD52B-A2AB-11CE-B11F-00AA00530503'],
-
                                   SetTrigger: [[:pointer], :hresult],
                                   GetTrigger: [[:pointer], :hresult],
                                   GetTriggerString: [[:pointer], :hresult]
