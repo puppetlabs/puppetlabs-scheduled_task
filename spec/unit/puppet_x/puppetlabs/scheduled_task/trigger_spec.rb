@@ -10,7 +10,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
   describe '#iso8601_datetime_to_local' do
     [nil, ''].each do |value|
       it "returns nil given value '#{value}' (#{value.class})" do
-        expect(trigger.iso8601_datetime_to_local(value)).to eq(nil)
+        expect(trigger.iso8601_datetime_to_local(value)).to be_nil
       end
     end
 

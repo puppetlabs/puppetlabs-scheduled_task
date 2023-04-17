@@ -387,6 +387,7 @@ task_providers.each do |task_provider|
           mock_task.stubs(:enabled).returns(false)
 
           expect(resource.provider.enabled).to eq(:false)
+
         end
 
         it 'reports tasks without the disabled bit set as enabled' do
@@ -423,7 +424,7 @@ task_providers.each do |task_provider|
       it "delegates to #{task2.name} using the resource's name" do
         task2.expects(:exists?).with('Test Task').returns(true)
 
-        expect(resource.provider.exists?).to eq(true)
+        expect(resource.provider.exists?).to be(true)
       end
     end
 
@@ -919,7 +920,7 @@ task_providers.each do |task_provider|
           { 'schedule' => 'weekly', 'start_date' => '2011-09-13', 'start_time' => '13:50', 'day_of_week' => 'mon' },
         ]
 
-        expect(provider.validate_trigger(triggers_to_validate)).to eq(true)
+        expect(provider.validate_trigger(triggers_to_validate)).to be(true)
       end
 
       it 'uses the exception from from_manifest_hash when it fails' do

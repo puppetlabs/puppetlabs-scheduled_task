@@ -155,7 +155,7 @@ describe 'Scheduled Tasks API v2' do
 
         context 'given a test task fixture' do
           it 'is enabled by default' do
-            expect(task_definition.Settings.Enabled).to eq(true)
+            expect(task_definition.Settings.Enabled).to be(true)
           end
 
           it 'is V2 compatible' do
