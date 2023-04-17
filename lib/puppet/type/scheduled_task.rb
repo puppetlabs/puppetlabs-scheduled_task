@@ -7,7 +7,7 @@ Puppet::Type.newtype(:scheduled_task) do
     @note
       All attributes except `name`, `command`, and `trigger` are optional; see the description
       of the `trigger` attribute for details on setting schedules."
-    PUPPET
+  PUPPET
 
   feature :compatibility, "The provider accepts compatibility to be
     set for the given task.",
