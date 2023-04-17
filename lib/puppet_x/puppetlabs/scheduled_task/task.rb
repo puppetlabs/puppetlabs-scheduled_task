@@ -558,8 +558,8 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Gets the action item with the specified index
     def action_at(index)
       @definition.Actions.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
+    rescue WIN32OLERuntimeError => e
+      raise unless Error.com_error_type?(e, Error::E_INVALIDARG)
 
       nil
     end
@@ -573,8 +573,8 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def trigger_at(index)
       @definition.Triggers.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
+    rescue WIN32OLERuntimeError => e
+      raise unless Error.com_error_type?(e, Error::E_INVALIDARG)
 
       nil
     end

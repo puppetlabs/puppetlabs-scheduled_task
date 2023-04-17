@@ -39,12 +39,6 @@ Lint/MixedRegexpCaptureTypes:
   Exclude:
     - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Lint/RedundantCopEnableDirective:
-  Exclude:
-    - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
-
 # Offense count: 19
 # Configuration parameters: AllowedMethods, AllowedPatterns, CountRepeatedAttributes.
 Metrics/AbcSize:
@@ -98,13 +92,6 @@ Naming/MemoizedInstanceVariableName:
     - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
 
 # Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: PreferredName.
-Naming/RescuedExceptionsVariableName:
-  Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
-
-# Offense count: 2
 # Configuration parameters: MinSize.
 Performance/CollectionLiteralInLoop:
   Exclude:
@@ -114,12 +101,6 @@ Performance/CollectionLiteralInLoop:
 # Offense count: 1
 # This cop supports unsafe autocorrection (--autocorrect-all).
 Performance/InefficientHashSearch:
-  Exclude:
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
-
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Performance/StringIdentifierArgument:
   Exclude:
     - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
 
@@ -159,20 +140,6 @@ RSpec/DescribeClass:
     - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
     - 'spec/unit/puppet/type/scheduled_task_spec.rb'
 
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowConsecutiveOneLiners.
-RSpec/EmptyLineAfterExample:
-  Exclude:
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
-
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowConsecutiveOneLiners.
-RSpec/EmptyLineAfterHook:
-  Exclude:
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
-
 # Offense count: 71
 # Configuration parameters: CountAsOne.
 RSpec/ExampleLength:
@@ -182,13 +149,6 @@ RSpec/ExampleLength:
 RSpec/LeakyConstantDeclaration:
   Exclude:
     - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
-
-# Offense count: 6
-# This cop supports safe autocorrection (--autocorrect).
-RSpec/MatchArray:
-  Exclude:
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
-    - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
 
 # Offense count: 29
 RSpec/MultipleExpectations:

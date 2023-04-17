@@ -149,10 +149,12 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             expect(validated['user_id']).to eq('')
           end
         end
+
         it 'does not error if passed a resolvable user_id' do
           logon_manifest = { 'schedule' => 'logon', 'user_id' => 'S-1-5-18' } # Local System Well Known SID
           expect { manifest.class.canonicalize_and_validate(logon_manifest) }.not_to raise_error
         end
+
         it 'errors if passed an unresolvable user_id' do
           logon_manifest = { 'schedule' => 'logon', 'user_id' => 'Unresolvable UserName' }
           expect { manifest.class.canonicalize_and_validate(logon_manifest) }.to raise_error(ArgumentError)

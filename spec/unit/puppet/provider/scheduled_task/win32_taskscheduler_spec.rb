@@ -221,35 +221,31 @@ task_providers.each do |task_provider|
                                                   'index' => 2,
                                                 }])
 
-          expect(resource.provider.trigger).to match_array([
-                                                             {
-                                                               'start_date' => '2011-10-13',
-                                                               'start_time' => '14:21',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 0,
-                                                               'minutes_duration' => 0,
-                                                               'enabled' => true,
-                                                               'index' => 0,
-                                                             },
-                                                             {
-                                                               'start_date' => '2012-11-14',
-                                                               'start_time' => '15:22',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 0,
-                                                               'minutes_duration' => 0,
-                                                               'enabled' => true,
-                                                               'index' => 1,
-                                                             },
-                                                             {
-                                                               'start_date' => '2013-12-15',
-                                                               'start_time' => '16:23',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 0,
-                                                               'minutes_duration' => 0,
-                                                               'enabled' => true,
-                                                               'index' => 2,
-                                                             },
-                                                           ])
+          expect(resource.provider.trigger).to contain_exactly({
+                                                                 'start_date' => '2011-10-13',
+                                                                 'start_time' => '14:21',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 0,
+                                                                 'minutes_duration' => 0,
+                                                                 'enabled' => true,
+                                                                 'index' => 0,
+                                                               }, {
+                                                                 'start_date' => '2012-11-14',
+                                                                 'start_time' => '15:22',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 0,
+                                                                 'minutes_duration' => 0,
+                                                                 'enabled' => true,
+                                                                 'index' => 1,
+                                                               }, {
+                                                                 'start_date' => '2013-12-15',
+                                                                 'start_time' => '16:23',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 0,
+                                                                 'minutes_duration' => 0,
+                                                                 'enabled' => true,
+                                                                 'index' => 2,
+                                                               })
         end
 
         it 'handles multiple triggers with repeat triggers' do
@@ -281,35 +277,31 @@ task_providers.each do |task_provider|
                                                   'index' => 2,
                                                 }])
 
-          expect(resource.provider.trigger).to match_array([
-                                                             {
-                                                               'start_date' => '2011-10-13',
-                                                               'start_time' => '14:21',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 15,
-                                                               'minutes_duration' => 60,
-                                                               'enabled' => true,
-                                                               'index' => 0,
-                                                             },
-                                                             {
-                                                               'start_date' => '2012-11-14',
-                                                               'start_time' => '15:22',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 30,
-                                                               'minutes_duration' => 120,
-                                                               'enabled' => true,
-                                                               'index' => 1,
-                                                             },
-                                                             {
-                                                               'start_date' => '2013-12-15',
-                                                               'start_time' => '16:23',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 60,
-                                                               'minutes_duration' => 240,
-                                                               'enabled' => true,
-                                                               'index' => 2,
-                                                             },
-                                                           ])
+          expect(resource.provider.trigger).to contain_exactly({
+                                                                 'start_date' => '2011-10-13',
+                                                                 'start_time' => '14:21',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 15,
+                                                                 'minutes_duration' => 60,
+                                                                 'enabled' => true,
+                                                                 'index' => 0,
+                                                               }, {
+                                                                 'start_date' => '2012-11-14',
+                                                                 'start_time' => '15:22',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 30,
+                                                                 'minutes_duration' => 120,
+                                                                 'enabled' => true,
+                                                                 'index' => 1,
+                                                               }, {
+                                                                 'start_date' => '2013-12-15',
+                                                                 'start_time' => '16:23',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 60,
+                                                                 'minutes_duration' => 240,
+                                                                 'enabled' => true,
+                                                                 'index' => 2,
+                                                               })
         end
 
         it 'skips triggers Win32::TaskScheduler cannot handle' do
@@ -333,26 +325,23 @@ task_providers.each do |task_provider|
                                                   'index' => 2,
                                                 }])
 
-          expect(resource.provider.trigger).to match_array([
-                                                             {
-                                                               'start_date' => '2011-10-13',
-                                                               'start_time' => '14:21',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 0,
-                                                               'minutes_duration' => 0,
-                                                               'enabled' => true,
-                                                               'index' => 0,
-                                                             },
-                                                             {
-                                                               'start_date' => '2013-12-15',
-                                                               'start_time' => '16:23',
-                                                               'schedule' => 'once',
-                                                               'minutes_interval' => 0,
-                                                               'minutes_duration' => 0,
-                                                               'enabled' => true,
-                                                               'index' => 2,
-                                                             },
-                                                           ])
+          expect(resource.provider.trigger).to contain_exactly({
+                                                                 'start_date' => '2011-10-13',
+                                                                 'start_time' => '14:21',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 0,
+                                                                 'minutes_duration' => 0,
+                                                                 'enabled' => true,
+                                                                 'index' => 0,
+                                                               }, {
+                                                                 'start_date' => '2013-12-15',
+                                                                 'start_time' => '16:23',
+                                                                 'schedule' => 'once',
+                                                                 'minutes_interval' => 0,
+                                                                 'minutes_duration' => 0,
+                                                                 'enabled' => true,
+                                                                 'index' => 2,
+                                                               })
         end
       end
 

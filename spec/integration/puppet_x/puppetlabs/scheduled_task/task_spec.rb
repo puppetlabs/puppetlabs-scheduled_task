@@ -94,7 +94,7 @@ describe 'Scheduled Tasks API v2' do
           # need a single trigger object on internal definition object to retrieve the
           triggers = stub(count: 1)
           triggers.expects(:Item).with(1).returns(stub(trigger_details))
-          task_object.instance_variable_set('@definition', stub(Triggers: triggers))
+          task_object.instance_variable_set(:@definition, stub(Triggers: triggers))
 
           expect(task_object.triggers[0]).to be_nil
         end
@@ -107,6 +107,7 @@ describe 'Scheduled Tasks API v2' do
         skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
         create_task(task_name, :v1_compatibility, [manifest_triggers[0]])
       end
+
       context 'with new task' do
         let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
 
@@ -299,7 +300,7 @@ describe 'Scheduled Tasks API v2' do
           task = subject.new(task_name)
 
           # trigger specific validation
-          expect(task.triggers).to match_array([manifest_hash.merge('index' => 0)])
+          expect(task.triggers).to contain_exactly(manifest_hash.merge('index' => 0))
         end
       end
     end
@@ -309,6 +310,7 @@ describe 'Scheduled Tasks API v2' do
         skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
         create_task(task_name, nil, [manifest_triggers[0]])
       end
+
       name = 'puppet_task_' + SecureRandom.uuid.to_s
       let(:task_name) { name }
 
@@ -506,7 +508,7 @@ describe 'Scheduled Tasks API v2' do
         expect(v2task.application_name).to eq(subjectv1.application_name)
         expect(v2task.triggers.count).to eq(subjectv1.trigger_count)
         v1manifest_hash = to_manifest_hash(subjectv1.trigger(0))
-        expect(v2task.triggers).to match_array([v1manifest_hash.merge('index' => 0)])
+        expect(v2task.triggers).to contain_exactly(v1manifest_hash.merge('index' => 0))
       end
     end
 
@@ -563,7 +565,7 @@ describe 'Scheduled Tasks API v2' do
         expect(subjectv1.application_name).to eq(v2task.application_name)
         expect(subjectv1.trigger_count).to eq(v2task.triggers.count)
         v1manifest_hash = to_manifest_hash(subjectv1.trigger(0)).merge('index' => 0)
-        expect(v2task.triggers).to match_array([v1manifest_hash.merge('index' => 0)])
+        expect(v2task.triggers).to contain_exactly(v1manifest_hash.merge('index' => 0))
       end
     end
   end
