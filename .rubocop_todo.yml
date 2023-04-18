@@ -8,6 +8,8 @@
 
 # Offense count: 17
 # This cop supports unsafe autocorrection (--autocorrect-all).
+# An attempt to enforce this rule was made during Puppet 8 support implementation.
+# However, enforcing this rule resulted in the CI breaking.
 Lint/BooleanSymbol:
   Exclude:
     - 'lib/puppet/provider/scheduled_task/taskscheduler_api2.rb'
@@ -96,12 +98,6 @@ Performance/CollectionLiteralInLoop:
   Exclude:
     - 'lib/puppet/provider/scheduled_task/taskscheduler_api2.rb'
     - 'lib/puppet/provider/scheduled_task/win32_taskscheduler.rb'
-
-# Offense count: 1
-# This cop supports unsafe autocorrection (--autocorrect-all).
-Performance/InefficientHashSearch:
-  Exclude:
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
 
 # Offense count: 2
 RSpec/Be:
