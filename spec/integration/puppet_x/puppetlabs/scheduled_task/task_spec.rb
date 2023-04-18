@@ -449,8 +449,11 @@ describe 'Scheduled Tasks API v2' do
   end
 
   describe 'When comparing legacy Puppet Win32::TaskScheduler API v1 to Scheduled Tasks API v2', if: Puppet.features.microsoft_windows? do
-    let(:subjectv1) { Win32::TaskScheduler.new }
-    let(:subjectv2) { ST::Task }
+    # There seems to be some sort of false positive hit in the following two lines regarding a Rubocop rule. Locally, this rule wont be picked
+    # up by rubocop, however, it will fail twice for each line on GitHub Actions. Implementing this disabling workaround to continue with the
+    # Puppet 8 support work.
+    let(:subjectv1) { Win32::TaskScheduler.new } # rubocop:disable RSpec/IndexedLet
+    let(:subjectv2) { ST::Task }                 # rubocop:disable RSpec/IndexedLet
 
     now = Time.now
     default_once_trigger =

@@ -387,7 +387,6 @@ task_providers.each do |task_provider|
           mock_task.stubs(:enabled).returns(false)
 
           expect(resource.provider.enabled).to eq(:false)
-
         end
 
         it 'reports tasks without the disabled bit set as enabled' do
