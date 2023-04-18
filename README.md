@@ -338,7 +338,7 @@ The full path of the directory in which to start the command.
 <a id="limitations"></a>
 ## Limitations
 
-For a full list of supported modules, check [metadata.json](https://github.com/puppetlabs/puppetlabs-scheduled_task/blob/main/metadata.json).
+For a full list of supported OS, check [metadata.json](https://github.com/puppetlabs/puppetlabs-scheduled_task/blob/main/metadata.json).
 
 <a id="development"></a>
 ## Development
