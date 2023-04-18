@@ -69,10 +69,8 @@ describe 'Should create a scheduled task' do
       provider    => 'taskscheduler_api2'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
 
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
@@ -94,10 +92,7 @@ describe 'Should create a scheduled task' do
       provider      => 'win32_taskscheduler'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
-
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
@@ -392,10 +387,7 @@ describe 'Should create a scheduled task' do
       provider    => 'taskscheduler_api2'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
-
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
@@ -418,10 +410,7 @@ describe 'Should create a scheduled task' do
       provider      => 'win32_taskscheduler'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
-
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
