@@ -56,7 +56,7 @@ def manifest_triggers
 end
 
 def create_task(task_name = nil, task_compatiblity = nil, triggers = [])
-  task_name = 'puppet_task_' + SecureRandom.uuid.to_s if task_name.nil?
+  task_name = "puppet_task_#{SecureRandom.uuid}" if task_name.nil?
 
   task = ST::Task.new(task_name, task_compatiblity)
   task.application_name = 'cmd.exe'
@@ -109,7 +109,7 @@ describe 'Scheduled Tasks API v2' do
       end
 
       context 'with new task' do
-        let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
+        let(:task_name) { "puppet_task_#{SecureRandom.uuid}" }
 
         it 'returns all tasks by default' do
           subject_count = subject.enum_task_names.count
@@ -140,7 +140,7 @@ describe 'Scheduled Tasks API v2' do
         end
 
         if Puppet.features.microsoft_windows?
-          name = 'puppet_task_' + SecureRandom.uuid.to_s
+          name = "puppet_task_#{SecureRandom.uuid}"
           # find the task by name and examine its properties through COM
           service = WIN32OLE.new('Schedule.Service')
           service.connect
@@ -194,7 +194,7 @@ describe 'Scheduled Tasks API v2' do
         end
 
         if Puppet.features.microsoft_windows?
-          task_path = SecureRandom.uuid.to_s + '\puppet_task_' + SecureRandom.uuid.to_s
+          task_path = "#{SecureRandom.uuid}\\puppet_task_#{SecureRandom.uuid}"
           _, name = create_task(task_path, nil, [manifest_triggers[0]])
           let(:task_name) { name }
         end
@@ -223,7 +223,7 @@ describe 'Scheduled Tasks API v2' do
         it 'changes the action path' do
           # Can't use URI as it is empty string on some OS.  Just construct the URI
           # using path and name
-          ps_cmd = '(Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].Execute'
+          ps_cmd = "(Get-ScheduledTask | ? { $_.TaskName -eq '#{task_name}' }).Actions[0].Execute"
 
           expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
 
@@ -235,7 +235,7 @@ describe 'Scheduled Tasks API v2' do
     end
 
     describe '#delete' do
-      let!(:task_name) { subject::ROOT_FOLDER + 'puppet_task_' + SecureRandom.uuid.to_s }
+      let!(:task_name) { "#{subject::ROOT_FOLDER}puppet_task_#{SecureRandom.uuid}" }
 
       before(:each) do
         skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
@@ -246,7 +246,7 @@ describe 'Scheduled Tasks API v2' do
 
         # Can't use URI as it is empty string on some OS.  Just construct the URI
         # using path and name
-        ps_cmd = '(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq \'' + task_name + '\' } | Measure-Object).count'
+        ps_cmd = "(Get-ScheduledTask | ? { $_.TaskPath + $_.TaskName -eq '#{task_name}' } | Measure-Object).count"
         expect(1).to be_same_as_powershell_command(ps_cmd)
 
         subject.delete(task_name)
@@ -266,7 +266,7 @@ describe 'Scheduled Tasks API v2' do
       end
 
       skip('Not on Windows platform') unless Puppet.features.microsoft_windows?
-      name = 'puppet_task_' + SecureRandom.uuid.to_s
+      name = "puppet_task_#{SecureRandom.uuid}"
       let(:task_name) { name }
 
       it 'and return the same application_name and properties as those originally set' do
@@ -311,7 +311,7 @@ describe 'Scheduled Tasks API v2' do
         create_task(task_name, nil, [manifest_triggers[0]])
       end
 
-      name = 'puppet_task_' + SecureRandom.uuid.to_s
+      name = "puppet_task_#{SecureRandom.uuid}"
       let(:task_name) { name }
 
       it 'is able to determine if the task exists or not' do
@@ -327,13 +327,13 @@ describe 'Scheduled Tasks API v2' do
         expect(task.delete_trigger(0)).to be(1)
         task.append_trigger(new_trigger)
         task.save
-        ps_cmd = '([string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Triggers.StartBoundary) -split \'T\')[0]'
+        ps_cmd = "([string]((Get-ScheduledTask | ? { $_.TaskName -eq '#{task_name}' }).Triggers.StartBoundary) -split 'T')[0]"
         expect('2112-12-12').to be_same_as_powershell_command(ps_cmd)
       end
 
       it 'is able to update a command' do
         new_application_name = 'notepad.exe'
-        ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].Execute)'
+        ps_cmd = "[string]((Get-ScheduledTask | ? { $_.TaskName -eq '#{task_name}' }).Actions[0].Execute)"
         task = subject.new(task_name)
 
         expect('cmd.exe').to be_same_as_powershell_command(ps_cmd)
@@ -344,7 +344,7 @@ describe 'Scheduled Tasks API v2' do
 
       it 'is able to update command parameters' do
         new_parameters = '/nonsense /utter /nonsense'
-        ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].Arguments)'
+        ps_cmd = "[string]((Get-ScheduledTask | ? { $_.TaskName -eq '#{task_name}' }).Actions[0].Arguments)"
         task = subject.new(task_name)
 
         expect('/c exit 0').to be_same_as_powershell_command(ps_cmd)
@@ -355,7 +355,7 @@ describe 'Scheduled Tasks API v2' do
 
       it 'is able to update the working directory' do
         new_working_directory = 'C:\Somewhere'
-        ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].WorkingDirectory)'
+        ps_cmd = "[string]((Get-ScheduledTask | ? { $_.TaskName -eq '#{task_name}' }).Actions[0].WorkingDirectory)"
         task = subject.new(task_name)
 
         expect('').to be_same_as_powershell_command(ps_cmd)
@@ -366,7 +366,7 @@ describe 'Scheduled Tasks API v2' do
 
       it 'is able to update the description' do
         new_description = 'updated description'
-        ps_cmd = '[string]((Get-ScheduledTask | ? { $_.TaskName -eq \'' + task_name + '\' }).Actions[0].WorkingDirectory)'
+        ps_cmd = "[string]((Get-ScheduledTask | ? { $_.TaskName -eq '#{task_name}' }).Actions[0].WorkingDirectory)"
         task = subject.new(task_name)
 
         expect('').to be_same_as_powershell_command(ps_cmd)
@@ -487,7 +487,7 @@ describe 'Scheduled Tasks API v2' do
     end
 
     context 'When created by the legacy V1 COM API' do
-      let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
+      let(:task_name) { "puppet_task_#{SecureRandom.uuid}" }
 
       it 'is visible by the V2 API' do
         expect(subjectv2.exists?(task_name)).to be true
@@ -514,7 +514,7 @@ describe 'Scheduled Tasks API v2' do
     end
 
     context 'When created by the V2 API' do
-      let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
+      let(:task_name) { "puppet_task_#{SecureRandom.uuid}" }
 
       it 'is visible by the V2 API' do
         expect(subjectv2.exists?(task_name)).to be true
@@ -540,7 +540,7 @@ describe 'Scheduled Tasks API v2' do
     end
 
     context 'When modifiying a legacy V1 COM API task using the V2 API' do
-      let(:task_name) { 'puppet_task_' + SecureRandom.uuid.to_s }
+      let(:task_name) { "puppet_task_#{SecureRandom.uuid}" }
 
       it 'is visible by the V2 API' do
         expect(subjectv2.exists?(task_name)).to be true

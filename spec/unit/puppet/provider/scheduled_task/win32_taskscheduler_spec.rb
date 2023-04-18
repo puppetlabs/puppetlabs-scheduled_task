@@ -1488,7 +1488,7 @@ task_providers.each do |task_provider|
       # rubocop:disable RSpec/PredicateMatcher
       describe '#exists?' do
         it 'works with Unicode task names' do
-          task_name = name + "\u16A0\u16C7\u16BB" # ᚠᛇᚻ
+          task_name = "#{name}ᚠᛇᚻ" # ᚠᛇᚻ
 
           begin
             task = Win32::TaskScheduler.new(task_name, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)
@@ -1502,7 +1502,7 @@ task_providers.each do |task_provider|
         end
 
         it 'is case insensitive' do
-          task_name = name + 'abc' # name is a guid, but might not have alpha chars
+          task_name = "#{name}abc" # name is a guid, but might not have alpha chars
 
           begin
             task = Win32::TaskScheduler.new(task_name.upcase, 'trigger_type' => :TASK_TIME_TRIGGER_ONCE)

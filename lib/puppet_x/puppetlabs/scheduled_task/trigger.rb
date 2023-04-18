@@ -282,7 +282,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         manifest_hash['minutes_duration'] = duration if duration
 
         if manifest_hash['start_date']
-          start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
+          start_date = Time.parse("#{manifest_hash['start_date']} 00:00")
           raise ArgumentError, "start_date must be on or after #{format_date(MINIMUM_TRIGGER_DATE)}" unless start_date >= MINIMUM_TRIGGER_DATE
 
           manifest_hash['start_date'] = format_date(start_date)

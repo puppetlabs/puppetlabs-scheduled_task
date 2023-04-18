@@ -1005,7 +1005,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         Repetition: { Interval: 'PT20M', Duration: 'PT20M', StopAtDurationEnd: false },
         ExecutionTimeLimit: 'P1M4DT2H5M',
         # StartBoundary is usually specified in local time without TZ
-        StartBoundary: '2005-10-11T13:21:17' + Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone,
+        StartBoundary: "2005-10-11T13:21:17#{Time.local(2005, 10, 11, 13, 21, 17).to_datetime.zone}",
         EndBoundary: '2005-10-11T13:21:17Z',
         Enabled: true
       }.freeze

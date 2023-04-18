@@ -552,7 +552,7 @@ class Win32::TaskScheduler
 
     # I'm working around github issue #1 here.
     enum.each do |name|
-      raise Error, _("task '%{task}' already exists") % { task: task } if name.downcase == task.downcase + '.job'
+      raise Error, _("task '%{task}' already exists") % { task: task } if name.downcase == "#{task.downcase}.job"
     end
 
     FFI::MemoryPointer.new(:pointer) do |ptr|
@@ -856,7 +856,7 @@ class Win32::TaskScheduler
   # Returns whether or not the scheduled task exists.
   def exists?(job_name)
     # task name comparison is case insensitive
-    tasks.any? { |name| name.casecmp(job_name + '.job') == 0 }
+    tasks.any? { |name| name.casecmp("#{job_name}.job") == 0 }
   end
 
   private

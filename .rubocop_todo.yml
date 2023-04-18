@@ -193,14 +193,3 @@ Style/OpenStructUse:
 Style/SafeNavigation:
   Exclude:
     - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
-
-# Offense count: 23
-# This cop supports unsafe autocorrection (--autocorrect-all).
-# Configuration parameters: Mode.
-Style/StringConcatenation:
-  Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
-    - 'spec/legacy_taskscheduler.rb'
-    - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
