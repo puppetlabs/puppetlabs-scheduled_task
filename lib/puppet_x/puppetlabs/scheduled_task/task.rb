@@ -374,14 +374,14 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def account_information
       principal = @definition.Principal
-      principal.nil? ? nil : principal.UserId
+      principal&.UserId
     end
 
     # Returns the name of the application associated with the task.
     #
     def application_name
       action = default_action(create_if_missing: false)
-      action.nil? ? nil : action.Path
+      action&.Path
     end
 
     # Sets the application name associated with the task.
@@ -396,7 +396,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def parameters
       action = default_action(create_if_missing: false)
-      action.nil? ? nil : action.Arguments
+      action&.Arguments
     end
 
     # Sets the parameters for the task. These parameters are passed as command
@@ -413,7 +413,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def working_directory
       action = default_action(create_if_missing: false)
-      action.nil? ? nil : action.WorkingDirectory
+      action&.WorkingDirectory
     end
 
     # Sets the working directory for the task.

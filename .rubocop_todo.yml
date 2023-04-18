@@ -185,11 +185,3 @@ Style/ClassAndModuleChildren:
 Style/OpenStructUse:
   Exclude:
     - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
-
-# Offense count: 4
-# This cop supports unsafe autocorrection (--autocorrect-all).
-# Configuration parameters: ConvertCodeThatCanStartToReturnNil, AllowedMethods, MaxChainLength.
-# AllowedMethods: present?, blank?, presence, try, try!
-Style/SafeNavigation:
-  Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
