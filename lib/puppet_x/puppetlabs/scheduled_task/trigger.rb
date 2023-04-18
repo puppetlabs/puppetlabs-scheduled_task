@@ -35,19 +35,20 @@ module PuppetX::PuppetLabs::ScheduledTask
           day: matches['day'],
           minute: matches['minute'],
           hour: matches['hour'],
-          second: matches['second'],
+          second: matches['second']
         }
       end
 
       # Converts a hash in a time format to seconds
       def self.hash_to_seconds(value)
         return 0 if value.nil?
+
         time = 0
         # Note - the Year and Month calculations are approximate
-        time += value[:year].to_i   * (365.2422 * 24 * 60**2)      unless value[:year].nil?
-        time += value[:month].to_i  * (365.2422 * 2 * 60**2)       unless value[:month].nil?
-        time += value[:day].to_i    * 24 * 60**2                   unless value[:day].nil?
-        time += value[:hour].to_i   * 60**2                        unless value[:hour].nil?
+        time += value[:year].to_i   * (365.2422 * 24 * (60**2))      unless value[:year].nil?
+        time += value[:month].to_i  * (365.2422 * 2 * (60**2))       unless value[:month].nil?
+        time += value[:day].to_i    * 24 * (60**2)                   unless value[:day].nil?
+        time += value[:hour].to_i   * (60**2)                        unless value[:hour].nil?
         time += value[:minute].to_i * 60                           unless value[:minute].nil?
         time += value[:second].to_i                                unless value[:second].nil?
 
@@ -127,24 +128,24 @@ module PuppetX::PuppetLabs::ScheduledTask
         case schedule
         when 'once'
           {
-            'schedule' => 'once',
+            'schedule' => 'once'
           }
         when 'daily'
           {
             'schedule' => 'daily',
-            'every'    => 1,
+            'every' => 1
           }
         when 'weekly'
           {
-            'schedule'     => 'weekly',
+            'schedule' => 'weekly',
             'days_of_week' => V2::Day.names,
-            'every'        => 1,
+            'every' => 1
           }
         when 'monthly'
           {
             'schedule' => 'monthly',
-            'months'   => V2::Month.indexes,
-            'days'     => 0,
+            'months' => V2::Month.indexes,
+            'days' => 0
           }
         end
       end
@@ -153,11 +154,11 @@ module PuppetX::PuppetLabs::ScheduledTask
       def self.default_trigger_for(schedule = 'once')
         now = Time.now
         {
-          'enabled'             => true,
-          'minutes_interval'    => 0,
-          'minutes_duration'    => 0,
-          'start_date'          => format_date(now),
-          'start_time'          => format_time(now),
+          'enabled' => true,
+          'minutes_interval' => 0,
+          'minutes_duration' => 0,
+          'start_date' => format_date(now),
+          'start_time' => format_time(now)
         }.merge(default_trigger_settings_for(schedule))
       end
 
@@ -165,7 +166,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       def self.time_valid?(time)
         Time.parse("2016-5-1 #{time}")
         true
-      rescue
+      rescue StandardError
         false
       end
 
@@ -175,25 +176,26 @@ module PuppetX::PuppetLabs::ScheduledTask
       # returns original object with downcased keys
       def self.canonicalize_and_validate(manifest_hash)
         raise TypeError unless manifest_hash.is_a?(Hash)
+
         manifest_hash = downcase_keys(manifest_hash)
 
         # check for valid key usage
         invalid_keys = manifest_hash.keys - ValidKeys
         raise ArgumentError, "Unknown trigger option(s): #{Puppet::Parameter.format_value_for_display(invalid_keys)}" unless invalid_keys.empty?
 
-        unless ValidScheduleKeys.include?(manifest_hash['schedule'])
-          raise ArgumentError, "Unknown schedule type: #{manifest_hash['schedule'].inspect}"
-        end
+        raise ArgumentError, "Unknown schedule type: #{manifest_hash['schedule'].inspect}" unless ValidScheduleKeys.include?(manifest_hash['schedule'])
 
         required = V2::EVENT_BASED_TRIGGER_MAP.value?(manifest_hash['schedule']) ? [] : ['start_time']
 
         required.each do |field|
           next if manifest_hash.key?(field)
+
           raise ArgumentError, "Must specify '#{field}' when defining a trigger"
         end
 
         start_time_valid = time_valid?(manifest_hash['start_time'])
         raise ArgumentError, "Invalid start_time value: #{manifest_hash['start_time']}" unless start_time_valid
+
         # The start_time must be canonicalized to match the format that the rest of the code expects
         manifest_hash['start_time'] = format_time(Time.parse(manifest_hash['start_time'])) unless manifest_hash['start_time'].nil?
 
@@ -209,6 +211,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
             ['day_of_week', 'which_occurrence'].each do |field|
               next if manifest_hash.key?(field)
+
               raise ArgumentError, "#{field} must be specified when creating a monthly day-of-week based trigger"
             end
           else
@@ -220,11 +223,12 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         if manifest_hash.key?('every')
           every = begin
-                    Integer(manifest_hash['every'])
-                  rescue
-                    nil
-                  end
+            Integer(manifest_hash['every'])
+          rescue StandardError
+            nil
+          end
           raise ArgumentError, "Invalid every value: #{manifest_hash['every']}" if every.nil?
+
           manifest_hash['every'] = every
         end
 
@@ -260,42 +264,39 @@ module PuppetX::PuppetLabs::ScheduledTask
           duration = Integer(manifest_hash['minutes_duration'])
           # defaults to -1 when unspecified
           interval = Integer(manifest_hash['minutes_interval'] || -1)
-          if duration != 0 && duration <= interval
-            raise ArgumentError, 'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
-          end
+          raise ArgumentError, 'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0' if duration != 0 && duration <= interval
         end
 
         # interval set with / without duration
         if manifest_hash['minutes_interval']
           interval = Integer(manifest_hash['minutes_interval'])
           # interval < 0
-          if interval.negative?
-            raise ArgumentError, 'minutes_interval must be an integer greater or equal to 0'
-          end
+          raise ArgumentError, 'minutes_interval must be an integer greater or equal to 0' if interval.negative?
 
           # defaults to a day when unspecified
           duration = Integer(manifest_hash['minutes_duration'] || 1440)
 
-          if interval.positive? && interval >= duration
-            raise ArgumentError, 'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
-          end
+          raise ArgumentError, 'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0' if interval.positive? && interval >= duration
         end
         manifest_hash['minutes_interval'] = interval if interval
         manifest_hash['minutes_duration'] = duration if duration
 
         if manifest_hash['start_date']
-          start_date = Time.parse(manifest_hash['start_date'] + ' 00:00')
+          start_date = Time.parse("#{manifest_hash['start_date']} 00:00")
           raise ArgumentError, "start_date must be on or after #{format_date(MINIMUM_TRIGGER_DATE)}" unless start_date >= MINIMUM_TRIGGER_DATE
+
           manifest_hash['start_date'] = format_date(start_date)
         end
 
         if manifest_hash['user_id']
           raise 'user_id can only be verified on a Windows Operating System' unless Puppet.features.microsoft_windows?
+
           # If the user specifies undef in the manifest, coerce that into an empty string;
           # This is what scheduled tasks expects to receive for 'all users'
           user_id = (manifest_hash['user_id'] == :undef) ? '' : manifest_hash['user_id']
           # If the user cannot be resolved, the task will fail to save with a vague error
           raise ArgumentError, "Invalid user, specified user must exist: #{user_id}" unless Puppet::Util::Windows::SID.name_to_sid(user_id)
+
           # To keep the internal comparison consistent but human readable, convert from
           # the user id specified in the manifest to the canonical representation of that
           # account's SID on the system. If the specified user_id is null/empty, leave it
@@ -312,7 +313,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         rekeyed = hash.map do |k, v|
           [k.is_a?(String) ? k.downcase : k, v.is_a?(Hash) ? downcase_keys(v) : v]
         end
-        Hash[rekeyed]
+        rekeyed.to_h
       end
 
       private_class_method :downcase_keys
@@ -353,13 +354,13 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         # Day name to HEX map
         DAY_CONST_MAP = {
-          'sun'   => TASK_SUNDAY,
-          'mon'   => TASK_MONDAY,
-          'tues'  => TASK_TUESDAY,
-          'wed'   => TASK_WEDNESDAY,
+          'sun' => TASK_SUNDAY,
+          'mon' => TASK_MONDAY,
+          'tues' => TASK_TUESDAY,
+          'wed' => TASK_WEDNESDAY,
           'thurs' => TASK_THURSDAY,
-          'fri'   => TASK_FRIDAY,
-          'sat'   => TASK_SATURDAY,
+          'fri' => TASK_FRIDAY,
+          'sat' => TASK_SATURDAY
         }.freeze
 
         # Returns day names
@@ -384,9 +385,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to day names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           DAY_CONST_MAP.values.each_with_object([]) do |day, names|
             names << DAY_CONST_MAP.key(day) if bitmask & day != 0
@@ -411,25 +410,20 @@ module PuppetX::PuppetLabs::ScheduledTask
         # V2 IMonthlyTrigger::DaysOfMonth
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380735(v=vs.85).aspx
         def self.indexes_to_bitmask(day_indexes)
-          if day_indexes.nil? || (day_indexes.is_a?(Hash) && day_indexes.empty?)
-            raise TypeError, 'Day indexes value must not be nil or an empty hash.'
-          end
+          raise TypeError, 'Day indexes value must not be nil or an empty hash.' if day_indexes.nil? || (day_indexes.is_a?(Hash) && day_indexes.empty?)
 
           integer_days = Array(day_indexes).select { |i| i.is_a?(Integer) }
           invalid_days = integer_days.reject { |i| i.between?(1, 31) }
 
-          unless invalid_days.empty?
-            raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31"
-          end
-          integer_days.reduce(0) { |bitmask, day_index| bitmask | 1 << day_index - 1 }
+          raise ArgumentError, "Day indexes value #{invalid_days.join(', ')} is invalid. Integers must be in the range 1-31" unless invalid_days.empty?
+
+          integer_days.reduce(0) { |bitmask, day_index| bitmask | (1 << (day_index - 1)) }
         end
 
         # Converts bitmask to index
         def self.bitmask_to_indexes(bitmask, run_on_last_day_of_month = nil)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           indexes = bit_index(bitmask).map { |bit_index| bit_index + 1 }
 
@@ -449,9 +443,8 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         def self.last_day_of_month?(day_indexes)
           invalid_day_names = Array(day_indexes).select { |i| i.is_a?(String) && (i != 'last') }
-          unless invalid_day_names.empty?
-            raise ArgumentError, "Only 'last' is allowed as a day name. All other values must be integers between 1 and 31."
-          end
+          raise ArgumentError, "Only 'last' is allowed as a day name. All other values must be integers between 1 and 31." unless invalid_day_names.empty?
+
           Array(day_indexes).include? 'last'
         end
       end
@@ -504,18 +497,18 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         # Month number to HEX map
         MONTHNUM_CONST_MAP = {
-          1  => TASK_JANUARY,
-          2  => TASK_FEBRUARY,
-          3  => TASK_MARCH,
-          4  => TASK_APRIL,
-          5  => TASK_MAY,
-          6  => TASK_JUNE,
-          7  => TASK_JULY,
-          8  => TASK_AUGUST,
-          9  => TASK_SEPTEMBER,
+          1 => TASK_JANUARY,
+          2 => TASK_FEBRUARY,
+          3 => TASK_MARCH,
+          4 => TASK_APRIL,
+          5 => TASK_MAY,
+          6 => TASK_JUNE,
+          7 => TASK_JULY,
+          8 => TASK_AUGUST,
+          9 => TASK_SEPTEMBER,
           10 => TASK_OCTOBER,
           11 => TASK_NOVEMBER,
-          12 => TASK_DECEMBER,
+          12 => TASK_DECEMBER
         }.freeze
 
         # Returns month indexes
@@ -527,7 +520,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         def self.indexes_to_bitmask(month_indexes)
           month_indexes = [month_indexes].flatten.map do |m|
             Integer(m)
-          rescue
+          rescue StandardError
             m
           end
           invalid_months = month_indexes - MONTHNUM_CONST_MAP.keys
@@ -539,9 +532,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to indexes
         def self.bitmask_to_indexes(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           MONTHNUM_CONST_MAP.values.each_with_object([]) do |day, indexes|
             indexes << MONTHNUM_CONST_MAP.key(day) if bitmask & day != 0
@@ -572,11 +563,11 @@ module PuppetX::PuppetLabs::ScheduledTask
 
         # Week of the month to HEX map
         WEEK_OF_MONTH_CONST_MAP = {
-          'first'  => FIRST,
+          'first' => FIRST,
           'second' => SECOND,
-          'third'  => THIRD,
+          'third' => THIRD,
           'fourth' => FOURTH,
-          'last'   => LAST,
+          'last' => LAST
         }.freeze
 
         # Converts names to bitmask
@@ -591,9 +582,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # Converts bitmask to names
         def self.bitmask_to_names(bitmask)
           bitmask = Integer(bitmask)
-          if bitmask.negative? || bitmask > MAX_VALUE
-            raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}"
-          end
+          raise ArgumentError, "bitmask must be specified as an integer from 0 to #{MAX_VALUE.to_s(10)}" if bitmask.negative? || bitmask > MAX_VALUE
 
           WEEK_OF_MONTH_CONST_MAP.values.each_with_object([]) do |week, names|
             names << WEEK_OF_MONTH_CONST_MAP.key(week) if bitmask & week != 0
@@ -664,18 +653,18 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       # Trigger type to day map
       SCHEDULE_BASED_TRIGGER_MAP = {
-        Type::TASK_TRIGGER_DAILY      => 'daily',
-        Type::TASK_TRIGGER_WEEKLY     => 'weekly',
+        Type::TASK_TRIGGER_DAILY => 'daily',
+        Type::TASK_TRIGGER_WEEKLY => 'weekly',
         # NOTE: monthly uses context to determine MONTHLY or MONTHLYDOW
-        Type::TASK_TRIGGER_MONTHLY    => 'monthly',
+        Type::TASK_TRIGGER_MONTHLY => 'monthly',
         Type::TASK_TRIGGER_MONTHLYDOW => 'monthly',
-        Type::TASK_TRIGGER_TIME       => 'once',
+        Type::TASK_TRIGGER_TIME => 'once'
       }.freeze
 
       # Event based trigger map
       EVENT_BASED_TRIGGER_MAP = {
-        Type::TASK_TRIGGER_BOOT                 => 'boot',
-        Type::TASK_TRIGGER_LOGON                => 'logon',
+        Type::TASK_TRIGGER_BOOT => 'boot',
+        Type::TASK_TRIGGER_LOGON => 'logon'
         # The triggers below are not yet supported.
         # Type::TASK_TRIGGER_EVENT                => 'event',
         # Type::TASK_TRIGGER_IDLE                 => 'idle',
@@ -699,21 +688,19 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       # Converts trigger to manifest hash
       def self.to_manifest_hash(i_trigger)
-        if TYPE_MANIFEST_MAP[i_trigger.Type].nil?
-          raise ArgumentError, _('Unknown trigger type %{type}') % { type: i_trigger.ole_type.to_s }
-        end
+        raise ArgumentError, _('Unknown trigger type %{type}') % { type: i_trigger.ole_type.to_s } if TYPE_MANIFEST_MAP[i_trigger.Type].nil?
 
         # StartBoundary and EndBoundary may be empty strings per V2 API
         start_boundary = Trigger.iso8601_datetime_to_local(i_trigger.StartBoundary)
         _end_boundary = Trigger.iso8601_datetime_to_local(i_trigger.EndBoundary)
 
         manifest_hash = {
-          'start_date'                        => start_boundary ? Manifest.format_date(start_boundary) : '',
-          'start_time'                        => start_boundary ? Manifest.format_time(start_boundary) : '',
-          'enabled'                           => i_trigger.Enabled,
-          'minutes_interval'                  => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
-          'minutes_duration'                  => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
-          'disable_time_zone_synchronization' => start_boundary ? !%r{(Z|[+-]\d\d:\d\d)$}.match?(i_trigger.StartBoundary) : false,
+          'start_date' => start_boundary ? Manifest.format_date(start_boundary) : '',
+          'start_time' => start_boundary ? Manifest.format_time(start_boundary) : '',
+          'enabled' => i_trigger.Enabled,
+          'minutes_interval' => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
+          'minutes_duration' => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
+          'disable_time_zone_synchronization' => start_boundary ? !%r{(Z|[+-]\d\d:\d\d)$}.match?(i_trigger.StartBoundary) : false
         }
 
         case i_trigger.Type
@@ -723,20 +710,20 @@ module PuppetX::PuppetLabs::ScheduledTask
           manifest_hash['schedule'] = 'daily'
           manifest_hash['every'] = i_trigger.DaysInterval
         when Type::TASK_TRIGGER_WEEKLY
-          manifest_hash.merge!('schedule'    => 'weekly',
-                               'every'       => i_trigger.WeeksInterval,
+          manifest_hash.merge!('schedule' => 'weekly',
+                               'every' => i_trigger.WeeksInterval,
                                'day_of_week' => Day.bitmask_to_names(i_trigger.DaysOfWeek))
         when Type::TASK_TRIGGER_MONTHLY
           manifest_hash.merge!('schedule' => 'monthly',
-                               'months'   => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
-                               'on'       => Days.bitmask_to_indexes(i_trigger.DaysOfMonth, i_trigger.RunOnLastDayOfMonth))
+                               'months' => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
+                               'on' => Days.bitmask_to_indexes(i_trigger.DaysOfMonth, i_trigger.RunOnLastDayOfMonth))
         when Type::TASK_TRIGGER_MONTHLYDOW
           occurrences = V2::WeeksOfMonth.bitmask_to_names(i_trigger.WeeksOfMonth)
-          manifest_hash.merge!('schedule'         => 'monthly',
-                               'months'           => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
+          manifest_hash.merge!('schedule' => 'monthly',
+                               'months' => Month.bitmask_to_indexes(i_trigger.MonthsOfYear),
                                # HACK: choose only the first week selected when converting - this LOSES information
                                'which_occurrence' => occurrences.first || '',
-                               'day_of_week'      => Day.bitmask_to_names(i_trigger.DaysOfWeek))
+                               'day_of_week' => Day.bitmask_to_names(i_trigger.DaysOfWeek))
           # MODULES-10101: We will need to evaluate whether the value 'last' has been applied to the WeekOfMonth
           # parameter by inspecting the value of Trigger::RunOnLastWeekOfMonth. See JIRA ticket for more details.
           manifest_hash['which_occurrence'] = 'last' if i_trigger.RunOnLastWeekOfMonth
@@ -780,7 +767,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         # If `disable_time_zone_synchronization` has been set to true then the timezone is removed from the start time
         unless datetime_string.strip.empty?
           start = if manifest_hash['disable_time_zone_synchronization'] && manifest_hash['disable_time_zone_synchronization'] == true
-                    Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..\:..$)|(\-..\:..$)}, '')
+                    Time.parse(datetime_string).iso8601.gsub(%r{Z|(\+..:..$)|(-..:..$)}, '')
                   else
                     Time.parse(datetime_string).iso8601
                   end

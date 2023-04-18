@@ -21,9 +21,7 @@ describe 'Should create a scheduled task' do
     run_shell("schtasks.exe /delete /tn #{taskname} /f", accept_all_exit_codes: true) do |r|
       # Empty means deletion was ok.  The 'The system cannot find the file specified' error occurs
       # if the task does not exist
-      unless r.stderr.empty? || r.stderr =~ %r{ERROR: The system cannot find the .+ specified}
-        raise r.stderr
-      end
+      raise r.stderr unless r.stderr.empty? || r.stderr =~ %r{ERROR: The system cannot find the .+ specified}
     end
   end
 
@@ -71,10 +69,8 @@ describe 'Should create a scheduled task' do
       provider    => 'taskscheduler_api2'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
 
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
@@ -96,10 +92,7 @@ describe 'Should create a scheduled task' do
       provider      => 'win32_taskscheduler'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
-
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
@@ -394,10 +387,7 @@ describe 'Should create a scheduled task' do
       provider    => 'taskscheduler_api2'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
-
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"
@@ -420,10 +410,7 @@ describe 'Should create a scheduled task' do
       provider      => 'win32_taskscheduler'
     }
     MANIFEST
-    apply_manifest(pp, catch_failures: true)
-
-    # Ensure it's idempotent
-    apply_manifest(pp, catch_changes: true)
+    idempotent_apply(pp)
 
     # Verify the task exists
     query_cmd = "schtasks.exe /query /v /fo list /tn #{taskname}"

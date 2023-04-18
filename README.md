@@ -338,7 +338,7 @@ The full path of the directory in which to start the command.
 <a id="limitations"></a>
 ## Limitations
 
-* Only supported on Windows Server 2008 and above, and Windows 7 and above.
+For a full list of supported OS, check [metadata.json](https://github.com/puppetlabs/puppetlabs-scheduled_task/blob/main/metadata.json).
 
 <a id="development"></a>
 ## Development

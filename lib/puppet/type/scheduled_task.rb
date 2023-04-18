@@ -7,7 +7,7 @@ Puppet::Type.newtype(:scheduled_task) do
     @note
       All attributes except `name`, `command`, and `trigger` are optional; see the description
       of the `trigger` attribute for details on setting schedules."
-    PUPPET
+  PUPPET
 
   feature :compatibility, "The provider accepts compatibility to be
     set for the given task.",
@@ -48,7 +48,7 @@ Puppet::Type.newtype(:scheduled_task) do
       # windows converts slashes to backslashes, so the *is* value
       # has backslashes. Do the same for the *should* value, so that
       # we are slash-insensitive. See #13009
-      File.expand_path(value).tr(%(\/), '\\')
+      File.expand_path(value).tr(%(/), '\\')
     end
   end
 
@@ -122,6 +122,7 @@ Puppet::Type.newtype(:scheduled_task) do
 
     validate do |value|
       raise Puppet::Error, _('must be a number') unless value.is_a?(Integer)
+
       super(value)
     end
 
@@ -130,7 +131,7 @@ Puppet::Type.newtype(:scheduled_task) do
   end
 
   newproperty(:trigger, array_matching: :all) do
-    desc <<-'EOT'
+    desc <<-'PROPERTY'
       One or more triggers defining when the task should run. A single trigger is
       represented as a hash, and multiple triggers can be specified with an array of
       hashes.
@@ -249,7 +250,7 @@ Puppet::Type.newtype(:scheduled_task) do
             user_id  => 'MyDomain\\SomeUser'
           }
 
-    EOT
+    PROPERTY
 
     validate do |value|
       provider.validate_trigger(value)

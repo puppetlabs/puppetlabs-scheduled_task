@@ -52,6 +52,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def user
     account = task.account_information
     return 'system' if account == ''
+
     account
   end
 
@@ -143,12 +144,12 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def user=(value)
     raise("Invalid user: #{value}") unless Puppet::Util::Windows::SID.name_to_sid(value)
 
-    if !value.to_s.casecmp('system').zero?
-      task.set_account_information(value, resource[:password])
-    else
+    if value.to_s.casecmp('system').zero?
       # Win32::TaskScheduler treats a nil/empty username & password as
       # requesting the SYSTEM account.
       task.set_account_information(nil, nil)
+    else
+      task.set_account_information(value, resource[:password])
     end
   end
 
@@ -169,6 +170,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def flush
     return if resource[:ensure] == :absent
     raise('Parameter command is required.') unless resource[:command]
+
     # HACK: even though the user may actually be insync?, for task changes to
     # fully propagate, it is necessary to explicitly set the user for the task,
     # even when it is SYSTEM (and has a nil password)
@@ -182,6 +184,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
 
   def triggers_same?(current_trigger, desired_trigger)
     return false if current_trigger.key?('enabled') && !current_trigger['enabled']
+
     # Canonicalizing the desired hash ensures it is in a matching state with what we convert from on-disk
     desired = PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(desired_trigger)
     # This method ensures that current_trigger:
@@ -195,9 +198,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def validate_trigger(value)
     [value].flatten.each do |t|
       ['index', 'enabled'].each do |key|
-        if t.key?(key)
-          raise "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)."
-        end
+        raise "'#{key}' is read-only on scheduled_task triggers and should be removed ('#{key}' is usually provided in puppet resource scheduled_task)." if t.key?(key)
       end
       PuppetX::PuppetLabs::ScheduledTask::Trigger::Manifest.canonicalize_and_validate(t)
     end
@@ -208,7 +209,7 @@ Puppet::Type.type(:scheduled_task).provide(:win32_taskscheduler) do
   def validate_name
     return unless @resource[:name].include?('\\')
 
-    raise Puppet::ResourceError, "#{@resource[:name]} specifies a path including subfolders which are not supported by the version of the Task Scheduler API used by this provider."\
+    raise Puppet::ResourceError, "#{@resource[:name]} specifies a path including subfolders which are not supported by the version of the Task Scheduler API used by this provider." \
                                  'Use the taskscheduler_api2 provider instead.'
   end
 end

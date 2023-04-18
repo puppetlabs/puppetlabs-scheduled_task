@@ -219,9 +219,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       @task, @definition = self.class.task(@full_task_path)
       task_userid = @definition.Principal.UserId || ''
 
-      if compatibility_level == :v1_compatibility
-        self.compatibility = TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1
-      end
+      self.compatibility = TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1 if compatibility_level == :v1_compatibility
 
       set_account_information(task_userid, nil)
     end
@@ -267,7 +265,7 @@ module PuppetX::PuppetLabs::ScheduledTask
 
       options = {
         include_child_folders: true,
-        include_compatibility: [],
+        include_compatibility: []
       }.merge(enum_options)
 
       array = []
@@ -276,6 +274,7 @@ module PuppetX::PuppetLabs::ScheduledTask
       filter_compatibility = !options[:include_compatibility].empty?
       task_folder.GetTasks(TASK_ENUM_FLAGS::TASK_ENUM_HIDDEN).each do |task|
         next if filter_compatibility && !options[:include_compatibility].include?(task.Definition.Settings.Compatibility)
+
         array << task.Path
       end
       return array unless options[:include_child_folders]
@@ -290,11 +289,12 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Returns whether or not the scheduled task exists.
     def self.exists?(task_path)
       raise TypeError unless task_path.is_a?(String)
+
       begin
         task_folder = task_service.GetFolder(folder_path_from_task_path(task_path))
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381363(v=vs.85).aspx
         _task = task_folder.GetTask(task_name_from_task_path(task_path))
-      rescue
+      rescue StandardError
         return false
       end
       true
@@ -374,14 +374,14 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def account_information
       principal = @definition.Principal
-      principal.nil? ? nil : principal.UserId
+      principal&.UserId
     end
 
     # Returns the name of the application associated with the task.
     #
     def application_name
       action = default_action(create_if_missing: false)
-      action.nil? ? nil : action.Path
+      action&.Path
     end
 
     # Sets the application name associated with the task.
@@ -396,7 +396,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def parameters
       action = default_action(create_if_missing: false)
-      action.nil? ? nil : action.Arguments
+      action&.Arguments
     end
 
     # Sets the parameters for the task. These parameters are passed as command
@@ -413,7 +413,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def working_directory
       action = default_action(create_if_missing: false)
-      action.nil? ? nil : action.WorkingDirectory
+      action&.WorkingDirectory
     end
 
     # Sets the working directory for the task.
@@ -511,15 +511,15 @@ module PuppetX::PuppetLabs::ScheduledTask
     def self.create_folder(path)
       task_service.GetFolder(path)
     rescue WIN32OLERuntimeError => e
-      unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
-        raise Puppet::Error.new(_('GetFolder failed with: %{error}') % { error: e }, e)
-      end
+      raise Puppet::Error.new(_('GetFolder failed with: %{error}') % { error: e }, e) unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
+
       task_service.GetFolder(ROOT_FOLDER).CreateFolder(path)
     end
 
     # Gets the task with a specified task path
     def self.task(task_path)
       raise TypeError unless task_path.is_a?(String)
+
       service = task_service
       begin
         task_folder = service.GetFolder(folder_path_from_task_path(task_path))
@@ -527,9 +527,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         task = task_folder.GetTask(task_name_from_task_path(task_path))
         return task, task.Definition
       rescue WIN32OLERuntimeError => e
-        unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
-          raise Puppet::Error.new(_('GetTask failed with: %{error}') % { error: e }, e)
-        end
+        raise Puppet::Error.new(_('GetTask failed with: %{error}') % { error: e }, e) unless Error.com_error_type?(e, Error::ERROR_FILE_NOT_FOUND)
       end
 
       [nil, service.NewTask(0)]
@@ -544,9 +542,7 @@ module PuppetX::PuppetLabs::ScheduledTask
         break if action
       end
 
-      if action.nil? && options.fetch(:create_if_missing, false)
-        action = @definition.Actions.Create(TASK_ACTION_TYPE::TASK_ACTION_EXEC)
-      end
+      action = @definition.Actions.Create(TASK_ACTION_TYPE::TASK_ACTION_EXEC) if action.nil? && options.fetch(:create_if_missing, false)
 
       action
     end
@@ -554,8 +550,9 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Gets the action item with the specified index
     def action_at(index)
       @definition.Actions.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
+    rescue WIN32OLERuntimeError => e
+      raise unless Error.com_error_type?(e, Error::E_INVALIDARG)
+
       nil
     end
 
@@ -568,8 +565,9 @@ module PuppetX::PuppetLabs::ScheduledTask
     #
     def trigger_at(index)
       @definition.Triggers.Item(index)
-    rescue WIN32OLERuntimeError => err
-      raise unless Error.com_error_type?(err, Error::E_INVALIDARG)
+    rescue WIN32OLERuntimeError => e
+      raise unless Error.com_error_type?(e, Error::E_INVALIDARG)
+
       nil
     end
 

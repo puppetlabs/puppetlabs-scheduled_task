@@ -24,6 +24,7 @@ module PuppetX::PuppetLabs::ScheduledTask::Error
     # to_s(16) does not include 0x prefix
     # assume actual hex for error is what message contains - i.e. 80070002
     return true if win_32_ole_runtime_error.message.match?(%r{#{hresult.to_s(16)}})
+
     # if not, look for 2s complement (negative value) - i.e. -2147024894
     win_32_ole_runtime_error.message =~ %r{#{to_signed_value(hresult)}}m
   end

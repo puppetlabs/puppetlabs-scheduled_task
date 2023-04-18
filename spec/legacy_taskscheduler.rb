@@ -200,10 +200,11 @@ class Win32::TaskScheduler
     at_exit do
       @pits.Release if @pits && !@pits.null?
       @pits = nil
-    rescue # rubocop:disable Lint/SuppressedException
+    rescue StandardError # rubocop:disable Lint/SuppressedException
     end
 
     raise TypeError if work_item && trigger && !trigger.is_a?(Hash)
+
     new_work_item(work_item, trigger) if work_item && trigger
   end
 
@@ -211,6 +212,7 @@ class Win32::TaskScheduler
   #
   def enum
     raise Error, _('No current task scheduler. ITaskScheduler is NULL.') if @pits.nil?
+
     array = []
 
     @pits.UseInstance(COM::EnumWorkItems, :Enum) do |pi_enum|
@@ -293,7 +295,7 @@ class Win32::TaskScheduler
         pi_persist_file.Save(wide_file, 1)
         pi_persist_file.SaveCompleted(wide_file)
       end
-    rescue
+    rescue StandardError
       reset = false
     ensure
       reset_current_task if reset
@@ -347,9 +349,8 @@ class Win32::TaskScheduler
       if (user.nil? || user == '') && (password.nil? || password == '')
         @pitask.SetAccountInformation(wide_string(''), FFI::Pointer::NULL)
       else
-        if user.length > MAX_ACCOUNT_LENGTH
-          raise Error, _('User has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH }
-        end
+        raise Error, _('User has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH } if user.length > MAX_ACCOUNT_LENGTH
+
         user = wide_string(user)
         password = wide_string(password)
         @pitask.SetAccountInformation(user, password)
@@ -419,9 +420,8 @@ class Win32::TaskScheduler
     raise TypeError unless app.is_a?(String)
 
     # the application name is written to a .job file on disk, so is subject to path limitations
-    if app.length > MAX_PATH
-      raise Error, _('Application name has exceeded maximum allowed length %{max}') % { max: MAX_PATH }
-    end
+    raise Error, _('Application name has exceeded maximum allowed length %{max}') % { max: MAX_PATH } if app.length > MAX_PATH
+
     @pitask.SetApplicationName(wide_string(app))
 
     app
@@ -455,9 +455,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless param.is_a?(String)
 
-    if param.length > MAX_PARAMETERS_LENGTH
-      raise Error, _('Parameters has exceeded maximum allowed length %{max}') % { max: MAX_PARAMETERS_LENGTH }
-    end
+    raise Error, _('Parameters has exceeded maximum allowed length %{max}') % { max: MAX_PARAMETERS_LENGTH } if param.length > MAX_PARAMETERS_LENGTH
 
     @pitask.SetParameters(wide_string(param))
 
@@ -490,9 +488,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless dir.is_a?(String)
 
-    if dir.length > MAX_PATH
-      raise Error, _('Working directory has exceeded maximum allowed length %{max}') % { max: MAX_PATH }
-    end
+    raise Error, _('Working directory has exceeded maximum allowed length %{max}') % { max: MAX_PATH } if dir.length > MAX_PATH
 
     @pitask.SetWorkingDirectory(wide_string(dir))
 
@@ -556,9 +552,7 @@ class Win32::TaskScheduler
 
     # I'm working around github issue #1 here.
     enum.each do |name|
-      if name.downcase == task.downcase + '.job'
-        raise Error, _("task '%{task}' already exists") % { task: task }
-      end
+      raise Error, _("task '%{task}' already exists") % { task: task } if name.downcase == "#{task.downcase}.job"
     end
 
     FFI::MemoryPointer.new(:pointer) do |ptr|
@@ -706,18 +700,16 @@ class Win32::TaskScheduler
       st = ptr.read_hresult
     end
 
-    status = case st
-             when SCHED_S_TASK_READY
-               'ready'
-             when SCHED_S_TASK_RUNNING
-               'running'
-             when SCHED_S_TASK_NOT_SCHEDULED
-               'not scheduled'
-             else
-               'unknown'
-             end
-
-    status
+    case st
+    when SCHED_S_TASK_READY
+      'ready'
+    when SCHED_S_TASK_RUNNING
+      'running'
+    when SCHED_S_TASK_NOT_SCHEDULED
+      'not scheduled'
+    else
+      'unknown'
+    end
   end
 
   # Returns the exit code from the last scheduled run.
@@ -763,9 +755,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless comment.is_a?(String)
 
-    if comment.length > MAX_COMMENT_LENGTH
-      raise Error, _('Comment has exceeded maximum allowed length %{max}') % { max: MAX_COMMENT_LENGTH }
-    end
+    raise Error, _('Comment has exceeded maximum allowed length %{max}') % { max: MAX_COMMENT_LENGTH } if comment.length > MAX_COMMENT_LENGTH
 
     @pitask.SetComment(wide_string(comment))
     comment
@@ -795,9 +785,7 @@ class Win32::TaskScheduler
     raise Error, _('No currently active task. ITask is NULL.') if @pitask.nil?
     raise TypeError unless creator.is_a?(String)
 
-    if creator.length > MAX_ACCOUNT_LENGTH
-      raise Error, _('Creator has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH }
-    end
+    raise Error, _('Creator has exceeded maximum allowed length %{max}') % { max: MAX_ACCOUNT_LENGTH } if creator.length > MAX_ACCOUNT_LENGTH
 
     @pitask.SetCreator(wide_string(creator))
     creator
@@ -868,7 +856,7 @@ class Win32::TaskScheduler
   # Returns whether or not the scheduled task exists.
   def exists?(job_name)
     # task name comparison is case insensitive
-    tasks.any? { |name| name.casecmp(job_name + '.job') == 0 }
+    tasks.any? { |name| name.casecmp("#{job_name}.job") == 0 }
   end
 
   private
@@ -913,9 +901,11 @@ class Win32::TaskScheduler
       if key == 'type'
         new_type_hash = {}
         raise ArgumentError unless value.is_a?(Hash)
+
         value.each do |subkey, subvalue|
           subkey = subkey.to_s.downcase
           raise ArgumentError, _("Invalid type key '%{key}'") % { key: subkey } unless ValidTypeKeys.include?(subkey)
+
           new_type_hash[subkey] = subvalue
         end
         new_hash[key] = new_type_hash
@@ -938,6 +928,7 @@ class Win32::TaskScheduler
 
   def populate_trigger(task_trigger, trigger)
     raise TypeError unless task_trigger.is_a?(COM::TaskTrigger)
+
     trigger = transform_and_validate(trigger)
 
     FFI::MemoryPointer.new(COM::TASK_TRIGGER.size) do |trigger_ptr|
@@ -947,9 +938,7 @@ class Win32::TaskScheduler
         tmp = trigger['type'].is_a?(Hash) ? trigger['type'] : nil
         case trigger['trigger_type']
         when :TASK_TIME_TRIGGER_DAILY
-          if tmp && tmp['days_interval']
-            trigger_type_union[:Daily][:DaysInterval] = tmp['days_interval']
-          end
+          trigger_type_union[:Daily][:DaysInterval] = tmp['days_interval'] if tmp && tmp['days_interval']
         when :TASK_TIME_TRIGGER_WEEKLY
           if tmp && tmp['weeks_interval'] && tmp['days_of_week']
             trigger_type_union[:Weekly][:WeeksInterval] = tmp['weeks_interval']
@@ -1012,7 +1001,7 @@ class Win32::TaskScheduler
       'minutes_interval' => task_trigger[:MinutesInterval],
       'flags' => task_trigger[:rgFlags],
       'trigger_type' => task_trigger[:TriggerType],
-      'random_minutes_interval' => task_trigger[:wRandomMinutesInterval],
+      'random_minutes_interval' => task_trigger[:wRandomMinutesInterval]
     }
 
     case task_trigger[:TriggerType]
@@ -1021,18 +1010,18 @@ class Win32::TaskScheduler
     when :TASK_TIME_TRIGGER_WEEKLY
       trigger['type'] = {
         'weeks_interval' => task_trigger[:Type][:Weekly][:WeeksInterval],
-        'days_of_week' => task_trigger[:Type][:Weekly][:rgfDaysOfTheWeek],
+        'days_of_week' => task_trigger[:Type][:Weekly][:rgfDaysOfTheWeek]
       }
     when :TASK_TIME_TRIGGER_MONTHLYDATE
       trigger['type'] = {
         'days' => task_trigger[:Type][:MonthlyDate][:rgfDays],
-        'months' => task_trigger[:Type][:MonthlyDate][:rgfMonths],
+        'months' => task_trigger[:Type][:MonthlyDate][:rgfMonths]
       }
     when :TASK_TIME_TRIGGER_MONTHLYDOW
       trigger['type'] = {
         'weeks' => task_trigger[:Type][:MonthlyDOW][:wWhichWeek],
         'days_of_week' => task_trigger[:Type][:MonthlyDOW][:rgfDaysOfTheWeek],
-        'months' => task_trigger[:Type][:MonthlyDOW][:rgfMonths],
+        'months' => task_trigger[:Type][:MonthlyDOW][:rgfMonths]
       }
     when :TASK_TIME_TRIGGER_ONCE
       trigger['type'] = { 'once' => nil }
@@ -1051,7 +1040,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381811(v=vs.85).aspx
     ITaskScheduler = com::Interface[com::IUnknown,
                                     FFI::WIN32::GUID['148BD527-A2AB-11CE-B11F-00AA00530503'],
-
                                     SetTargetComputer: [[:lpcwstr], :hresult],
                                     # LPWSTR *
                                     GetTargetComputer: [[:pointer], :hresult],
@@ -1074,7 +1062,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa380706(v=vs.85).aspx
     IEnumWorkItems = com::Interface[com::IUnknown,
                                     FFI::WIN32::GUID['148BD528-A2AB-11CE-B11F-00AA00530503'],
-
                                     # ULONG, LPWSTR **, ULONG *
                                     Next: [[:win32_ulong, :pointer, :pointer], :hresult],
                                     Skip: [[:win32_ulong], :hresult],
@@ -1088,7 +1075,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381216(v=vs.85).aspx
     IScheduledWorkItem = com::Interface[com::IUnknown,
                                         FFI::WIN32::GUID['a6b952f0-a4b1-11d0-997d-00aa006887ec'],
-
                                         # WORD *, ITaskTrigger **
                                         CreateTrigger: [[:pointer, :pointer], :hresult],
                                         DeleteTrigger: [[:word], :hresult],
@@ -1140,7 +1126,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381311(v=vs.85).aspx
     ITask = com::Interface[IScheduledWorkItem,
                            FFI::WIN32::GUID['148BD524-A2AB-11CE-B11F-00AA00530503'],
-
                            SetApplicationName: [[:lpcwstr], :hresult],
                            # LPWSTR *
                            GetApplicationName: [[:pointer], :hresult],
@@ -1173,7 +1158,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/ms687223(v=vs.85).aspx
     IPersistFile = com::Interface[IPersist,
                                   FFI::WIN32::GUID['0000010b-0000-0000-C000-000000000046'],
-
                                   IsDirty: [[], :hresult],
                                   Load: [[:lpcolestr, :dword], :hresult],
                                   Save: [[:lpcolestr, :win32_bool], :hresult],
@@ -1187,7 +1171,6 @@ class Win32::TaskScheduler
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381864(v=vs.85).aspx
     ITaskTrigger = com::Interface[com::IUnknown,
                                   FFI::WIN32::GUID['148BD52B-A2AB-11CE-B11F-00AA00530503'],
-
                                   SetTrigger: [[:pointer], :hresult],
                                   GetTrigger: [[:pointer], :hresult],
                                   GetTriggerString: [[:pointer], :hresult]
