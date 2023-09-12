@@ -160,6 +160,11 @@ RSpec/NoExpectationExample:
     - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
     - 'spec/unit/puppet/type/scheduled_task_spec.rb'
 
+# Offense count: 1
+RSpec/SpecFilePathFormat:
+  Exclude:
+    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: EnforcedStyle.

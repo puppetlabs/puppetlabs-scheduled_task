@@ -25,7 +25,7 @@ describe 'Should create a scheduled task' do
     end
   end
 
-  it 'creates a task that runs on the last day of the month: taskscheduler_api2', tier_high: true do
+  it 'creates a task that runs on the last day of the month: taskscheduler_api2', :tier_high do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':
       ensure      => present,
@@ -54,7 +54,7 @@ describe 'Should create a scheduled task' do
     end
   end
 
-  it 'creates a task if it does not exist: taskscheduler_api2', tier_high: true do
+  it 'creates a task if it does not exist: taskscheduler_api2', :tier_high do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':
       ensure      => present,
@@ -77,7 +77,7 @@ describe 'Should create a scheduled task' do
     run_shell(query_cmd)
   end
 
-  it 'creates a task if it does not exist: win32_taskscheduler', tier_high: true do
+  it 'creates a task if it does not exist: win32_taskscheduler', :tier_high do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':
       ensure        => present,
@@ -371,7 +371,7 @@ describe 'Should create a scheduled task' do
     end
   end
 
-  it 'creates a task with synchronisation disabled: taskscheduler_api2', tier_high: true do
+  it 'creates a task with synchronisation disabled: taskscheduler_api2', :tier_high do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':
       ensure      => present,
@@ -394,7 +394,7 @@ describe 'Should create a scheduled task' do
     run_shell(query_cmd)
   end
 
-  it 'creates a task with synchronisation disabled: win32_taskscheduler', tier_high: true do
+  it 'creates a task with synchronisation disabled: win32_taskscheduler', :tier_high do
     pp = <<-MANIFEST
     scheduled_task {'#{taskname}':
       ensure        => present,
