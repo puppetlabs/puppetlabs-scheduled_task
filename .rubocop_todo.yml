@@ -23,29 +23,29 @@ Lint/BooleanSymbol:
 # AllowedMethods: enums
 Lint/ConstantDefinitionInBlock:
   Exclude:
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+    - 'spec/unit/puppet_x/puppet_labs/scheduled_task/trigger_spec.rb'
 
 # Offense count: 6
 # Configuration parameters: MaximumRangeSize.
 Lint/MissingCopEnableDirective:
   Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
+    - 'lib/puppet_x/puppet_labs/scheduled_task/task.rb'
+    - 'spec/integration/puppet_x/puppet_labs/scheduled_task/task_spec.rb'
     - 'spec/legacy_taskscheduler.rb'
     - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
     - 'spec/unit/puppet/type/scheduled_task_spec.rb'
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+    - 'spec/unit/puppet_x/puppet_labs/scheduled_task/trigger_spec.rb'
 
 # Offense count: 1
 Lint/MixedRegexpCaptureTypes:
   Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
+    - 'lib/puppet_x/puppet_labs/scheduled_task/trigger.rb'
 
 # Offense count: 2
 # This cop supports safe autocorrection (--autocorrect).
 Lint/RedundantCopDisableDirective:
   Exclude:
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
+    - 'spec/integration/puppet_x/puppet_labs/scheduled_task/task_spec.rb'
 
 # Offense count: 19
 # Configuration parameters: AllowedMethods, AllowedPatterns, CountRepeatedAttributes.
@@ -90,7 +90,7 @@ Naming/MemoizedInstanceVariableName:
   Exclude:
     - 'lib/puppet/provider/scheduled_task/taskscheduler_api2.rb'
     - 'lib/puppet/provider/scheduled_task/win32_taskscheduler.rb'
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
+    - 'lib/puppet_x/puppet_labs/scheduled_task/task.rb'
 
 # Offense count: 2
 # Configuration parameters: MinSize.
@@ -109,8 +109,8 @@ RSpec/Be:
 # Prefixes: when, with, without
 RSpec/ContextWording:
   Exclude:
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+    - 'spec/integration/puppet_x/puppet_labs/scheduled_task/task_spec.rb'
+    - 'spec/unit/puppet_x/puppet_labs/scheduled_task/trigger_spec.rb'
 
 # Offense count: 5
 # Configuration parameters: IgnoredMetadata.
@@ -123,7 +123,7 @@ RSpec/DescribeClass:
     - '**/spec/views/**/*'
     - 'spec/acceptance/should_create_task_spec.rb'
     - 'spec/acceptance/should_destroy_spec.rb'
-    - 'spec/integration/puppet_x/puppetlabs/scheduled_task/task_spec.rb'
+    - 'spec/integration/puppet_x/puppet_labs/scheduled_task/task_spec.rb'
     - 'spec/unit/puppet/provider/scheduled_task/win32_taskscheduler_spec.rb'
     - 'spec/unit/puppet/type/scheduled_task_spec.rb'
 
@@ -135,7 +135,7 @@ RSpec/ExampleLength:
 # Offense count: 16
 RSpec/LeakyConstantDeclaration:
   Exclude:
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+    - 'spec/unit/puppet_x/puppet_labs/scheduled_task/trigger_spec.rb'
 
 # Offense count: 29
 RSpec/MultipleExpectations:
@@ -163,7 +163,7 @@ RSpec/NoExpectationExample:
 # Offense count: 1
 RSpec/SpecFilePathFormat:
   Exclude:
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+    - 'spec/unit/puppet_x/puppet_labs/scheduled_task/trigger_spec.rb'
 
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).
@@ -171,10 +171,10 @@ RSpec/SpecFilePathFormat:
 # SupportedStyles: nested, compact
 Style/ClassAndModuleChildren:
   Exclude:
-    - 'lib/puppet_x/puppetlabs/scheduled_task/task.rb'
-    - 'lib/puppet_x/puppetlabs/scheduled_task/trigger.rb'
+    - 'lib/puppet_x/puppet_labs/scheduled_task/task.rb'
+    - 'lib/puppet_x/puppet_labs/scheduled_task/trigger.rb'
 
 # Offense count: 6
 Style/OpenStructUse:
   Exclude:
-    - 'spec/unit/puppet_x/puppetlabs/scheduled_task/trigger_spec.rb'
+    - 'spec/unit/puppet_x/puppet_labs/scheduled_task/trigger_spec.rb'

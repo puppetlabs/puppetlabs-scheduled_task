@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'puppet_x/puppetlabs/scheduled_task/trigger'
+require 'puppet_x/puppet_labs/scheduled_task/trigger'
 
 describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
   subject(:trigger) { described_class }

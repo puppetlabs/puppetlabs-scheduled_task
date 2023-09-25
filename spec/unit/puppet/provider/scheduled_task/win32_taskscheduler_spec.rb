@@ -4,7 +4,7 @@
 require 'spec_helper'
 
 require_relative '../../../../legacy_taskscheduler' if Puppet.features.microsoft_windows?
-require 'puppet_x/puppetlabs/scheduled_task/task'
+require 'puppet_x/puppet_labs/scheduled_task/task'
 
 describe Puppet::Type.type(:scheduled_task).provider(:taskscheduler_api2) do
   subject(:taskscheduler_api2) { described_class.new }
