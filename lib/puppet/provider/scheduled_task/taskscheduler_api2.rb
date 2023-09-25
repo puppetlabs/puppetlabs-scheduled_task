@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'puppet/parameter'
-require_relative '../../../puppet_x/puppetlabs/scheduled_task/task'
+require_relative '../../../puppet_x/puppet_labs/scheduled_task/task'
 
 Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
   desc "This provider manages scheduled tasks on Windows.
