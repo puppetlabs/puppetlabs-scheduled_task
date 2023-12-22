@@ -6,10 +6,6 @@ appveyor.yml:
 
 Gemfile:
   use_litmus: true
-  optional:
-    ":development":
-    - gem: github_changelog_generator
-      version: '= 1.15.2'
 NOTICE:
   copyright_holders:
   - name: Puppet, Inc.
