@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v4.0.2](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v4.0.2) - 2025-02-14
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.1...v4.0.2)
+
+### Fixed
+
+- Update taskscheduler_api2.rb [#258](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/258) ([voreilly](https://github.com/voreilly))
+
 ## [v4.0.1](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v4.0.1) - 2024-12-17
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.0...v4.0.1)
