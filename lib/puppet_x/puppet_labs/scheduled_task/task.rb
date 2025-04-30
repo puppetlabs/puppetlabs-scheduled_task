@@ -471,6 +471,7 @@ module PuppetX::PuppetLabs::ScheduledTask
     # Appends a new trigger for the currently active task.
     #
     def append_trigger(manifest_hash)
+      Puppet.debug("Task.append_trigger called with: #{manifest_hash.inspect}")
       Trigger::V2.append_trigger(@definition, manifest_hash)
     end
 

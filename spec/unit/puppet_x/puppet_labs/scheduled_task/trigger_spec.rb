@@ -160,6 +160,28 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
         end
       end
 
+      describe 'when validating delay and random_delay properties' do
+        it 'accepts valid ISO8601 duration format for delay' do
+          logon_manifest = { 'schedule' => 'logon', 'delay' => 'PT15M' }
+          expect { manifest.class.canonicalize_and_validate(logon_manifest) }.not_to raise_error
+        end
+
+        it 'rejects invalid format for delay' do
+          logon_manifest = { 'schedule' => 'logon', 'delay' => 'invalid_format' }
+          expect { manifest.class.canonicalize_and_validate(logon_manifest) }.to raise_error(ArgumentError, /Invalid delay value/)
+        end
+
+        it 'accepts valid ISO8601 duration format for random_delay' do
+          daily_manifest = { 'schedule' => 'daily', 'start_time' => '01:00', 'random_delay' => 'PT15M' }
+          expect { manifest.class.canonicalize_and_validate(daily_manifest) }.not_to raise_error
+        end
+
+        it 'rejects invalid format for random_delay' do
+          daily_manifest = { 'schedule' => 'daily', 'start_time' => '01:00', 'random_delay' => 'invalid_format' }
+          expect { manifest.class.canonicalize_and_validate(daily_manifest) }.to raise_error(ArgumentError, /Invalid random_delay value/)
+        end
+      end
+
       it 'canonicalizes `start_time` to %H:%M' do
         manifest_hash = MINIMAL_MANIFEST_HASH.merge('start_time' => '2:03 pm')
         expected = MINIMAL_MANIFEST_HASH.merge('start_time' => '14:03')

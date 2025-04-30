@@ -167,6 +167,43 @@ scheduled_task { 'Disk Cleanup On Restart':
 ~~~
 * Note: Duration properties like `minutes_duration` and `minutes_interval` must have `compatibility => 2` or higher specified for `boot` triggers. Windows does not support those options at the "Windows XP or Windows Server 2003 computer" compatibility level which is the default when compatibility is left unspecified.
 
+You can also add a random delay to your scheduled tasks to prevent multiple tasks from starting at exactly the same time:
+
+~~~puppet
+scheduled_task { 'Disk Cleanup with Random Delay':
+  ensure        => 'present',
+  compatibility => 2,
+  command       => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  arguments     => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
+  enabled       => 'true',
+  trigger       => [{
+    'schedule'     => 'daily',
+    'start_time'   => '07:00',
+    'random_delay' => 'PT30M'  # Adds a random delay of up to 30 minutes
+  }],
+  user          => 'system',
+}
+~~~
+* Note: The `random_delay` property requires `compatibility => 2` or higher and is only supported for schedule-based triggers (daily, weekly, monthly, and once).
+
+For event-based triggers like boot or logon, you can specify a delay to wait before running the task:
+
+~~~puppet
+scheduled_task { 'Disk Cleanup After Boot with Delay':
+  ensure        => 'present',
+  compatibility => 2,
+  command       => "$::system32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  arguments     => '-File "C:\\Scripts\\Clear-DiskSpace.ps1"',
+  enabled       => 'true',
+  trigger       => [{
+    'schedule'  => 'boot',
+    'delay'     => 'PT5M'  # Starts the task 5 minutes after boot
+  }],
+  user          => 'system',
+}
+~~~
+* Note: The `delay` property requires `compatibility => 2` or higher and is only supported for event-based triggers (boot, logon, registration, event, and session state change).
+
 If you want a task to run at logon, use the `logon` trigger:
 
 ~~~puppet
@@ -289,6 +326,16 @@ For all triggers:
   You should format dates as YYYY-MM-DD, although other date formats may work (under the hood, this uses Date.parse).
 * `minutes_interval` — The repeat interval in minutes.
 * `minutes_duration` — The duration in minutes, needs to be greater than the minutes_interval.
+* `random_delay` --- A random delay to add to the start time of the trigger.
+  The format for this is a duration string (ISO8601) like PT15M for 15 minutes or
+  P1DT3H24M for 1 day, 3 hours and 24 minutes. This property requires a
+  compatibility of 2 or higher and is only supported for schedule-based triggers
+  (daily, weekly, monthly, and once).
+* `delay` --- A fixed delay to add to the start time of event-based triggers.
+  The format for this is a duration string (ISO8601) like PT15M for 15 minutes or
+  P1DT3H24M for 1 day, 3 hours and 24 minutes. This property requires a
+  compatibility of 2 or higher and is only supported for event-based triggers
+  (boot, logon, registration, event, and session state change).
 * For daily triggers:
   * `every` — How often the task should run, as a number of days.
     Defaults to 1.
@@ -349,5 +396,5 @@ This codebase is licensed under the Apache2.0 licensing, however due to the natu
 <a id="development"></a>
 ## Development
 
-Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. We can't access the huge number of platforms and myriad hardware, software, and deployment configurations that Puppet is intended to serve, therefore want to keep it as easy as possible to contribute changes so that our modules work in your environment. There are a few guidelines that we need contributors to follow so that we can have a chance of keeping on top of things. 
+Puppet modules on the Puppet Forge are open projects, and community contributions are essential for keeping them great. We can't access the huge number of platforms and myriad hardware, software, and deployment configurations that Puppet is intended to serve, therefore want to keep it as easy as possible to contribute changes so that our modules work in your environment. There are a few guidelines that we need contributors to follow so that we can have a chance of keeping on top of things.
 If you would like to contribute to this module, please follow the rules in the [CONTRIBUTING.md](https://github.com/puppetlabs/puppetlabs-scheduled_task/blob/main/CONTRIBUTING.md). For more information, see our [module contribution guide.](https://puppet.com/docs/puppet/latest/contributing.html).

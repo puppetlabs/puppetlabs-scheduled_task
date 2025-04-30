@@ -96,6 +96,8 @@ module PuppetX::PuppetLabs::ScheduledTask
         'minutes_duration',
         'user_id',
         'disable_time_zone_synchronization',
+        'random_delay',
+        'delay',
       ].freeze
 
       # Valid Schedule Keys
@@ -303,6 +305,28 @@ module PuppetX::PuppetLabs::ScheduledTask
           # that way so the task runs whenever _any_ user logs on.
           user_id = Puppet::Util::Windows::SID.sid_to_name(Puppet::Util::Windows::SID.name_to_sid(user_id)) unless user_id == ''
           manifest_hash['user_id'] = user_id
+        end
+
+        # Validate random_delay if specified
+        if manifest_hash.key?('random_delay') && !manifest_hash['random_delay'].empty?
+          # We need to check compatibility at runtime when the trigger is actually being set
+          # since we might not have access to the resource here
+          begin
+            # Attempt to parse the duration to validate it
+            Duration.to_hash(manifest_hash['random_delay'])
+          rescue StandardError
+            raise ArgumentError, "Invalid random_delay value: #{manifest_hash['random_delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
+          end
+        end
+
+        # Validate delay if specified
+        if manifest_hash.key?('delay') && !manifest_hash['delay'].empty?
+          begin
+            # Attempt to parse the duration to validate it
+            Duration.to_hash(manifest_hash['delay'])
+          rescue StandardError
+            raise ArgumentError, "Invalid delay value: #{manifest_hash['delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
+          end
         end
 
         manifest_hash
@@ -703,6 +727,18 @@ module PuppetX::PuppetLabs::ScheduledTask
           'disable_time_zone_synchronization' => start_boundary ? !%r{(Z|[+-]\d\d:\d\d)$}.match?(i_trigger.StartBoundary) : false
         }
 
+        # Add type-specific properties
+        case i_trigger.Type
+        when Type::TASK_TRIGGER_DAILY, Type::TASK_TRIGGER_WEEKLY, Type::TASK_TRIGGER_MONTHLY,
+             Type::TASK_TRIGGER_MONTHLYDOW, Type::TASK_TRIGGER_TIME
+          # Add random_delay for schedule-based triggers
+          manifest_hash['random_delay'] = i_trigger.RandomDelay || '' if i_trigger.ole_respond_to?('RandomDelay')
+        when Type::TASK_TRIGGER_BOOT, Type::TASK_TRIGGER_LOGON, Type::TASK_TRIGGER_REGISTRATION,
+             Type::TASK_TRIGGER_EVENT, Type::TASK_TRIGGER_SESSION_STATE_CHANGE
+          # Add delay for event-based triggers
+          manifest_hash['delay'] = i_trigger.Delay || '' if i_trigger.ole_respond_to?('Delay')
+        end
+
         case i_trigger.Type
         when Type::TASK_TRIGGER_TIME
           manifest_hash['schedule'] = 'once'
@@ -742,8 +778,14 @@ module PuppetX::PuppetLabs::ScheduledTask
       # Adds trigger to definition
       def self.append_trigger(definition, manifest_hash)
         manifest_hash = Trigger::Manifest.canonicalize_and_validate(manifest_hash)
+
+        # Add debugging for trigger types
+        Puppet.debug("Appending trigger with schedule: #{manifest_hash['schedule']}")
+        trigger_type = type_from_manifest_hash(manifest_hash)
+        Puppet.debug("Trigger type: #{trigger_type}")
+
         # create appropriate i_trigger based on 'schedule'
-        i_trigger = definition.Triggers.Create(type_from_manifest_hash(manifest_hash))
+        i_trigger = definition.Triggers.Create(trigger_type)
 
         # Values for all Trigger Types
         if manifest_hash['minutes_interval']
@@ -774,7 +816,67 @@ module PuppetX::PuppetLabs::ScheduledTask
           i_trigger.StartBoundary = start
         end
 
-        # ITrigger specific settings
+        # Set random delay if specified and supported by this trigger type
+        if manifest_hash['random_delay'] && !manifest_hash['random_delay'].empty?
+          # Check the compatibility level directly from the definition
+          if definition.Settings.Compatibility >= 2
+            # Only apply RandomDelay to supported trigger types
+            random_delay_supported_types = [
+              Type::TASK_TRIGGER_DAILY,
+              Type::TASK_TRIGGER_WEEKLY,
+              Type::TASK_TRIGGER_MONTHLY,
+              Type::TASK_TRIGGER_MONTHLYDOW,
+              Type::TASK_TRIGGER_TIME
+            ]
+
+            if random_delay_supported_types.include?(i_trigger.Type) && i_trigger.ole_respond_to?('RandomDelay')
+              begin
+                Puppet.debug("Setting random_delay '#{manifest_hash['random_delay']}' on trigger type #{i_trigger.Type}")
+                i_trigger.RandomDelay = manifest_hash['random_delay']
+                Puppet.debug("Successfully set RandomDelay to #{i_trigger.RandomDelay}")
+              rescue => e
+                Puppet.warning("Error setting RandomDelay property: #{e.class} - #{e.message}")
+                Puppet.debug(e.backtrace.join("\n"))
+              end
+            else
+              Puppet.warning("Ignoring 'random_delay' property because it is not supported for trigger type #{i_trigger.Type}. The random_delay property will not be set.")
+            end
+          else
+            Puppet.warning("Ignoring 'random_delay' property because compatibility level is less than 2. The random_delay property will not be set.")
+          end
+        end
+
+        # Set delay if specified and supported by this trigger type
+        if manifest_hash['delay'] && !manifest_hash['delay'].empty?
+          # Check the compatibility level directly from the definition
+          if definition.Settings.Compatibility >= 2
+            # Only apply Delay to supported trigger types
+            delay_supported_types = [
+              Type::TASK_TRIGGER_BOOT,
+              Type::TASK_TRIGGER_LOGON,
+              Type::TASK_TRIGGER_REGISTRATION,
+              Type::TASK_TRIGGER_EVENT,
+              Type::TASK_TRIGGER_SESSION_STATE_CHANGE
+            ]
+
+            if delay_supported_types.include?(i_trigger.Type) && i_trigger.ole_respond_to?('Delay')
+              begin
+                Puppet.debug("Setting delay '#{manifest_hash['delay']}' on trigger type #{i_trigger.Type}")
+                i_trigger.Delay = manifest_hash['delay']
+                Puppet.debug("Successfully set Delay to #{i_trigger.Delay}")
+              rescue => e
+                Puppet.warning("Error setting Delay property: #{e.class} - #{e.message}")
+                Puppet.debug(e.backtrace.join("\n"))
+              end
+            else
+              Puppet.warning("Ignoring 'delay' property because it is not supported for trigger type #{i_trigger.Type}. The delay property will not be set.")
+            end
+          else
+            Puppet.warning("Ignoring 'delay' property because compatibility level is less than 2. The delay property will not be set.")
+          end
+        end
+
+        # Remaining ITrigger specific settings
         case i_trigger.Type
         when Type::TASK_TRIGGER_DAILY
           # https://msdn.microsoft.com/en-us/library/windows/desktop/aa446858(v=vs.85).aspx
@@ -800,7 +902,11 @@ module PuppetX::PuppetLabs::ScheduledTask
           i_trigger.WeeksOfMonth = WeeksOfMonth.names_to_bitmask(manifest_hash['which_occurrence'])
 
         when Type::TASK_TRIGGER_LOGON
-          i_trigger.UserId = manifest_hash['user_id']
+          Puppet.debug("Setting UserId for logon trigger. user_id in manifest: #{manifest_hash['user_id'].inspect}")
+          # Ensure UserId is set for logon triggers, even if not specified in the manifest
+          # An empty string means the task will trigger when any user logs on
+          i_trigger.UserId = manifest_hash['user_id'] || ''
+          Puppet.debug("UserId set to: #{i_trigger.UserId.inspect}")
         end
 
         nil
