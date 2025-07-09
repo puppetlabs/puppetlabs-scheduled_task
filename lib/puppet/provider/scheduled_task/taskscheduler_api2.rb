@@ -123,6 +123,19 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     desired_triggers = value.is_a?(Array) ? value : [value]
     current_triggers = trigger.is_a?(Array) ? trigger : [trigger]
 
+    # Add debugging
+    Puppet.debug("Setting triggers: #{desired_triggers.inspect}")
+    
+    # Check for random_delay with incompatible task
+    if resource[:compatibility] < 2 && desired_triggers.any? { |t| t.is_a?(Hash) && t['random_delay'] && !t['random_delay'].empty? }
+      Puppet.warning("The 'random_delay' property requires compatibility level 2 or higher. Current compatibility level is #{resource[:compatibility]}.")
+    end
+
+    # Check for delay with incompatible task
+    if resource[:compatibility] < 2 && desired_triggers.any? { |t| t.is_a?(Hash) && t['delay'] && !t['delay'].empty? }
+      Puppet.warning("The 'delay' property requires compatibility level 2 or higher. Current compatibility level is #{resource[:compatibility]}.")
+    end
+
     extra_triggers = []
     desired_to_search = desired_triggers.dup
     current_triggers.each do |current|
