@@ -168,7 +168,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
         it 'rejects invalid format for delay' do
           logon_manifest = { 'schedule' => 'logon', 'delay' => 'invalid_format' }
-          expect { manifest.class.canonicalize_and_validate(logon_manifest) }.to raise_error(ArgumentError, /Invalid delay value/)
+          expect { manifest.class.canonicalize_and_validate(logon_manifest) }.to raise_error(ArgumentError, %r{Invalid delay value})
         end
 
         it 'accepts valid ISO8601 duration format for random_delay' do
@@ -178,7 +178,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
 
         it 'rejects invalid format for random_delay' do
           daily_manifest = { 'schedule' => 'daily', 'start_time' => '01:00', 'random_delay' => 'invalid_format' }
-          expect { manifest.class.canonicalize_and_validate(daily_manifest) }.to raise_error(ArgumentError, /Invalid random_delay value/)
+          expect { manifest.class.canonicalize_and_validate(daily_manifest) }.to raise_error(ArgumentError, %r{Invalid random_delay value})
         end
       end
 
@@ -995,6 +995,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           i_trigger = DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details)
           i_trigger[:Repetition] = OpenStruct.new(i_trigger[:Repetition])
           i_trigger = OpenStruct.new(i_trigger)
+          allow(i_trigger).to receive(:ole_respond_to?).with('RandomDelay').and_return(true)
+          allow(i_trigger).to receive(:ole_respond_to?).with('Delay').and_return(true)
           expect(v2_class.class.to_manifest_hash(i_trigger)).not_to be_nil
         end
       end
@@ -1005,6 +1007,7 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       ].each do |trigger_details|
         it "converts an #{trigger_details[:ole_type]} instance" do
           i_trigger = OpenStruct.new(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+          allow(i_trigger).to receive(:ole_respond_to?).with('RandomDelay').and_return(true)
           expect { v2_class.class.to_manifest_hash(i_trigger) }.not_to raise_error(ArgumentError)
         end
       end
@@ -1017,6 +1020,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
       ].each do |trigger_details|
         it "fails to convert an #{trigger_details[:ole_type]} instance" do
           i_trigger = OpenStruct.new(DEFAULT_V2_ITRIGGER_PROPERTIES.merge(trigger_details))
+          allow(i_trigger).to receive(:ole_respond_to?).with('RandomDelay').and_return(true)
+          allow(i_trigger).to receive(:ole_respond_to?).with('Delay').and_return(true)
           expect { v2_class.class.to_manifest_hash(i_trigger) }.to raise_error(ArgumentError)
         end
       end
@@ -1048,7 +1053,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           },
           expected: {
             'schedule' => 'once',
-            'disable_time_zone_synchronization' => false
+            'disable_time_zone_synchronization' => false,
+            'random_delay' => 'P2DT5S'
           }
         },
         {
@@ -1060,7 +1066,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           expected: {
             'schedule' => 'daily',
             'every' => 2,
-            'disable_time_zone_synchronization' => false
+            'disable_time_zone_synchronization' => false,
+            'random_delay' => 'P2DT5S'
           }
         },
         {
@@ -1074,7 +1081,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'schedule' => 'weekly',
             'every' => 2,
             'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-            'disable_time_zone_synchronization' => false
+            'disable_time_zone_synchronization' => false,
+            'random_delay' => 'P2DT5S'
           }
         },
         {
@@ -1089,7 +1097,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'schedule' => 'monthly',
             'months' => [1],
             'on' => (1..31).to_a + ['last'],
-            'disable_time_zone_synchronization' => false
+            'disable_time_zone_synchronization' => false,
+            'random_delay' => 'P2DT5S'
           }
         },
         {
@@ -1107,7 +1116,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
             'months' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             'which_occurrence' => 'last',
             'day_of_week' => ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'],
-            'disable_time_zone_synchronization' => false
+            'disable_time_zone_synchronization' => false,
+            'random_delay' => 'P2DT5S'
           }
         },
       ].each do |trigger_details|
@@ -1115,6 +1125,8 @@ describe PuppetX::PuppetLabs::ScheduledTask::Trigger do
           i_trigger = FILLED_V2_ITRIGGER_PROPERTIES.merge(trigger_details[:i_trigger])
           i_trigger[:Repetition] = OpenStruct.new(i_trigger[:Repetition])
           i_trigger = OpenStruct.new(i_trigger)
+          allow(i_trigger).to receive(:ole_respond_to?).with('RandomDelay').and_return(true)
+          allow(i_trigger).to receive(:ole_respond_to?).with('Delay').and_return(true)
           converted = CONVERTED_V2_MANIFEST_HASH.merge(trigger_details[:expected])
           expect(v2_class.class.to_manifest_hash(i_trigger)).to eq(converted)
         end
