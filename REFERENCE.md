@@ -76,7 +76,7 @@ A trigger can contain the following keys:
 
 * For all triggers:
     * `schedule` **(Required)** --- What kind of trigger this is.
-      Valid values are `daily`, `weekly`, `monthly`, or `once`. Each kind
+      Valid values are `daily`, `weekly`, `monthly`, `once`, `boot`, `logon`. Each kind
       of trigger is configured with a different set of keys; see the
       sections below. (`once` triggers only need a start time/date.)
     * `start_time` **(Required)** --- The time of day when the trigger should
@@ -124,6 +124,8 @@ A trigger can contain the following keys:
       * Domain User: `"MyDomain\\MyUser"`
       * SID: `"S-15-..."`
       * Any User: `''` or `undef`
+* For `boot` triggers:
+    * Only the options in the all triggers section can be provided to `boot` triggers.
 
 Examples:
 
