@@ -311,20 +311,16 @@ module PuppetX::PuppetLabs::ScheduledTask
         if manifest_hash.key?('random_delay') && !manifest_hash['random_delay'].empty?
           # We need to check compatibility at runtime when the trigger is actually being set
           # since we might not have access to the resource here
-          begin
-            # Attempt to parse the duration to validate it
-            Duration.to_hash(manifest_hash['random_delay'])
-          rescue StandardError
+          # Duration.to_hash will return nil if the format is invalid
+          unless Duration.to_hash(manifest_hash['random_delay'])
             raise ArgumentError, "Invalid random_delay value: #{manifest_hash['random_delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
           end
         end
 
         # Validate delay if specified
         if manifest_hash.key?('delay') && !manifest_hash['delay'].empty?
-          begin
-            # Attempt to parse the duration to validate it
-            Duration.to_hash(manifest_hash['delay'])
-          rescue StandardError
+          # Duration.to_hash will return nil if the format is invalid
+          unless Duration.to_hash(manifest_hash['delay'])
             raise ArgumentError, "Invalid delay value: #{manifest_hash['delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
           end
         end
@@ -826,7 +822,7 @@ module PuppetX::PuppetLabs::ScheduledTask
               Type::TASK_TRIGGER_WEEKLY,
               Type::TASK_TRIGGER_MONTHLY,
               Type::TASK_TRIGGER_MONTHLYDOW,
-              Type::TASK_TRIGGER_TIME
+              Type::TASK_TRIGGER_TIME,
             ]
 
             if random_delay_supported_types.include?(i_trigger.Type) && i_trigger.ole_respond_to?('RandomDelay')
@@ -856,7 +852,7 @@ module PuppetX::PuppetLabs::ScheduledTask
               Type::TASK_TRIGGER_LOGON,
               Type::TASK_TRIGGER_REGISTRATION,
               Type::TASK_TRIGGER_EVENT,
-              Type::TASK_TRIGGER_SESSION_STATE_CHANGE
+              Type::TASK_TRIGGER_SESSION_STATE_CHANGE,
             ]
 
             if delay_supported_types.include?(i_trigger.Type) && i_trigger.ole_respond_to?('Delay')

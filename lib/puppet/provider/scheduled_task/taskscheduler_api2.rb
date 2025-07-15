@@ -125,7 +125,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
 
     # Add debugging
     Puppet.debug("Setting triggers: #{desired_triggers.inspect}")
-    
+
     # Check for random_delay with incompatible task
     if resource[:compatibility] < 2 && desired_triggers.any? { |t| t.is_a?(Hash) && t['random_delay'] && !t['random_delay'].empty? }
       Puppet.warning("The 'random_delay' property requires compatibility level 2 or higher. Current compatibility level is #{resource[:compatibility]}.")
