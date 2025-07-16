@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v4.0.3](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v4.0.3) - 2025-07-16
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.2...v4.0.3)
+
+### Other
+
+- Fix rubocop offenses and failing rspecs [#268](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/268) ([shubhamshinde360](https://github.com/shubhamshinde360))
+- update reference file to include other schedule options [#267](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/267) ([xenon8](https://github.com/xenon8))
+- Add delay properties to triggers [#266](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/266) ([tpowelldev](https://github.com/tpowelldev))
+
 ## [v4.0.2](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v4.0.2) - 2025-02-14
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.1...v4.0.2)

@@ -76,7 +76,7 @@ A trigger can contain the following keys:
 
 * For all triggers:
     * `schedule` **(Required)** --- What kind of trigger this is.
-      Valid values are `daily`, `weekly`, `monthly`, `once`, `boot`, `logon`. Each kind
+      Valid values are `daily`, `weekly`, `monthly`, or `once`. Each kind
       of trigger is configured with a different set of keys; see the
       sections below. (`once` triggers only need a start time/date.)
     * `start_time` **(Required)** --- The time of day when the trigger should
@@ -91,6 +91,16 @@ A trigger can contain the following keys:
     * `disable_time_zone_synchronization` --- Whether or not to disable the
       `synchronise across time zones` function. Due to difficulties with the
       api this is non idempotent. Defaults to false
+    * `random_delay` --- A random delay to add to the start time of the trigger.
+      The format for this string is a duration string like PT15M for 15 minutes or
+      P1DT3H24M for 1 day, 3 hours and 24 minutes. This property requires a
+      compatibility of 2 or higher and is only supported for schedule-based triggers
+      (daily, weekly, monthly, and once).
+    * `delay` --- A fixed delay to add to the start time of event-based triggers.
+      The format for this string is a duration string like PT15M for 15 minutes or
+      P1DT3H24M for 1 day, 3 hours and 24 minutes. This property requires a
+      compatibility of 2 or higher and is only supported for event-based triggers
+      (boot, logon, registration, event, and session state change).
 * For `daily` triggers:
     * `every` --- How often the task should run, as a number of days. Defaults
       to 1. ("2" means every other day, "3" means every three days, etc.)
@@ -124,8 +134,6 @@ A trigger can contain the following keys:
       * Domain User: `"MyDomain\\MyUser"`
       * SID: `"S-15-..."`
       * Any User: `''` or `undef`
-* For `boot` triggers:
-    * Only the options in the all triggers section can be provided to `boot` triggers.
 
 Examples:
 
