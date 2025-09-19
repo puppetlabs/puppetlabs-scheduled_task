@@ -66,6 +66,14 @@ The basic property that the resource should be in.
 
 Default value: `present`
 
+##### `group`
+
+The group to run the scheduled task as.
+
+Please also note that Puppet must be running as a privileged user
+in order to manage `scheduled_task` resources. Running as an
+unprivileged user will result in 'access denied' errors.
+
 ##### `trigger`
 
 One or more triggers defining when the task should run. A single trigger is
@@ -205,7 +213,8 @@ conditions will fail with a reported error of 'The operation
 completed successfully'.  It is recommended that you either
 choose another user to run the scheduled task, or alter the
 security policy to allow v1 scheduled tasks to run as the
-'SYSTEM' account.  Defaults to 'SYSTEM'.
+'SYSTEM' account.
+Defaults to 'SYSTEM' unless the group property is set.
 
 Please also note that Puppet must be running as a privileged user
 in order to manage `scheduled_task` resources. Running as an
@@ -215,8 +224,6 @@ If a user is specified without an accompanying password, and the
 user does not end with a dollar sign (`$`) signifying a Group
 Managed Service Account (gMSA), the task will be created with
 `Run only when user is logged on` specified.
-
-Default value: `system`
 
 ##### `working_dir`
 
