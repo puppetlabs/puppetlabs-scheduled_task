@@ -77,7 +77,8 @@ Puppet::Type.newtype(:scheduled_task) do
       completed successfully'.  It is recommended that you either
       choose another user to run the scheduled task, or alter the
       security policy to allow v1 scheduled tasks to run as the
-      'SYSTEM' account.  Defaults to 'SYSTEM'.
+      'SYSTEM' account.
+      Defaults to 'SYSTEM' unless the group property is set.
 
       Please also note that Puppet must be running as a privileged user
       in order to manage `scheduled_task` resources. Running as an
@@ -88,7 +89,7 @@ Puppet::Type.newtype(:scheduled_task) do
       Managed Service Account (gMSA), the task will be created with
       `Run only when user is logged on` specified."
 
-    defaultto :system
+    defaultto { :system if @resource[:group].nil? || @resource[:group].empty? }
 
     def insync?(current)
       provider.user_insync?(current, @should)
@@ -101,6 +102,18 @@ Puppet::Type.newtype(:scheduled_task) do
       Since there is no way to retrieve the password used to set the
       account information for a task, this parameter will not be used
       to determine if a scheduled task is in sync or not."
+  end
+
+  newproperty(:group) do
+    desc "The group to run the scheduled task as.
+
+      Please also note that Puppet must be running as a privileged user
+      in order to manage `scheduled_task` resources. Running as an
+      unprivileged user will result in 'access denied' errors."
+
+    def insync?(current)
+      provider.group_insync?(current, @should)
+    end
   end
 
   newproperty(:compatibility, required_features: :compatibility) do
