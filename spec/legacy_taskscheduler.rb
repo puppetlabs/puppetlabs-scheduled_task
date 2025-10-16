@@ -385,9 +385,7 @@ class Win32::TaskScheduler
         end
       end
     rescue Puppet::Util::Windows::Error => e
-      raise e unless e.code == SCHED_E_ACCOUNT_INFORMATION_NOT_SET ||
-                     e.code == SCHED_E_NO_SECURITY_SERVICES ||
-                     e.code == ERROR_NONE_MAPPED
+      raise e unless [SCHED_E_ACCOUNT_INFORMATION_NOT_SET, SCHED_E_NO_SECURITY_SERVICES, ERROR_NONE_MAPPED].include?(e.code)
     end
 
     user

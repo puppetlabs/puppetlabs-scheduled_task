@@ -270,7 +270,7 @@ describe 'Scheduled Tasks API v2' do
       let(:task_name) { name }
 
       it 'and return the same application_name and properties as those originally set' do
-        expect(subject).to be_exists(task_name)
+        expect(subject).to exist(task_name)
 
         task = subject.new(task_name)
         # verify initial task configuration
@@ -289,7 +289,7 @@ describe 'Scheduled Tasks API v2' do
 
         it "#{manifest_hash['schedule']} and return the same properties as those set" do
           # verifying task exists guarantees that .new below loads existing task
-          expect(subject).to be_exists(task_name)
+          expect(subject).to exist(task_name)
 
           # append the trigger of given type
           task = subject.new(task_name)

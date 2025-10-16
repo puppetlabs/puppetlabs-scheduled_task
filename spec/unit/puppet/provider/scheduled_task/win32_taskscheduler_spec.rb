@@ -939,7 +939,7 @@ task_providers.each do |task_provider|
         ]
 
         expect { provider.validate_trigger(triggers_to_validate) }.to raise_error(
-          %r{#{Regexp.escape("Unknown day_of_week values(s): [\"BadDay\"]")}},
+          %r{#{Regexp.escape('Unknown day_of_week values(s): ["BadDay"]')}},
         )
       end
     end

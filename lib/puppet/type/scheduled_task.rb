@@ -271,11 +271,11 @@ Puppet::Type.newtype(:scheduled_task) do
     end
 
     def should_to_s(new_value = @should)
-      super(new_value)
+      super
     end
 
     def to_s?(current_value = @is)
-      super(current_value)
+      super
     end
   end
 
