@@ -218,10 +218,15 @@ module PuppetX::PuppetLabs::ScheduledTask
       # definition populated when task exists, otherwise new
       @task, @definition = self.class.task(@full_task_path)
       task_userid = @definition.Principal.UserId || ''
+      task_groupid = @definition.Principal.GroupId || ''
 
       self.compatibility = TASK_COMPATIBILITY::TASK_COMPATIBILITY_V1 if compatibility_level == :v1_compatibility
 
-      set_account_information(task_userid, nil)
+      if task_groupid == ''
+        set_group_information(task_groupid)
+      else
+        set_account_information(task_userid, nil)
+      end
     end
 
     # API v1 Compatibility list
@@ -320,6 +325,8 @@ module PuppetX::PuppetLabs::ScheduledTask
       task_user = nil
       task_password = nil
 
+      # user and password should be nil if task should run in
+      # service account or group context
       case @definition.Principal.LogonType
       when TASK_LOGON_TYPE::TASK_LOGON_PASSWORD,
           TASK_LOGON_TYPE::TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD
@@ -369,12 +376,32 @@ module PuppetX::PuppetLabs::ScheduledTask
       true
     end
 
+    # Sets the +group+ for the given task if the task should run in a group context.
+    # If successfull then true is returned.
+    #
+    def set_group_information(group)
+      @definition.Principal.RunLevel = TASK_RUNLEVEL_TYPE::TASK_RUNLEVEL_HIGHEST
+
+      @definition.Principal.GroupId = group
+      @definition.Principal.LogonType = TASK_LOGON_TYPE::TASK_LOGON_GROUP
+
+      true
+    end
+
     # Returns the user associated with the task or nil if no user has yet
     # been associated with the task.
     #
     def account_information
       principal = @definition.Principal
       principal&.UserId
+    end
+
+    # Returns the group associated with the task or nil if no group has yet
+    # been associated with the task.
+    #
+    def group_information
+      principal = @definition.Principal
+      principal&.GroupId
     end
 
     # Returns the name of the application associated with the task.
