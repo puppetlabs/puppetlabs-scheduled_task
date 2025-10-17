@@ -4,8 +4,8 @@
 #
 # https://docs.microsoft.com/en-gb/windows/win32/taskschd/task-scheduler-2-0-interfaces
 #
-require_relative './error'
-require_relative './trigger'
+require_relative 'error'
+require_relative 'trigger'
 
 # disabling some false positives on the FFI definitions
 # rubocop:disable Naming/ClassAndModuleCamelCase,Lint/Void
