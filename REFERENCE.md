@@ -177,10 +177,10 @@ Examples:
 
     # Run on the first _Saturday_ of every month at 7:00AM
     trigger => {
-      'schedule'        => 'monthly',
-      'start_time'      => '07:00',
-      'day_of_week'     => 'sat',     # Specify the day of the week to trigger on
-      'which_occurence' => 'first'    # Specify which occurance to trigger on, up to fifth
+      'schedule'         => 'monthly',
+      'start_time'       => '07:00',
+      'day_of_week'      => 'sat',     # Specify the day of the week to trigger on
+      'which_occurrence' => 'first'    # Specify which occurrence to trigger on, up to fifth
     }
 
     # Run on boot, then once per hour for 12 hours
