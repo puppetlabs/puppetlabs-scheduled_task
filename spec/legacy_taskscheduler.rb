@@ -1051,7 +1051,7 @@ class Win32::TaskScheduler
                                     # LPCWSTR, IScheduledWorkItem *
                                     AddWorkItem: [[:lpcwstr, :pointer], :hresult],
                                     # LPCWSTR, REFIID
-                                    IsOfType: [[:lpcwstr, :pointer], :hresult]
+                                    IsOfType: [[:lpcwstr, :pointer], :hresult],
     ]
 
     TaskScheduler = com::Factory[ITaskScheduler,
@@ -1065,7 +1065,7 @@ class Win32::TaskScheduler
                                     Skip: [[:win32_ulong], :hresult],
                                     Reset: [[], :hresult],
                                     # IEnumWorkItems ** ppEnumWorkItems
-                                    Clone: [[:pointer], :hresult]
+                                    Clone: [[:pointer], :hresult],
     ]
 
     EnumWorkItems = com::Instance[IEnumWorkItems]
@@ -1118,7 +1118,7 @@ class Win32::TaskScheduler
                                         GetFlags: [[:pointer], :hresult],
                                         SetAccountInformation: [[:lpcwstr, :lpcwstr], :hresult],
                                         # LPWSTR *
-                                        GetAccountInformation: [[:pointer], :hresult]
+                                        GetAccountInformation: [[:pointer], :hresult],
     ]
 
     # https://msdn.microsoft.com/en-us/library/windows/desktop/aa381311(v=vs.85).aspx
@@ -1141,7 +1141,7 @@ class Win32::TaskScheduler
                            GetTaskFlags: [[:pointer], :hresult],
                            SetMaxRunTime: [[:dword], :hresult],
                            # DWORD *
-                           GetMaxRunTime: [[:pointer], :hresult]
+                           GetMaxRunTime: [[:pointer], :hresult],
     ]
 
     Task = com::Instance[ITask]
@@ -1150,7 +1150,7 @@ class Win32::TaskScheduler
     IPersist = com::Interface[com::IUnknown,
                               FFI::WIN32::GUID['0000010c-0000-0000-c000-000000000046'],
                               # CLSID *
-                              GetClassID: [[:pointer], :hresult]
+                              GetClassID: [[:pointer], :hresult],
     ]
 
     # https://msdn.microsoft.com/en-us/library/windows/desktop/ms687223(v=vs.85).aspx
@@ -1161,7 +1161,7 @@ class Win32::TaskScheduler
                                   Save: [[:lpcolestr, :win32_bool], :hresult],
                                   SaveCompleted: [[:lpcolestr], :hresult],
                                   # LPOLESTR *
-                                  GetCurFile: [[:pointer], :hresult]
+                                  GetCurFile: [[:pointer], :hresult],
     ]
 
     PersistFile = com::Instance[IPersistFile]
@@ -1171,7 +1171,7 @@ class Win32::TaskScheduler
                                   FFI::WIN32::GUID['148BD52B-A2AB-11CE-B11F-00AA00530503'],
                                   SetTrigger: [[:pointer], :hresult],
                                   GetTrigger: [[:pointer], :hresult],
-                                  GetTriggerString: [[:pointer], :hresult]
+                                  GetTriggerString: [[:pointer], :hresult],
     ]
 
     TaskTrigger = com::Instance[ITaskTrigger]
