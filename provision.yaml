@@ -14,6 +14,7 @@ release_checks:
   - win-2012r2-x86_64
   - win-2016-core-x86_64
   - win-2019-core-x86_64
+  - win-2025-x64
 release_checks_7:
   provisioner: abs
   images:
@@ -21,3 +22,4 @@ release_checks_7:
   - win-2016-core-x86_64
   - win-2019-core-x86_64
   - win-10-pro-x86_64
+  - win-2025-x64
