@@ -5,14 +5,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v5.0.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v5.0.0) - 2026-07-13
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.3...v5.0.0)
+
+### Changed
+
+- (CAT-2391) Puppetcore upgrade [#271](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/271) ([LukasAud](https://github.com/LukasAud))
+
+### Other
+
+- [MODULES-11616] Adding Windows 2025 support to module [#275](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/275) ([jst-cyr](https://github.com/jst-cyr))
+- Update link to contributing documentation [#273](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/273) ([jst-cyr](https://github.com/jst-cyr))
+
 ## [v4.0.3](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v4.0.3) - 2025-07-16
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.2...v4.0.3)
 
-### Other
+### Added
 
-- Fix rubocop offenses and failing rspecs [#268](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/268) ([shubhamshinde360](https://github.com/shubhamshinde360))
-- update reference file to include other schedule options [#267](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/267) ([xenon8](https://github.com/xenon8))
 - Add delay properties to triggers [#266](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/266) ([tpowelldev](https://github.com/tpowelldev))
 
 ## [v4.0.2](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v4.0.2) - 2025-02-14
