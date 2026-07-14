@@ -1,10 +1,7 @@
 ---
-plugins:
+require:
 - rubocop-performance
 - rubocop-rspec
-- rubocop-rspec_rails
-- rubocop-factory_bot
-- rubocop-capybara
 AllCops:
   NewCops: enable
   DisplayCopNames: true
@@ -119,16 +116,6 @@ Style/StringMethods:
 Bundler/GemFilename:
   Enabled: false
 Bundler/InsecureProtocolSource:
-  Enabled: false
-Capybara/CurrentPathExpectation:
-  Enabled: false
-Capybara/VisibilityMatcher:
-  Enabled: false
-FactoryBot/AttributeDefinedStatically:
-  Enabled: false
-FactoryBot/CreateList:
-  Enabled: false
-FactoryBot/FactoryClassName:
   Enabled: false
 Gemspec/DuplicatedAssignment:
   Enabled: false
@@ -312,8 +299,6 @@ RSpec/ContextWording:
   Enabled: false
 RSpec/DescribeClass:
   Enabled: false
-RSpec/Dialect:
-  Enabled: false
 RSpec/EmptyHook:
   Enabled: false
 RSpec/EmptyLineAfterExample:
@@ -494,22 +479,6 @@ Style/TrailingMethodEndStatement:
   Enabled: false
 Style/UnpackFirst:
   Enabled: false
-Capybara/MatchStyle:
-  Enabled: false
-Capybara/NegationMatcher:
-  Enabled: false
-Capybara/SpecificActions:
-  Enabled: false
-Capybara/SpecificFinders:
-  Enabled: false
-Capybara/SpecificMatcher:
-  Enabled: false
-FactoryBot/ConsistentParenthesesStyle:
-  Enabled: false
-FactoryBot/FactoryNameStyle:
-  Enabled: false
-FactoryBot/SyntaxMethods:
-  Enabled: false
 Gemspec/DeprecatedAttributeAssignment:
   Enabled: false
 Gemspec/DevelopmentDependencies:
@@ -625,16 +594,6 @@ RSpec/SortMetadata:
 RSpec/SubjectDeclaration:
   Enabled: false
 RSpec/VerifiedDoubleReference:
-  Enabled: false
-RSpecRails/AvoidSetupHook:
-  Enabled: false
-RSpecRails/HaveHttpStatus:
-  Enabled: false
-RSpecRails/InferredSpecType:
-  Enabled: false
-RSpecRails/MinitestAssertions:
-  Enabled: false
-RSpecRails/TravelAround:
   Enabled: false
 Security/CompoundHash:
   Enabled: false

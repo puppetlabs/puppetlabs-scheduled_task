@@ -74,7 +74,7 @@ describe 'Scheduled Tasks API v2' do
     subject = ST::Task
 
     after :each do
-      if Puppet.features.microsoft_windows? && (defined?(task_name) && subject.exists?(task_name))
+      if Puppet.features.microsoft_windows? && defined?(task_name) && subject.exists?(task_name)
         subject.delete(task_name)
       end
     end
