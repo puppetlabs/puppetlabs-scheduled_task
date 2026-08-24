@@ -18,10 +18,22 @@ spec/spec_helper.rb:
   unmanaged: false
 .github/workflows/auto_release.yml:
   unmanaged: false
+# ci.yml and nightly.yml are maintained by hand because their Spec jobs carry
+# customisations pdk-templates cannot express -- the `additional_packages` input
+# (no such key in the templates) and `secrets: inherit` (needed so the Puppet 9
+# lane can reach PUPPET_GEM_SOURCE / Twingate). The template emits no `with:` or
+# `secrets:` block on Spec at all, so leaving them managed means the scheduled
+# `pdk update` PR silently reverts Puppet 9 support. `acceptance_flags` below is
+# kept in step with the hand-written `flags:` so these can go back to template
+# management once pdk-templates supports those inputs.
 .github/workflows/ci.yml:
-  unmanaged: false
+  unmanaged: true
+  acceptance_flags:
+    - '--nightly'
 .github/workflows/nightly.yml:
-  unmanaged: false
+  unmanaged: true
+  acceptance_flags:
+    - '--nightly'
 .github/workflows/release.yml:
   unmanaged: false
 .travis.yml:
