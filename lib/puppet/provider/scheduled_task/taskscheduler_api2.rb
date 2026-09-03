@@ -59,6 +59,10 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     account
   end
 
+  def group
+    task.group_information
+  end
+
   def compatibility
     task.compatibility
   end
@@ -73,6 +77,14 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     # Win32::TaskScheduler can return the 'SYSTEM' account as the
     # empty string.
     current = 'system' if current == ''
+
+    # By comparing account SIDs we don't have to worry about case
+    # sensitivity, or canonicalization of the account name.
+    Puppet::Util::Windows::SID.name_to_sid(current) == Puppet::Util::Windows::SID.name_to_sid(should[0])
+  end
+
+  def group_insync?(current, should)
+    return false unless current
 
     # By comparing account SIDs we don't have to worry about case
     # sensitivity, or canonicalization of the account name.
@@ -177,12 +189,18 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     end
   end
 
+  def group=(value)
+    raise("Invalid group: #{value}") unless Puppet::Util::Windows::SID.name_to_sid(value)
+
+    task.set_group_information(value)
+  end
+
   def create
     @triggers = nil
     @task = PuppetX::PuppetLabs::ScheduledTask::Task.new(resource[:name])
     self.command = resource[:command]
 
-    [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility, :description].each do |prop|
+    [:arguments, :working_dir, :enabled, :trigger, :user, :group, :compatibility, :description].each do |prop|
       send("#{prop}=", resource[prop]) if resource[prop]
     end
   end
@@ -202,7 +220,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     # this is a Windows security feature with the v1 COM APIs that prevent
     # arbitrary reassignment of a task scheduler command to run as SYSTEM
     # without the authorization to do so
-    self.user = resource[:user]
+    self.user = resource[:user] unless resource[:group]
     task.save
     @task = nil
   end
