@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v5.1.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v5.1.0) - 2026-09-03
+
+[Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v5.0.0...v5.1.0)
+
+### Added
+
+- (MODULES-11734) Add support for Puppet 9 [#277](https://github.com/puppetlabs/puppetlabs-scheduled_task/pull/277) ([SugatD](https://github.com/SugatD))
+
 ## [v5.0.0](https://github.com/puppetlabs/puppetlabs-scheduled_task/tree/v5.0.0) - 2026-07-13
 
 [Full Changelog](https://github.com/puppetlabs/puppetlabs-scheduled_task/compare/v4.0.3...v5.0.0)
