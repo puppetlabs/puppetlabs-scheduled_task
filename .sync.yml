@@ -6,6 +6,9 @@ appveyor.yml:
 
 Gemfile:
   use_litmus: true
+  overrides:
+    - gem: 'puppet_litmus'
+      version: '~> 2.0'
 NOTICE:
   copyright_holders:
   - name: Puppet, Inc.
