@@ -35,7 +35,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           day: matches['day'],
           minute: matches['minute'],
           hour: matches['hour'],
-          second: matches['second']
+          second: matches['second'],
         }
       end
 
@@ -130,24 +130,24 @@ module PuppetX::PuppetLabs::ScheduledTask
         case schedule
         when 'once'
           {
-            'schedule' => 'once'
+            'schedule' => 'once',
           }
         when 'daily'
           {
             'schedule' => 'daily',
-            'every' => 1
+            'every' => 1,
           }
         when 'weekly'
           {
             'schedule' => 'weekly',
             'days_of_week' => V2::Day.names,
-            'every' => 1
+            'every' => 1,
           }
         when 'monthly'
           {
             'schedule' => 'monthly',
             'months' => V2::Month.indexes,
-            'days' => 0
+            'days' => 0,
           }
         end
       end
@@ -160,7 +160,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           'minutes_interval' => 0,
           'minutes_duration' => 0,
           'start_date' => format_date(now),
-          'start_time' => format_time(now)
+          'start_time' => format_time(now),
         }.merge(default_trigger_settings_for(schedule))
       end
 
@@ -308,21 +308,17 @@ module PuppetX::PuppetLabs::ScheduledTask
         end
 
         # Validate random_delay if specified
-        if manifest_hash.key?('random_delay') && !manifest_hash['random_delay'].empty?
-          # We need to check compatibility at runtime when the trigger is actually being set
-          # since we might not have access to the resource here
-          # Duration.to_hash will return nil if the format is invalid
-          unless Duration.to_hash(manifest_hash['random_delay'])
-            raise ArgumentError, "Invalid random_delay value: #{manifest_hash['random_delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
-          end
+        # We need to check compatibility at runtime when the trigger is actually being set
+        # since we might not have access to the resource here
+        # Duration.to_hash will return nil if the format is invalid
+        if manifest_hash.key?('random_delay') && !manifest_hash['random_delay'].empty? && !Duration.to_hash(manifest_hash['random_delay'])
+          raise ArgumentError, "Invalid random_delay value: #{manifest_hash['random_delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
         end
 
         # Validate delay if specified
-        if manifest_hash.key?('delay') && !manifest_hash['delay'].empty?
+        if manifest_hash.key?('delay') && !manifest_hash['delay'].empty? && !Duration.to_hash(manifest_hash['delay'])
           # Duration.to_hash will return nil if the format is invalid
-          unless Duration.to_hash(manifest_hash['delay'])
-            raise ArgumentError, "Invalid delay value: #{manifest_hash['delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
-          end
+          raise ArgumentError, "Invalid delay value: #{manifest_hash['delay']}. Must be in ISO8601 duration format (e.g., PT15M for 15 minutes)."
         end
 
         manifest_hash
@@ -380,7 +376,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           'wed' => TASK_WEDNESDAY,
           'thurs' => TASK_THURSDAY,
           'fri' => TASK_FRIDAY,
-          'sat' => TASK_SATURDAY
+          'sat' => TASK_SATURDAY,
         }.freeze
 
         # Returns day names
@@ -528,7 +524,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           9 => TASK_SEPTEMBER,
           10 => TASK_OCTOBER,
           11 => TASK_NOVEMBER,
-          12 => TASK_DECEMBER
+          12 => TASK_DECEMBER,
         }.freeze
 
         # Returns month indexes
@@ -587,7 +583,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           'second' => SECOND,
           'third' => THIRD,
           'fourth' => FOURTH,
-          'last' => LAST
+          'last' => LAST,
         }.freeze
 
         # Converts names to bitmask
@@ -678,13 +674,13 @@ module PuppetX::PuppetLabs::ScheduledTask
         # NOTE: monthly uses context to determine MONTHLY or MONTHLYDOW
         Type::TASK_TRIGGER_MONTHLY => 'monthly',
         Type::TASK_TRIGGER_MONTHLYDOW => 'monthly',
-        Type::TASK_TRIGGER_TIME => 'once'
+        Type::TASK_TRIGGER_TIME => 'once',
       }.freeze
 
       # Event based trigger map
       EVENT_BASED_TRIGGER_MAP = {
         Type::TASK_TRIGGER_BOOT => 'boot',
-        Type::TASK_TRIGGER_LOGON => 'logon'
+        Type::TASK_TRIGGER_LOGON => 'logon',
         # The triggers below are not yet supported.
         # Type::TASK_TRIGGER_EVENT                => 'event',
         # Type::TASK_TRIGGER_IDLE                 => 'idle',
@@ -720,7 +716,7 @@ module PuppetX::PuppetLabs::ScheduledTask
           'enabled' => i_trigger.Enabled,
           'minutes_interval' => Duration.to_minutes(i_trigger.Repetition.Interval) || 0,
           'minutes_duration' => Duration.to_minutes(i_trigger.Repetition.Duration) || 0,
-          'disable_time_zone_synchronization' => start_boundary ? !%r{(Z|[+-]\d\d:\d\d)$}.match?(i_trigger.StartBoundary) : false
+          'disable_time_zone_synchronization' => start_boundary ? !%r{(Z|[+-]\d\d:\d\d)$}.match?(i_trigger.StartBoundary) : false,
         }
 
         # Add type-specific properties
@@ -830,7 +826,7 @@ module PuppetX::PuppetLabs::ScheduledTask
                 Puppet.debug("Setting random_delay '#{manifest_hash['random_delay']}' on trigger type #{i_trigger.Type}")
                 i_trigger.RandomDelay = manifest_hash['random_delay']
                 Puppet.debug("Successfully set RandomDelay to #{i_trigger.RandomDelay}")
-              rescue => e
+              rescue StandardError => e
                 Puppet.warning("Error setting RandomDelay property: #{e.class} - #{e.message}")
                 Puppet.debug(e.backtrace.join("\n"))
               end
@@ -860,7 +856,7 @@ module PuppetX::PuppetLabs::ScheduledTask
                 Puppet.debug("Setting delay '#{manifest_hash['delay']}' on trigger type #{i_trigger.Type}")
                 i_trigger.Delay = manifest_hash['delay']
                 Puppet.debug("Successfully set Delay to #{i_trigger.Delay}")
-              rescue => e
+              rescue StandardError => e
                 Puppet.warning("Error setting Delay property: #{e.class} - #{e.message}")
                 Puppet.debug(e.backtrace.join("\n"))
               end
