@@ -183,7 +183,7 @@ Puppet::Type.type(:scheduled_task).provide(:taskscheduler_api2) do
     self.command = resource[:command]
 
     [:arguments, :working_dir, :enabled, :trigger, :user, :compatibility, :description].each do |prop|
-      send("#{prop}=", resource[prop]) if resource[prop]
+      send(:"#{prop}=", resource[prop]) if resource[prop]
     end
   end
 
